@@ -103,6 +103,7 @@ if (eje === 'corto') {
   // 4. avanzar con ↑ hasta la pared (signo de la tienda, visible en el plano)
   s = await holdUntil('ArrowUp', (x) => WALL.includes(x.estado));
   await log('4. ↑ hasta la pared');
+  if (!WALL.includes(s.estado)) throw new Error(`La aguja no llegó al vaso a tiempo (estado ${s.estado}, ${s.insertada} mm): ¿render demasiado lento? Prueba con ?calidad=baja`);
   if (s.estado === 'tienda') {
     await shot('02-signo-tienda');
     s = await holdUntil('ArrowUp', (x) => PAST.includes(x.estado));
@@ -121,7 +122,8 @@ await shot(eje === 'corto' ? '03-reflujo' : '04-punta-centrada');
 if (eje === 'largo') {
   // 7. comprobar la posición con un lavado de suero (tecla J): microburbujas arrastradas por el flujo
   await page.keyboard.press('j');
-  await page.waitForFunction(() => window.app.flush && window.app.time - window.app.flush.t0 > 1.0, null, { timeout: 240000 });
+  await page.waitForFunction(() => (window.app.flush && window.app.time - window.app.flush.t0 > 1.0) || window.app.metrics.infiltrations > 0, null, { timeout: 240000 });
+  if (await page.evaluate(() => window.app.metrics.infiltrations > 0)) throw new Error('El lavado produjo una infiltración: la punta no estaba en la luz');
   await log('7. J (lavado con suero)');
   await shot('05-lavado-suero');
 }
