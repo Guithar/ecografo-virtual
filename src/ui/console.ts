@@ -318,8 +318,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   root.insertBefore(gNd.root, gImg.root);
   const update = () => {
     const m = app.mode;
-    const cannulate = m === 'cannulate' || (m === 'learn' && app.lesson?.lesson.mode === 'cannulate');
-    gNd.root.classList.toggle('hidden', !cannulate);
+    gNd.root.classList.toggle('hidden', !app.needleMode());
     gRoom.root.classList.toggle('hidden', m !== 'room');
     gDop.root.classList.toggle('hidden', m === 'room');
     gImg.root.classList.toggle('hidden', m === 'room');

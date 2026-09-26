@@ -268,7 +268,7 @@ export class Panels {
           <ol>
             <li>Arrastra la <b>sonda</b> sobre la piel o usa <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. Gira con <kbd>Q</kbd>/<kbd>E</kbd> y presiona con <kbd>X</kbd>.</li>
             <li>Pulsa <kbd>1</kbd> o <kbd>2</kbd> para ver el vaso en transversal o en longitudinal.</li>
-            <li>En <b>Punción</b>, coloca la aguja con <kbd>N</kbd>, avanza con <kbd>↑</kbd> y confirma con <kbd>Intro</kbd>.</li>
+            <li>Coloca la aguja con <kbd>N</kbd> (pasa al modo <b>Punción</b>), avanza con <kbd>↑</kbd> y confirma con <kbd>Intro</kbd>.</li>
             <li>En <b>Aprendizaje</b> tienes 8 lecciones guiadas que se corrigen solas.</li>
           </ol>
         </div>
@@ -311,7 +311,7 @@ export class Panels {
           </table>
           <h4>Aguja (modo Punción)</h4>
           <table class="tbl">
-            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda</td></tr>
+            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda (pasa al modo Punción)</td></tr>
             <tr><td><kbd>↑</kbd>/<kbd>↓</kbd> o rueda sobre la imagen</td><td>Avanzar / retirar</td></tr>
             <tr><td><kbd>←</kbd>/<kbd>→</kbd></td><td>Rumbo (dirección)</td></tr>
             <tr><td><kbd>RePág</kbd>/<kbd>AvPág</kbd></td><td>Ángulo de inserción</td></tr>

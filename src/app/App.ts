@@ -205,8 +205,28 @@ export class App {
       this.scene.applyOptions();
       if (!this.scene.useOperatorCam) this.scene.setPreset('procedimiento');
     }
-    document.getElementById('needleHud')!.classList.toggle('hidden', m !== 'cannulate' && !(m === 'learn' && this.lesson?.lesson.mode === 'cannulate'));
+    document.getElementById('needleHud')!.classList.toggle('hidden', !this.needleMode());
     this.consoleUpdate();
+  }
+
+  /** La aguja está disponible: modo Punción o lección de punción en curso. */
+  needleMode(): boolean {
+    return this.mode === 'cannulate' || (this.mode === 'learn' && this.lesson?.lesson.mode === 'cannulate');
+  }
+
+  /**
+   * Pasa al modo Punción si hace falta para usar la aguja (la N funciona desde cualquier modo).
+   * Dentro de una lección que no es de punción no cambia de modo, para no perder la lección, y avisa.
+   */
+  ensureNeedleMode(): boolean {
+    if (this.needleMode()) return true;
+    if (this.mode === 'learn' && this.lesson) {
+      this.toast('Esta lección no usa la aguja. Para puncionar, pasa al modo Punción.', 'warn');
+      return false;
+    }
+    this.setMode('cannulate');
+    this.toast('Modo Punción activado', 'info');
+    return true;
   }
 
   startLesson(id: string) {
@@ -731,10 +751,10 @@ export class App {
           if (s.flipLR) this.lessonFlags.flipSeen = 1;
           break;
         case 'enter':
-          if (this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate') this.confirmPuncture();
+          if (this.needleMode()) this.confirmPuncture();
           break;
         case 'n':
-          if (this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate') this.placeNeedleAuto();
+          if (this.ensureNeedleMode()) this.placeNeedleAuto();
           break;
         case 'v': {
           const order: CameraPreset[] = ['procedimiento', 'superior', 'lateral', 'corte', 'operador', 'sala'];
@@ -764,6 +784,13 @@ export class App {
     });
     window.addEventListener('blur', () => this.keys.clear());
     document.addEventListener('visibilitychange', () => this.keys.clear());
+    // un botón pulsado con el ratón suelta el foco: si no, Intro o Espacio (confirmar, congelar)
+    // también lo volverían a «pulsar» (p. ej. recentrar la sonda o abrir el informe).
+    // Con el teclado (pointerType vacío) se conserva el foco para la navegación accesible.
+    document.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement | null)?.closest?.('button');
+      if (b && (e as PointerEvent).pointerType) b.blur();
+    });
 
     // ratón en la vista 3D
     const v3 = document.getElementById('view3d')!;
@@ -846,7 +873,7 @@ export class App {
       'wheel',
       (e) => {
         if (e.shiftKey || e.altKey) return;
-        if ((this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate') && this.needle.placed) {
+        if (this.needleMode() && this.needle.placed) {
           e.preventDefault();
           this.advanceNeedle(e.deltaY < 0 ? 0.5 : -0.5);
         }
@@ -885,7 +912,7 @@ export class App {
     if (k.has('x')) p.press += 3 * dt * fine;
     if (k.has('z')) p.press -= 3 * dt * fine;
     const n = this.needle;
-    if (n.placed && (this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate')) {
+    if (n.placed && this.needleMode()) {
       if (k.has('arrowup')) this.advanceNeedle(4 * dt * fine);
       if (k.has('arrowdown')) this.advanceNeedle(-4 * dt * fine);
       if (!n.confirmed) {

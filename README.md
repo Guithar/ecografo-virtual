@@ -137,6 +137,7 @@ npm run build        # sitio estático en dist/ (p. ej. GitHub Pages)
 npm run build:single # un único HTML autocontenido en dist-single/ (abre sin servidor)
 npm run typecheck
 npm test             # pruebas unitarias (hemodinámica, modelo, aguja, métricas)
+node tests/e2e-puncion.mjs http://localhost:5173/  # punción completa con clics y teclado en Chromium (requiere Playwright)
 ```
 
 El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub Pages** en cada push a `main`. Antes de publicar, pasa las pruebas y compila. También se puede lanzar a mano desde la pestaña *Actions*.
@@ -166,7 +167,7 @@ Parámetros de URL útiles:
 | Rotar / inclinar / balancear | `Q` `E` / `R` `F` / `T` `G` |
 | Presión | `Z` `X` |
 | Vista transversal / longitudinal del vaso | `1` / `2` |
-| Colocar, avanzar y confirmar la aguja | `N`, `↑` `↓` (o rueda sobre la imagen), `Intro` |
+| Colocar, avanzar y confirmar la aguja | `N` (pasa al modo Punción), `↑` `↓` (o rueda sobre la imagen), `Intro` |
 | Ángulo / rumbo de la aguja | `RePág` `AvPág` / `←` `→` |
 | Profundidad / ganancia | `+` `−` / `[` `]` |
 | Color / PW / modo B / congelar | `C` / `P` / `B` / `Espacio` |
