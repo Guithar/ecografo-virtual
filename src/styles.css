@@ -1253,3 +1253,50 @@ kbd {
   top: 3px;
   right: 110px;
 }
+
+/* ---------- cine ---------- */
+.cine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: #05080b;
+  border-top: 1px solid #141c24;
+  font: 11px var(--mono);
+  color: #9fd3ff;
+}
+
+.cine input[type='range'] {
+  flex: 1;
+}
+
+.cine button {
+  padding: 0 7px;
+  font-size: 11px;
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+#usSvg .guide {
+  stroke: #7dffb2;
+  stroke-width: 1.3;
+  stroke-dasharray: 5 4;
+  fill: none;
+  opacity: 0.85;
+}
+
+#usSvg .guidept {
+  stroke: #7dffb2;
+  stroke-width: 1.4;
+  fill: none;
+}
+
+#usSvg .guidetxt {
+  fill: #b8ffd6;
+  font: 10.5px var(--font);
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 3px;
+}

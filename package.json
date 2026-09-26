@@ -10,7 +10,7 @@
     "build:single": "tsc --noEmit && vite build --mode single",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/"
+    "test": "vitest run"
   },
   "license": "MIT",
   "dependencies": {
@@ -20,6 +20,7 @@
     "@types/three": "^0.186.0",
     "typescript": "^5.9.3",
     "vite": "^8.3.1",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^3.2.7"
   }
 }

@@ -29,6 +29,7 @@ import { AnatomyModel, MAX_SEGMENTS, MAX_STRUCTS } from '../anatomy/model';
 import { KNOT_DX, KNOT_X0 } from '../anatomy/armShape';
 import {
   ANATOMY_FRAG,
+  COPY_FRAG,
   AXIAL_FRAG,
   BMODE_FRAG,
   COMPOSE_FRAG,
@@ -212,6 +213,15 @@ export class UltrasoundSim {
   private mCompose: RawShaderMaterial;
   private mAnat: RawShaderMaterial;
   highlight = -1;
+  // bucle cine: anillo de fotogramas de la imagen final
+  private cine: WebGLRenderTarget[] = [];
+  private cineTimes: number[] = [];
+  private cineHead = 0;
+  private cineCount = 0;
+  private lastCine = -1;
+  readonly cineSize = 64;
+  cineRate = 16; // Hz
+  private mCopy = mat(COPY_FRAG, { uTex: { value: null } });
 
   constructor(
     private renderer: WebGLRenderer,
@@ -585,12 +595,62 @@ export class UltrasoundSim {
     uc.uMapB.value = s.grayMap;
     this.fs.run(r, this.mCompose, this.rtDisplay);
 
+    // --- bucle cine ---
+    if (time - this.lastCine >= 1 / this.cineRate) {
+      this.lastCine = time;
+      this.pushCine(time);
+    }
+
     // --- H. anatomía ---
     this.mAnat.uniforms.uT1.value = this.rtTissue.textures[1];
     this.mAnat.uniforms.uHighlight.value = this.highlight;
     this.fs.run(r, this.mAnat, this.rtAnatomy);
 
     r.setRenderTarget(null);
+  }
+
+  private pushCine(t: number) {
+    if (this.cine.length < this.cineSize) {
+      const rt = new WebGLRenderTarget(this.nl, this.na, { type: UnsignedByteType, format: RGBAFormat, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: false });
+      rt.texture.colorSpace = SRGBColorSpace;
+      this.cine.push(rt);
+      this.cineTimes.push(0);
+    }
+    const rt = this.cine[this.cineHead];
+    if (rt.width !== this.nl || rt.height !== this.na) rt.setSize(this.nl, this.na);
+    this.mCopy.uniforms.uTex.value = this.rtDisplay.texture;
+    this.fs.run(this.renderer, this.mCopy, rt);
+    this.cineTimes[this.cineHead] = t;
+    this.cineHead = (this.cineHead + 1) % this.cineSize;
+    this.cineCount = Math.min(this.cineCount + 1, this.cineSize);
+  }
+
+  /** Número de fotogramas disponibles en el cine. */
+  get cineFrames(): number {
+    return this.cineCount;
+  }
+
+  /** Muestra el fotograma k del cine (0 = más antiguo, n−1 = más reciente) en la imagen congelada. */
+  showCine(k: number) {
+    if (!this.cineCount) return;
+    const n = this.cineCount;
+    const idx = (this.cineHead - n + Math.max(0, Math.min(n - 1, Math.round(k))) + this.cineSize) % this.cineSize;
+    this.mCopy.uniforms.uTex.value = this.cine[idx].texture;
+    this.fs.run(this.renderer, this.mCopy, this.rtDisplay);
+    this.renderer.setRenderTarget(null);
+  }
+
+  /** Tiempo relativo (s) del fotograma k respecto al más reciente. */
+  cineTime(k: number): number {
+    const n = this.cineCount;
+    if (!n) return 0;
+    const i = (this.cineHead - n + Math.max(0, Math.min(n - 1, Math.round(k))) + this.cineSize) % this.cineSize;
+    const last = (this.cineHead - 1 + this.cineSize) % this.cineSize;
+    return this.cineTimes[i] - this.cineTimes[last];
+  }
+
+  resetCine() {
+    this.cineCount = 0;
   }
 
   /** Lectura de la etiqueta de tejido en un píxel de la imagen (para depuración/pruebas). */

@@ -306,6 +306,8 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   gRoom.body.appendChild(rc3);
   root.appendChild(gRoom.root);
 
+  // orden: sonda, aguja, imagen, Doppler, sala (la aguja justo tras la sonda para verla sin desplazar)
+  root.insertBefore(gNd.root, gImg.root);
   const update = () => {
     const m = app.mode;
     const cannulate = m === 'cannulate' || (m === 'learn' && app.lesson?.lesson.mode === 'cannulate');

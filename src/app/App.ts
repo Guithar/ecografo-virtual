@@ -148,6 +148,7 @@ export class App {
     s.depth = cd.id === 'bc_obeso' ? 35 : 25;
     s.focus = cd.id === 'bc_obeso' ? 16 : 8;
     s.frozen = false;
+    this.sim.resetCine();
     this.resetNeedles();
     this.monitor.clearCalipers();
     this.metrics.reset();
@@ -238,6 +239,12 @@ export class App {
       if (Math.abs(base) > 60) base = 0;
     }
     this.probe.rot = kind === 'trans' ? base : base + 90;
+  }
+
+  /** Recalcula la pose de la sonda a partir de su estado (sin esperar al siguiente fotograma). */
+  updatePose() {
+    clampProbe(this.probe);
+    computePose(this.arm, this.probe, this.sim.pose);
   }
 
   /** Centra la sonda sobre el vaso de acceso (ayuda). */
@@ -606,6 +613,19 @@ export class App {
     const al = document.getElementById('anatLabels') as HTMLInputElement;
     al.addEventListener('change', () => (this.anatLabels = al.checked));
     document.querySelectorAll<HTMLButtonElement>('#tabButtons button').forEach((b) => b.addEventListener('click', () => this.panels.showTab(b.dataset.tab!)));
+    // bucle cine
+    const cs = document.getElementById('cineSlider') as HTMLInputElement;
+    const showCine = (k: number) => {
+      const n = this.sim.cineFrames;
+      const kk = Math.max(0, Math.min(n - 1, k));
+      cs.value = String(kk);
+      this.sim.showCine(kk);
+      document.getElementById('cineTime')!.textContent = `${this.sim.cineTime(kk).toFixed(2)} s`;
+    };
+    cs.addEventListener('input', () => showCine(parseInt(cs.value)));
+    document.getElementById('cinePrev')!.addEventListener('click', () => showCine(parseInt(cs.value) - 1));
+    document.getElementById('cineNext')!.addEventListener('click', () => showCine(parseInt(cs.value) + 1));
+    this.cineStep = (d: number) => showCine(parseInt(cs.value) + d);
     // maximizar paneles
     const grid = document.getElementById('grid')!;
     const addMax = (paneId: string, cls: string) => {
@@ -649,6 +669,12 @@ export class App {
         case ' ':
           s.frozen = !s.frozen;
           e.preventDefault();
+          break;
+        case ',':
+          if (s.frozen) this.cineStep(-1);
+          break;
+        case '.':
+          if (s.frozen) this.cineStep(1);
           break;
         case '+':
         case '=':
@@ -905,9 +931,30 @@ export class App {
         const crosses = Math.sign(entryIm.e) !== Math.sign(im.e) && Math.abs(im.e) > half + 0.8;
         this.metrics.frame(t, Math.max(0, adv), tipVisible, crosses, probeMove, this.accessStruct() ? this.collapseOf(this.accessStruct()!.def.id) : 0);
         this.monitor.flags.tipMarker = { u: im.u, w: im.w, visible: tipVisible, inPlane: Math.abs(im.e) < 3 };
+        // trayectoria prevista (línea recta de la aguja más allá de la punta)
+        const guide: { u: number; w: number; e: number }[] = [];
+        for (let k = 0; k <= 30; k++) {
+          const p = n.entry.clone().addScaledVector(n.dir, (k / 30) * (n.length + 6));
+          const g = this.sim.tissueToImage(p);
+          guide.push({ u: g.u, w: g.w, e: g.e });
+        }
+        this.monitor.flags.guide = guide;
       }
     }
-    if (!this.needle.placed) this.monitor.flags.tipMarker = null;
+    if (!this.needle.placed) {
+      this.monitor.flags.tipMarker = null;
+      if (this.needle.placed === false) this.monitor.flags.guide = null;
+    }
+    // guía también antes de insertar (aguja colocada sobre la piel)
+    if (this.needle.placed && this.needle.depth <= 0) {
+      const n = this.needle;
+      const guide: { u: number; w: number; e: number }[] = [];
+      for (let k = 0; k <= 30; k++) {
+        const g = this.sim.tissueToImage(n.entry.clone().addScaledVector(n.dir, (k / 30) * (n.length + 6)));
+        guide.push({ u: g.u, w: g.w, e: g.e });
+      }
+      this.monitor.flags.guide = guide;
+    }
     this.sim.needles = renders;
     this.sim.tent = tent;
 
@@ -972,6 +1019,8 @@ export class App {
 
   /** depuración: número máximo de fotogramas (?frames=N) */
   maxFrames = Infinity;
+  cineStep: (d: number) => void = () => {};
+  private wasFrozen = false;
   frameCount = 0;
 
   private anatLayout = { x: 0, y: 0, w: 1, h: 1 };
@@ -1037,6 +1086,19 @@ export class App {
           `Insertada ${Math.max(0, n.depth).toFixed(1)} mm\n` +
           `Estado: <b>${n.state}</b>${n.inVessel ? ' (' + (n.inVessel.def.short ?? n.inVessel.def.name) + ')' : ''}\n` +
           `Punta: ${im.w.toFixed(1)} mm prof · ${Math.abs(im.e).toFixed(1)} mm del plano`;
+      }
+    }
+    // barra de cine visible al congelar
+    const fr = this.sim.settings.frozen;
+    if (fr !== this.wasFrozen) {
+      this.wasFrozen = fr;
+      const bar = document.getElementById('cineBar')!;
+      bar.classList.toggle('hidden', !fr);
+      if (fr) {
+        const cs = document.getElementById('cineSlider') as HTMLInputElement;
+        cs.max = String(Math.max(0, this.sim.cineFrames - 1));
+        cs.value = cs.max;
+        document.getElementById('cineTime')!.textContent = '0.00 s';
       }
     }
     const clk = document.getElementById('monClock')!;

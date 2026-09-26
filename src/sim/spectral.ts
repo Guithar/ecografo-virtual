@@ -131,7 +131,7 @@ export class SpectralDoppler {
     for (let i = 0; i < SPEC_BINS; i++) {
       const sp = hist[i] > 0 ? hist[i] * -Math.log(Math.max(1e-6, Math.random())) : 0;
       const noise = 0.004 * -Math.log(Math.max(1e-6, Math.random()));
-      const v = (sp / Math.max(power, 1)) * 18 * g + noise * g;
+      const v = (sp / Math.max(power, 1)) * 7 * g + noise * g;
       const disp = Math.min(1, Math.max(0, (Math.log10(v + 1e-4) + 2.6) / 2.4));
       this.data[off + i] = disp;
       const vel = lo + ((i + 0.5) / SPEC_BINS) * span;

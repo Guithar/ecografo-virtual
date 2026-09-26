@@ -20,6 +20,8 @@ export interface Caliper {
 export interface MonitorFlags {
   labels: boolean;
   aids: boolean;
+  /** trayectoria prevista de la aguja en coordenadas de imagen (u, w, e) */
+  guide: { u: number; w: number; e: number }[] | null;
   tipMarker: { u: number; w: number; visible: boolean; inPlane: boolean } | null;
   caseName: string;
   hint: string;
@@ -44,7 +46,7 @@ export class Monitor {
   hover: { u: number; w: number } | null = null;
   onChange: (() => void) | null = null;
   onMeasure: ((c: Caliper) => void) | null = null;
-  flags: MonitorFlags = { labels: false, aids: false, tipMarker: null, caseName: '', hint: '' };
+  flags: MonitorFlags = { labels: false, aids: false, guide: null, tipMarker: null, caseName: '', hint: '' };
   private specImg: ImageData | null = null;
   private lastSvg = 0;
 
@@ -204,6 +206,34 @@ export class Monitor {
         px += 0;
       }
     }
+    // ayuda: trayectoria prevista de la aguja (segmentos en el grosor de corte) y cruce con el plano
+    const gd = this.flags.guide;
+    if (this.flags.aids && gd && gd.length > 1) {
+      let path = '';
+      let pen = false;
+      for (let i = 0; i < gd.length; i++) {
+        const g = gd[i];
+        const inPlane = Math.abs(g.e) < 1.2 && g.w > 0 && g.w < D && Math.abs(g.u) < W / 2;
+        if (inPlane) {
+          const [px, py] = this.toPx(g.u, g.w);
+          path += `${pen ? 'L' : 'M'}${px.toFixed(1)} ${py.toFixed(1)} `;
+          pen = true;
+        } else pen = false;
+        if (i > 0) {
+          const a = gd[i - 1];
+          if ((a.e < 0) !== (g.e < 0)) {
+            const f = a.e / (a.e - g.e);
+            const cu = a.u + (g.u - a.u) * f;
+            const cw = a.w + (g.w - a.w) * f;
+            if (cw > 0 && cw < D && Math.abs(cu) < W / 2) {
+              const [px, py] = this.toPx(cu, cw);
+              parts.push(`<g><circle cx="${px}" cy="${py}" r="6" class="guidept"/><path d="M${px - 10} ${py} h6 M${px + 4} ${py} h6 M${px} ${py - 10} v6 M${px} ${py + 4} v6" class="guidept"/><text x="${px + 12}" y="${py - 8}" class="guidetxt">cruce de la aguja con el plano</text></g>`);
+            }
+          }
+        }
+      }
+      if (path) parts.push(`<path d="${path}" class="guide"/>`);
+    }
     // ayuda: posición real de la punta
     const tm = this.flags.tipMarker;
     if (this.flags.aids && tm) {
@@ -344,12 +374,12 @@ export class Monitor {
     g.fillStyle = '#9fc3dc';
     g.font = '11px system-ui, sans-serif';
     const step = niceStep((hi - lo) / 5);
-    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    for (let v = Math.ceil(lo / step) * step; v <= hi - step * 0.3; v += step) {
       const yy = yOf(v);
       g.fillRect(ml + gw, yy, 5, 1);
       g.fillText(`${v.toFixed(0)}`, ml + gw + 8, yy + 4);
     }
-    g.fillText('cm/s', ml + gw + 8, 14);
+    g.fillText('cm/s', ml + gw + 8, ch - 2);
     // envolvente (traza automática)
     if (sp.col > 4) {
       g.strokeStyle = 'rgba(80, 220, 255, 0.85)';

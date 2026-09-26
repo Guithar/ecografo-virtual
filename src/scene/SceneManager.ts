@@ -138,7 +138,7 @@ export function placeDefaults(cfg: RoomConfig) {
 export class SceneManager {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(40, 1, 0.01, 50);
-  readonly opCamera = new PerspectiveCamera(60, 1, 0.02, 30);
+  readonly opCamera = new PerspectiveCamera(72, 1, 0.02, 30);
   controls: OrbitControls;
   useOperatorCam = false;
   readonly armRoot = new Group();
@@ -536,7 +536,8 @@ export class SceneManager {
     // cámara del operador
     const eye = op.eye();
     this.opCamera.position.copy(eye);
-    const tgt = this.probeWorld();
+    // mirada entre el sitio de punción y la pantalla (ambos en el campo visual)
+    const tgt = this.probeWorld().lerp(this.room.cart.screenCenter(), 0.38);
     this.opCamera.lookAt(tgt.x, tgt.y, tgt.z);
     this.opCamera.updateMatrixWorld();
   }

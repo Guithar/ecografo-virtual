@@ -934,3 +934,17 @@ void main() {
   o0 = vec4(c, 1.0);
 }
 `;
+
+// -------------------------------------------------------------------------------------------------
+// Copia de textura (bucle cine)
+// -------------------------------------------------------------------------------------------------
+export const COPY_FRAG = /* glsl */ `
+precision highp float;
+precision highp sampler2D;
+in vec2 vUv;
+layout(location = 0) out vec4 o0;
+uniform sampler2D uTex;
+void main() {
+  o0 = texelFetch(uTex, ivec2(gl_FragCoord.xy), 0);
+}
+`;
