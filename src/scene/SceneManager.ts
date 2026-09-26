@@ -39,7 +39,7 @@ import type { AnatomyModel } from '../anatomy/model';
 import { buildSkinGeometry, fasciaTube } from './armMesh';
 import { AnatomyMeshes, buildAnatomyMeshes, FlowParticles } from './anatomyMeshes';
 import { buildNeedle, buildProbe, NeedleMesh, ProbeMesh } from './instruments';
-import { armBoard, armMatrix, armPlacement, ArmPlacement, buildRoom, Room, skinMaterial, SKIN_TONES } from './room';
+import { armBoard, armMatrix, armPlacement, ArmPlacement, buildRoom, IndentUniforms, patchIndent, Room, skinMaterial, SKIN_TONES } from './room';
 import type { ProbePose } from '../sim/UltrasoundSim';
 
 export interface ViewOptions {
@@ -146,6 +146,7 @@ export class SceneManager {
   room!: Room;
   skin!: Mesh;
   skinMat: MeshPhysicalMaterial;
+  indent: IndentUniforms;
   fascia!: Mesh;
   anat!: AnatomyMeshes;
   flow!: FlowParticles;
@@ -213,7 +214,16 @@ export class SceneManager {
     this.controls.maxDistance = 6;
     this.controls.zoomSpeed = 1.1;
 
+    this.indent = {
+      uIndF: { value: new Vector3() },
+      uIndL: { value: new Vector3(1, 0, 0) },
+      uIndE: { value: new Vector3(0, 0, 1) },
+      uIndB: { value: new Vector3(0, -1, 0) },
+      uIndPress: { value: 0 },
+      uIndHalf: { value: new Vector3(20, 6.5, 8) },
+    };
     this.skinMat = skinMaterial('III');
+    patchIndent(this.skinMat, this.indent);
     this.skinMat.transparent = true;
 
     this.armRoot.add(this.armGroup);
@@ -260,6 +270,7 @@ export class SceneManager {
       new MeshPhysicalMaterial({ color: '#b04a42', roughness: 0.55, transparent: true, opacity: 0.28, depthWrite: false, side: DoubleSide, sheen: 0.5, sheenColor: new Color('#ff9a8a') }),
     );
     this.fascia.renderOrder = 15;
+    patchIndent(this.fascia.material as MeshPhysicalMaterial, this.indent);
     this.armGroup.add(this.fascia);
     this.rebuildAnatomy();
     this.applyOptions();
@@ -272,6 +283,14 @@ export class SceneManager {
       this.anat.group.traverse((o) => (o as Mesh).geometry?.dispose());
     }
     this.anat = buildAnatomyMeshes(model);
+    const patched = new Set<unknown>();
+    this.anat.group.traverse((o) => {
+      const m = (o as Mesh).material as MeshPhysicalMaterial | undefined;
+      if (m && !patched.has(m)) {
+        patched.add(m);
+        patchIndent(m, this.indent);
+      }
+    });
     this.armGroup.add(this.anat.group);
     if (this.flow) {
       this.armGroup.remove(this.flow.points);
@@ -356,6 +375,13 @@ export class SceneManager {
     this.probe.group.matrixAutoUpdate = false;
     this.probe.group.matrix.copy(m);
     this.probe.group.matrixWorldNeedsUpdate = true;
+    // indentación de la piel
+    this.indent.uIndF.value.copy(pose.F);
+    this.indent.uIndL.value.copy(L);
+    this.indent.uIndE.value.copy(pose.E);
+    this.indent.uIndB.value.copy(Bv);
+    this.indent.uIndPress.value = pose.press;
+    this.indent.uIndHalf.value.set(pose.width / 2 + 2, 6.5, 10);
     // plano de imagen
     const W = pose.width;
     const pm = new Matrix4().makeBasis(L.clone().multiplyScalar(W), Bv.clone().multiplyScalar(depth), new Vector3().crossVectors(L, Bv));

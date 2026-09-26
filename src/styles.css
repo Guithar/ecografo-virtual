@@ -136,7 +136,11 @@ select {
 
 #topbar > * {
   min-width: 0;
-  flex-shrink: 1;
+  flex-shrink: 0;
+}
+
+#topbar > .case-sel {
+  flex: 1 1 auto;
 }
 
 .brand {
@@ -200,7 +204,6 @@ select {
 #modeTabs {
   display: flex;
   gap: 4px;
-  margin-left: auto;
 }
 
 #modeTabs button {

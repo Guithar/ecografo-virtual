@@ -4,6 +4,7 @@
  * Unidades: metros. Paciente mirando hacia +Z; +X = lado izquierdo del paciente; Y arriba.
  */
 import {
+  type Material,
   CanvasTexture,
   CapsuleGeometry,
   CircleGeometry,
@@ -38,6 +39,46 @@ export const SKIN_TONES: Record<string, string> = {
   V: '#8d5a3a',
   VI: '#5e3a26',
 };
+
+/** Uniformes de la indentación de la piel por la sonda (coordenadas del brazo, mm). */
+export interface IndentUniforms {
+  uIndF: { value: Vector3 };
+  uIndL: { value: Vector3 };
+  uIndE: { value: Vector3 };
+  uIndB: { value: Vector3 };
+  uIndPress: { value: number };
+  uIndHalf: { value: Vector3 };
+}
+
+/**
+ * Deforma una malla del brazo según la presión de la sonda, con el mismo modelo que el simulador
+ * ecográfico: desplazamiento a lo largo del haz = presión·exp(−profundidad/14 mm) bajo la huella.
+ */
+export function patchIndent(m: Material, indent: IndentUniforms) {
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    Object.assign(sh.uniforms, indent);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+uniform vec3 uIndF; uniform vec3 uIndL; uniform vec3 uIndE; uniform vec3 uIndB; uniform float uIndPress; uniform vec3 uIndHalf;`)
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+{
+  vec3 rel = transformed - uIndF;
+  float lu = dot(rel, uIndL);
+  float le = dot(rel, uIndE);
+  float lb = dot(rel, uIndB);
+  float fu = 1.0 - smoothstep(uIndHalf.x, uIndHalf.x + 10.0, abs(lu));
+  float fe = 1.0 - smoothstep(uIndHalf.y, uIndHalf.y + 10.0, abs(le));
+  float d = uIndPress * exp(-max(lb, 0.0) / 14.0) * fu * fe;
+  if (lb > -uIndHalf.z) transformed += uIndB * d;
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => 'indent';
+}
 
 export function skinMaterial(tone = 'III'): MeshPhysicalMaterial {
   const m = new MeshPhysicalMaterial({
