@@ -140,6 +140,35 @@ describe('aguja', () => {
     }
     expect(events).toContain('backwall');
   });
+
+  it('cruzar el rumbo ±180° gira por el camino corto (sin barrido de 360°)', () => {
+    const { arm, model } = build('rc_madura');
+    const n = new Needle('venosa');
+    n.place(arm, 120, 40, 179, 30);
+    const ids = new Set(['fav']);
+    n.depth = 4;
+    n.update(model, 0, ids);
+    const tip0 = n.tip.clone();
+    n.heading = -179; // 2° de giro real
+    n.update(model, 0.1, ids);
+    expect(n.tip.distanceTo(tip0)).toBeLessThan(0.3);
+    expect(n.redirections).toBe(0);
+    expect(n.heading).toBeCloseTo(-179, 5);
+  });
+
+  it('el nervio cubital no atraviesa el epicóndilo en ningún caso', () => {
+    for (const c of CASES) {
+      const arm = new ArmShape(undefined, c.armOpts);
+      const m = new AnatomyModel(arm, c.build(arm));
+      const nerve = m.byId('n_cubital');
+      const epi = m.byId('humero_epi');
+      if (!nerve || !epi) continue;
+      for (const s of nerve.samples) {
+        const q = m.query(s.p);
+        expect(q.struct?.def.kind).not.toBe('bone');
+      }
+    }
+  });
 });
 
 describe('métricas', () => {

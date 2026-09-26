@@ -381,8 +381,18 @@ export class AnatomyModel {
 
   /** Cambia el radio de una estructura (p. ej. hematoma que crece) sin recalcular la trayectoria. */
   setUniformRadius(st: Structure, r: number) {
-    for (const s of st.samples) s.r = r;
-    st.maxR = r;
+    let maxR = 0;
+    st.bbMin.set(Infinity, Infinity, Infinity);
+    st.bbMax.set(-Infinity, -Infinity, -Infinity);
+    for (const s of st.samples) {
+      s.r = r;
+      maxR = Math.max(maxR, r + s.w + s.wallExtra);
+      st.bbMin.min(s.p);
+      st.bbMax.max(s.p);
+    }
+    st.maxR = maxR;
+    st.bbMin.subScalar(maxR * 1.6 + 1);
+    st.bbMax.addScalar(maxR * 1.6 + 1);
   }
 
   /** Actualiza el estado hemodinámico dependiente del tiempo. */
@@ -583,11 +593,14 @@ export class AnatomyModel {
     return res;
   }
 
-  /** Estructuras (con índice de muestra) cuya línea central cruza un plano (para etiquetas). */
-  planeCrossings(F: Vector3, L: Vector3, B: Vector3, E: Vector3, W: number, D: number) {
+  /**
+   * Estructuras cuya línea central cruza un plano (para etiquetas). `u` es lateral y `w` la
+   * coordenada a lo largo del haz desde F en el tejido sin deformar (no la profundidad de imagen).
+   */
+  planeCrossings(F: Vector3, L: Vector3, B: Vector3, E: Vector3, W: number, D: number, includeHidden = false) {
     const res: { st: Structure; u: number; w: number; along: boolean }[] = [];
     for (const st of this.structures) {
-      if (st.def.hideLabel) continue;
+      if (st.def.hideLabel && !includeHidden) continue;
       const sm = st.samples;
       let inRun: number[] = [];
       const flush = () => {

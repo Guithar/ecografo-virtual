@@ -427,8 +427,20 @@ export class UltrasoundSim {
     const lam = (this.mTissue.uniforms.uCompLambda.value as number) || 14;
     let w = b - press;
     if (dloc < -lift) {
-      // hueco con gel/aire: el tejido sólo se eleva `lift` (aproximación)
-      w = b - press - lift;
+      // hueco con gel/aire: inversa exacta de imageToTissue, w + lift·exp(−max(w−gap,0)/λ) = b − press
+      const gap = -dloc - lift;
+      const rhs = b - press;
+      w = rhs - lift;
+      if (w > gap) {
+        let x = w;
+        for (let i = 0; i < 6; i++) {
+          const ex = Math.exp(-(x - gap) / lam);
+          const f = x + lift * ex - rhs;
+          const df = 1 - (lift / lam) * ex;
+          x -= f / df;
+        }
+        w = Math.max(gap, x);
+      }
     } else if (dloc !== 0) {
       // resolver w − dloc·exp(−w/λ) = b − press (Newton)
       let x = Math.max(0, w + dloc);
@@ -442,6 +454,13 @@ export class UltrasoundSim {
     }
     out.copy(F).addScaledVector(L, u).addScaledVector(E, e).addScaledVector(B, press + w);
     return { u, w, e, p: out };
+  }
+
+  /** Punto del plano en coordenadas de tejido (u lateral, b a lo largo del haz desde la cara de la sonda) → imagen. */
+  planeToImage(u: number, b: number): { u: number; w: number } {
+    const { F, L, B } = this.pose;
+    const r = this.tissueToImage(tmp3b.copy(F).addScaledVector(L, u).addScaledVector(B, b), tmp3c);
+    return { u: r.u, w: r.w };
   }
 
   /** Inversa: punto de la imagen (u, w) → punto del tejido sin deformar. */
@@ -462,7 +481,8 @@ export class UltrasoundSim {
   /** Grosor de corte (FWHM, mm) a una profundidad. */
   sliceThickness(w: number): number {
     const s = this.settings;
-    return s.elevFWHM * Math.sqrt(1 + ((w - elevFocus(s)) / 8.7) ** 2);
+    // mismo modelo que el shader de tejido (uElevFWHM incluye el factor de frecuencia)
+    return s.elevFWHM * (12 / Math.max(6, s.freq)) ** 0.5 * Math.sqrt(1 + ((w - elevFocus(s)) / 8.7) ** 2);
   }
 
   /** Ejecuta la tubería completa. */
@@ -732,3 +752,5 @@ export const SOFT_LIFT = 1.8;
 const tmp1 = new Vector3();
 const tmp2 = new Vector3();
 const tmp3 = new Vector3();
+const tmp3b = new Vector3();
+const tmp3c = new Vector3();

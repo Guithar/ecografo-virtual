@@ -21,6 +21,8 @@ import { Panels } from '../ui/panels';
 
 export type AppMode = 'explore' | 'cannulate' | 'room' | 'learn';
 
+const CLEAR_COLOR = new Color('#0b1117');
+
 interface Hematoma {
   st: Structure;
   t0: number;
@@ -236,8 +238,8 @@ export class App {
       const f = this.arm.skinFrame(this.probe.x, this.probe.theta);
       const ang = (Math.atan2(t.dot(f.Tt), t.dot(f.Tx)) * 180) / Math.PI; // ángulo del vaso respecto a Tx
       // transversal: L ⟂ vaso → L = Tt·cos(rot)+Tx·sin(rot) ⟂ t → rot = ang (L ∥ t para longitudinal: rot = ang + 90)... ver computePose
-      base = -ang;
-      if (Math.abs(base) > 60) base = 0;
+      // el sentido del vaso es indiferente para orientar la sonda: reducir a [−90°, 90°]
+      base = ((((-ang + 90) % 180) + 180) % 180) - 90;
     }
     this.probe.rot = kind === 'trans' ? base : base + 90;
   }
@@ -394,6 +396,10 @@ export class App {
       this.toast('No hay aguja insertada', 'warn');
       return;
     }
+    if (n.confirmed) {
+      this.toast('Esta punción ya está evaluada. Retira la aguja para repetir.', 'info');
+      return;
+    }
     const checks: FinalCheck[] = [];
     const access = this.accessIds();
     const inAccess = n.state === 'luz' && !!n.inVessel && access.has(n.inVessel.def.id);
@@ -476,13 +482,14 @@ export class App {
     const st = this.model.byId(id);
     if (!st) return null;
     const pose = this.sim.pose;
-    const cr = this.model.planeCrossings(pose.F, pose.L, pose.B, pose.E, pose.width, this.sim.settings.depth).filter((c) => c.st === st);
+    const cr = this.model.planeCrossings(pose.F, pose.L, pose.B, pose.E, pose.width, this.sim.settings.depth + pose.press, true).filter((c) => c.st === st);
     if (!cr.length) return null;
     cr.sort((a, b) => Math.abs(a.u) - Math.abs(b.u));
     const c = cr[0];
-    const im = this.sim.tissueToImage(this.sim.imageToTissue(c.u, c.w));
-    const { idx } = this.model.nearestSample(st, this.sim.imageToTissue(c.u, c.w));
-    return { u: c.u, w: im.w, r: st.samples[idx].r * st.dyn.radiusScale, along: c.along };
+    const im = this.sim.planeToImage(c.u, c.w);
+    const p = pose.F.clone().addScaledVector(pose.L, c.u).addScaledVector(pose.B, c.w);
+    const { idx } = this.model.nearestSample(st, p);
+    return { u: im.u, w: im.w, r: st.samples[idx].r * st.dyn.radiusScale, along: c.along };
   }
 
   collapseOf(id: string): number {
@@ -647,6 +654,8 @@ export class App {
     document.getElementById('mobileInfo')!.addEventListener('click', () => grid.classList.toggle('show-info'));
     const mx = new URLSearchParams(location.search).get('max');
     if (mx) grid.classList.add(`max-${mx}`);
+    // los desplegables de la barra superior y de las capas sueltan el foco tras elegir
+    for (const s of document.querySelectorAll<HTMLSelectElement>('#topbar select, #pane3d select')) s.addEventListener('change', () => s.blur());
   }
 
   private bindInput() {
@@ -654,13 +663,19 @@ export class App {
       const a = document.activeElement;
       return !!a && (a.tagName === 'INPUT' || a.tagName === 'SELECT' || a.tagName === 'TEXTAREA') && (a as HTMLInputElement).type !== 'range' && (a as HTMLInputElement).type !== 'checkbox';
     };
+    // teclas que pueden repetirse al mantenerlas pulsadas; el resto son conmutadores (una vez por pulsación)
+    const repeatable = new Set(['+', '=', '-', '[', ']', ',', '.']);
+    const held = new Set(['w', 'a', 's', 'd', 'q', 'e', 'r', 'f', 't', 'g', 'z', 'x', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown']);
     window.addEventListener('keydown', (e) => {
       if (isTyping()) return;
+      // no interferir con atajos del navegador o del sistema (Ctrl+C, Cmd+R…)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key.toLowerCase();
-      this.keys.add(k);
+      if (held.has(k)) this.keys.add(k);
       if (e.shiftKey) this.keys.add('shift');
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown', ' '].includes(k)) e.preventDefault();
+      if (e.repeat && !repeatable.has(k)) return;
       const s = this.sim.settings;
-      const handled = true;
       switch (k) {
         case '1':
           this.setProbeView('trans');
@@ -670,7 +685,6 @@ export class App {
           break;
         case ' ':
           s.frozen = !s.frozen;
-          e.preventDefault();
           break;
         case ',':
           if (s.frozen) this.cineStep(-1);
@@ -740,10 +754,8 @@ export class App {
           this.monitor.tool = 'none';
           break;
         default:
-          if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown'].includes(k)) e.preventDefault();
           break;
       }
-      void handled;
       this.consoleUpdate();
     });
     window.addEventListener('keyup', (e) => {
@@ -751,6 +763,7 @@ export class App {
       if (!e.shiftKey) this.keys.delete('shift');
     });
     window.addEventListener('blur', () => this.keys.clear());
+    document.addEventListener('visibilitychange', () => this.keys.clear());
 
     // ratón en la vista 3D
     const v3 = document.getElementById('view3d')!;
@@ -931,7 +944,7 @@ export class App {
         const tipVisible = inImg && Math.abs(im.e) < half;
         const entryIm = this.sim.tissueToImage(n.entry);
         const crosses = Math.sign(entryIm.e) !== Math.sign(im.e) && Math.abs(im.e) > half + 0.8;
-        this.metrics.frame(t, Math.max(0, adv), tipVisible, crosses, probeMove, this.accessStruct() ? this.collapseOf(this.accessStruct()!.def.id) : 0);
+        this.metrics.frame(t, Math.max(0, adv), tipVisible, crosses, probeMove, this.accessCollapse);
         this.monitor.flags.tipMarker = { u: im.u, w: im.w, visible: tipVisible, inPlane: Math.abs(im.e) < 3 };
         // trayectoria prevista (línea recta de la aguja más allá de la punta)
         const guide: { u: number; w: number; e: number }[] = [];
@@ -950,6 +963,7 @@ export class App {
     // guía también antes de insertar (aguja colocada sobre la piel)
     if (this.needle.placed && this.needle.depth <= 0) {
       const n = this.needle;
+      this.monitor.flags.tipMarker = null;
       const guide: { u: number; w: number; e: number }[] = [];
       for (let k = 0; k <= 30; k++) {
         const g = this.sim.tissueToImage(n.entry.clone().addScaledVector(n.dir, (k / 30) * (n.length + 6)));
@@ -966,7 +980,7 @@ export class App {
       this.model.setUniformRadius(h.st, r);
       const mesh = this.scene.anat.meshes.get(h.st);
       if (mesh) {
-        const s = r / 0.8;
+        const s = r / ((mesh.userData.baseR as number) || 0.8);
         mesh.scale.setScalar(s);
         mesh.position.copy(h.center).multiplyScalar(1 - s);
       }
@@ -988,7 +1002,7 @@ export class App {
     r.setScissorTest(false);
     r.setRenderTarget(null);
     r.setViewport(0, 0, window.innerWidth, window.innerHeight);
-    r.setClearColor(new Color('#0b1117'), 1);
+    r.setClearColor(CLEAR_COLOR, 1);
     r.clear();
     const v3 = elementRect(document.getElementById('view3d')!, this.canvas);
     if (v3) this.scene.render(v3);
@@ -1001,11 +1015,14 @@ export class App {
     // superposiciones
     this.monitor.flags.labels = this.labels;
     this.monitor.flags.aids = this.aids;
-    this.monitor.updateOverlay(t);
+    this.monitor.updateOverlay();
     this.monitor.drawSpectral();
     this.uiTimer += dt;
     if (this.uiTimer > 0.2) {
       this.uiTimer = 0;
+      // colapso del vaso de acceso (métricas): recalculado a 5 Hz, no en cada fotograma
+      const acc = this.accessStruct();
+      this.accessCollapse = acc ? this.collapseOf(acc.def.id) : 0;
       this.updateHud();
       this.consoleUpdate();
       this.panels.tick();
@@ -1026,6 +1043,8 @@ export class App {
   frameCount = 0;
 
   private anatLayout = { x: 0, y: 0, w: 1, h: 1 };
+  private anatLabelTime = 0;
+  private accessCollapse = 0;
 
   private renderAnatomy(rect: { x: number; y: number; w: number; h: number }, el: HTMLElement) {
     const W = this.sim.pose.width;
@@ -1039,17 +1058,19 @@ export class App {
     this.anatView.render(this.renderer, rect, img, this.sim.anatomyTexture, this.sim.settings.flipLR);
     // etiquetas
     const svg = document.getElementById('anatSvg')!;
-    if (this.uiTimer > 0.19 || !svg.childElementCount) {
+    const now = performance.now();
+    if (now - this.anatLabelTime > 200 || !svg.childElementCount) {
+      this.anatLabelTime = now;
       const parts: string[] = [];
       if (this.anatLabels) {
         const pose = this.sim.pose;
-        const cr = this.model.planeCrossings(pose.F, pose.L, pose.B, pose.E, W, D);
+        const cr = this.model.planeCrossings(pose.F, pose.L, pose.B, pose.E, W, D + pose.press);
         const used: [number, number][] = [];
         for (const c of cr) {
           const name = c.st.def.short ?? c.st.def.name;
           if (!name) continue;
-          const im = this.sim.tissueToImage(this.sim.imageToTissue(c.u, c.w));
-          let fx = (c.u + W / 2) / W;
+          const im = this.sim.planeToImage(c.u, c.w);
+          let fx = (im.u + W / 2) / W;
           if (this.sim.settings.flipLR) fx = 1 - fx;
           const px = img.x + fx * w;
           let py = img.y + (Math.max(0.5, Math.min(D - 0.5, im.w)) / D) * h;

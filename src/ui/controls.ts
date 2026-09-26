@@ -137,7 +137,11 @@ export function field(label: string, get: Getter<number>, set: Setter<number>, o
 export function selectBox<T extends string>(opts: [T, string][], get: Getter<T>, set: Setter<T>, title = ''): Bound {
   const s = el('select', { title }) as HTMLSelectElement;
   for (const [v, l] of opts) s.appendChild(el('option', { value: v }, l));
-  s.addEventListener('change', () => set(s.value as T));
+  s.addEventListener('change', () => {
+    set(s.value as T);
+    // liberar el foco para que los atajos de teclado vuelvan a funcionar
+    s.blur();
+  });
   const update = () => {
     if (document.activeElement !== s) s.value = get();
   };

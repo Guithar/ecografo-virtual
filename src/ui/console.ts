@@ -237,7 +237,15 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   const adv = el('div', { class: 'crow' });
   adv.appendChild(hold('▲ Avanzar', 'arrowup', 'Avanzar la aguja (↑)'));
   adv.appendChild(hold('▼ Retirar', 'arrowdown', 'Retirar la aguja (↓)'));
-  add(adv, button('⇄', () => (app.needle.heading = app.needle.heading > 0 ? app.needle.heading - 180 : app.needle.heading + 180), { title: 'Invertir la dirección (anterógrada/retrógrada)' }));
+  add(adv, button('⇄', () => {
+    const n = app.needle;
+    // invertir el rumbo sólo con la aguja fuera de la piel: dentro del tejido sería un barrido de 180°
+    if (n.placed && n.depth > 0) {
+      app.toast('Retira la aguja de la piel para invertir su dirección', 'warn');
+      return;
+    }
+    n.heading = n.heading > 0 ? n.heading - 180 : n.heading + 180;
+  }, { title: 'Invertir la dirección (anterógrada/retrógrada), con la aguja fuera de la piel' }));
   nCol2.appendChild(adv);
   const cf = el('div', { class: 'crow' });
   add(cf, button('Confirmar punción', () => app.confirmPuncture(), { cls: 'primary', title: 'Evaluar la posición final (Intro)' }));

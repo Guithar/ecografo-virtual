@@ -231,8 +231,9 @@ export const NERVES = (): StructDef[] => [
       { x: 50, th: -61, d: 4.5, ref: 'fascia', r: 1.5 },
       { x: 120, th: -58, d: 9, ref: 'fascia', r: 1.6 },
       { x: 200, th: -75, d: 10, ref: 'fascia', r: 1.7 },
-      { x: 250, th: -100, d: 5, ref: 'fascia', r: 1.8 },
-      { x: 275, th: -125, d: 3, ref: 'fascia', r: 1.9 },
+      // túnel cubital: por detrás del epicóndilo medial, sin atravesar el hueso
+      { x: 250, th: -112, d: 3, ref: 'fascia', r: 1.8 },
+      { x: 275, th: -135, d: 2, ref: 'fascia', r: 1.9 },
       { x: 330, th: -110, d: 6, ref: 'fascia', r: 1.9 },
       { x: 450, th: -95, d: 8, ref: 'fascia', r: 2.0 },
       { x: 575, th: -92, d: 12, ref: 'fascia', r: 2.1 },

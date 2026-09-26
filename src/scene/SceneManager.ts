@@ -15,10 +15,12 @@ import {
   HemisphereLight,
   LineBasicMaterial,
   LineSegments,
+  Material,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
+  Object3D,
   PCFShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
@@ -263,7 +265,7 @@ export class SceneManager {
     this.armGroup.add(this.skin);
     if (this.fascia) {
       this.armGroup.remove(this.fascia);
-      this.fascia.geometry.dispose();
+      disposeObject(this.fascia);
     }
     this.fascia = new Mesh(
       fasciaTube(model.arm),
@@ -280,7 +282,7 @@ export class SceneManager {
     const model = this.model;
     if (this.anat) {
       this.armGroup.remove(this.anat.group);
-      this.anat.group.traverse((o) => (o as Mesh).geometry?.dispose());
+      disposeObject(this.anat.group);
     }
     this.anat = buildAnatomyMeshes(model);
     const patched = new Set<unknown>();
@@ -430,7 +432,10 @@ export class SceneManager {
 
   /** Reemplaza una aguja (cambio de calibre o rol). */
   resetNeedles() {
-    for (const n of this.needles) this.armGroup.remove(n.group);
+    for (const n of this.needles) {
+      this.armGroup.remove(n.group);
+      disposeObject(n.group);
+    }
     this.needles = [];
   }
 
@@ -578,6 +583,22 @@ export class SceneManager {
     r.setScissor(rect.x, rect.y, rect.w, rect.h);
     r.setScissorTest(true);
     r.render(this.scene, cam);
+  }
+}
+
+/** Libera geometrías, materiales y sus texturas de un subárbol que ya no se usa. */
+export function disposeObject(root: Object3D) {
+  const mats = new Set<Material>();
+  root.traverse((o) => {
+    const m = o as Mesh;
+    m.geometry?.dispose();
+    const mm = m.material as Material | Material[] | undefined;
+    if (Array.isArray(mm)) mm.forEach((x) => mats.add(x));
+    else if (mm) mats.add(mm);
+  });
+  for (const m of mats) {
+    for (const v of Object.values(m)) if (v instanceof Texture) v.dispose();
+    m.dispose();
   }
 }
 

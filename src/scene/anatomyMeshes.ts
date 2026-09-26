@@ -187,6 +187,8 @@ export function buildAnatomyMeshes(model: AnatomyModel): AnatomyMeshes {
     const mesh = new Mesh(geo, matFor(kind));
     mesh.name = st.def.id;
     mesh.userData.structure = st;
+    // radio con el que se construyó la malla (el hematoma que crece se escala respecto a él)
+    mesh.userData.baseR = st.samples[0]?.r ?? 1;
     mesh.castShadow = false;
     mesh.receiveShadow = false;
     const g = st.def.group ?? kind;

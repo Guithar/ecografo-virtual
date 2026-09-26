@@ -48,7 +48,10 @@ export class Monitor {
   onMeasure: ((c: Caliper) => void) | null = null;
   flags: MonitorFlags = { labels: false, aids: false, guide: null, tipMarker: null, caseName: '', hint: '' };
   private specImg: ImageData | null = null;
+  private specSig = '';
   private lastSvg = 0;
+  /** fuerza el redibujado de la superposición en el siguiente fotograma (interacción del puntero) */
+  private dirty = false;
 
   constructor(
     root: HTMLElement,
@@ -107,10 +110,12 @@ export class Monitor {
     this.iv.render(r, rect, this.img, this.sim.displayTexture, this.sim.settings.flipLR);
   }
 
-  /** Actualiza la superposición SVG y los textos (limitado a ~25 Hz). */
-  updateOverlay(now: number, force = false) {
-    if (!force && now - this.lastSvg < 0.04) return;
+  /** Actualiza la superposición SVG y los textos (limitado a ~25 Hz en tiempo real, también con la imagen congelada). */
+  updateOverlay(force = false) {
+    const now = performance.now();
+    if (!force && !this.dirty && now - this.lastSvg < 40) return;
     this.lastSvg = now;
+    this.dirty = false;
     const s = this.sim.settings;
     const D = s.depth;
     const W = this.sim.pose.width;
@@ -192,13 +197,13 @@ export class Monitor {
     // etiquetas anatómicas
     if (this.flags.labels) {
       const pose = this.sim.pose;
-      const cross = this.getModel().planeCrossings(pose.F, pose.L, pose.B, pose.E, W, D);
+      const cross = this.getModel().planeCrossings(pose.F, pose.L, pose.B, pose.E, W, D + pose.press);
       const used: [number, number][] = [];
       for (const c of cross) {
         const name = c.st.def.short ?? c.st.def.name;
         if (!name) continue;
-        const im = this.sim.tissueToImage(this.sim.imageToTissue(c.u, c.w), undefined);
-        let [px, py] = this.toPx(c.u, Math.max(0.5, Math.min(D - 0.5, im.w)));
+        const im = this.sim.planeToImage(c.u, c.w);
+        let [px, py] = this.toPx(im.u, Math.max(0.5, Math.min(D - 0.5, im.w)));
         // evitar solapes
         for (const [ux, uy] of used) if (Math.abs(ux - px) < 60 && Math.abs(uy - py) < 12) py += 13;
         used.push([px, py]);
@@ -209,6 +214,7 @@ export class Monitor {
     }
     // ayuda: trayectoria prevista de la aguja (segmentos en el grosor de corte) y cruce con el plano
     const gd = this.flags.guide;
+    const tmk = this.flags.aids && this.flags.tipMarker ? this.toPx(this.flags.tipMarker.u, this.flags.tipMarker.w) : null;
     if (this.flags.aids && gd && gd.length > 1) {
       let path = '';
       let pen = false;
@@ -228,7 +234,10 @@ export class Monitor {
             const cw = a.w + (g.w - a.w) * f;
             if (cw > 0 && cw < D && Math.abs(cu) < W / 2) {
               const [px, py] = this.toPx(cu, cw);
-              parts.push(`<g><circle cx="${px}" cy="${py}" r="6" class="guidept"/><path d="M${px - 10} ${py} h6 M${px + 4} ${py} h6 M${px} ${py - 10} v6 M${px} ${py + 4} v6" class="guidept"/><text x="${px + 12}" y="${py - 8}" class="guidetxt">cruce de la aguja con el plano</text></g>`);
+              // sin texto si la etiqueta de la punta está al lado (evita solapes)
+              const near = tmk && Math.hypot(tmk[0] - px, tmk[1] - py) < 40;
+              const txt = near ? '' : `<text x="${px + 12}" y="${py - 8}" class="guidetxt">cruce de la aguja con el plano</text>`;
+              parts.push(`<g><circle cx="${px}" cy="${py}" r="6" class="guidept"/><path d="M${px - 10} ${py} h6 M${px + 4} ${py} h6 M${px} ${py - 10} v6 M${px} ${py + 4} v6" class="guidept"/>${txt}</g>`);
             }
           }
         }
@@ -330,6 +339,11 @@ export class Monitor {
       cv.height = ch;
       this.specImg = null;
     }
+    const [lo, hi] = sp.vRange();
+    // redibujar sólo si llegan columnas nuevas o cambia la escala, la inversión o el tamaño
+    const sig = `${sp.col}|${cw}x${ch}|${lo}|${hi}|${sp.invert}`;
+    if (sig === this.specSig) return;
+    this.specSig = sig;
     const g = cv.getContext('2d')!;
     const ml = 8;
     const mr = 58;
@@ -342,11 +356,10 @@ export class Monitor {
       // barrido tipo "borrado": columna actual con hueco
       const gap = (c - cur + SPEC_COLS) % SPEC_COLS;
       for (let b = 0; b < SPEC_BINS; b++) {
-        let v = sp.data[c * SPEC_BINS + b];
-        if (gap < 6) v = 0;
+        const v = gap < 6 ? 0 : sp.data[c * SPEC_BINS + b];
         const row = sp.invert ? b : SPEC_BINS - 1 - b;
         const o = (row * SPEC_COLS + c) * 4;
-        const vv = Math.round(Math.pow(v, 0.9) * 255);
+        const vv = SPEC_LUT[Math.max(0, Math.min(1023, (v * 1023) | 0))];
         im[o] = vv;
         im[o + 1] = vv;
         im[o + 2] = Math.min(255, vv + 6);
@@ -360,7 +373,6 @@ export class Monitor {
     g.imageSmoothingEnabled = true;
     g.drawImage(tmp, ml, 4, gw, gh);
     // línea base y escala
-    const [lo, hi] = sp.vRange();
     const yOf = (v: number) => {
       let f = (v - lo) / (hi - lo);
       if (sp.invert) f = 1 - f;
@@ -412,6 +424,7 @@ export class Monitor {
     el.addEventListener('pointermove', (ev) => {
       const p = pos(ev);
       this.hover = p;
+      this.dirty = true;
       const s = this.sim.settings;
       if (this.drag?.kind === 'box') {
         const b = s.colorBox;
@@ -432,10 +445,12 @@ export class Monitor {
     el.addEventListener('pointerleave', () => {
       this.hover = null;
       this.sim.highlight = -1;
+      this.dirty = true;
     });
     el.addEventListener('pointerdown', (ev) => {
       const p = pos(ev);
       const s = this.sim.settings;
+      this.dirty = true;
       el.setPointerCapture(ev.pointerId);
       if (this.tool === 'caliper') {
         const last = this.calipers[this.calipers.length - 1];
@@ -471,10 +486,13 @@ export class Monitor {
         }
       }
     });
-    el.addEventListener('pointerup', (ev) => {
+    const end = (ev: PointerEvent) => {
       this.drag = null;
-      el.releasePointerCapture(ev.pointerId);
-    });
+      this.dirty = true;
+      if (el.hasPointerCapture(ev.pointerId)) el.releasePointerCapture(ev.pointerId);
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
     el.addEventListener('wheel', (ev) => {
       // rueda sobre la imagen: tamaño de caja de color / volumen de muestra
       const s = this.sim.settings;
@@ -523,6 +541,10 @@ function niceStep(x: number) {
   const m = x / p;
   return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p;
 }
+
+/** curva de gris del espectrograma (v^0,9) tabulada */
+const SPEC_LUT = new Uint8Array(1024);
+for (let i = 0; i < 1024; i++) SPEC_LUT[i] = Math.round(Math.pow(i / 1023, 0.9) * 255);
 
 let tmpCanvas: HTMLCanvasElement | null = null;
 function getTmpCanvas(w: number, h: number) {

@@ -118,6 +118,10 @@ export class Needle {
     this.angle = angle;
     this.depth = -3;
     this.prevDepth = -3;
+    // la nueva orientación no es un pivote dentro del tejido
+    this.prevAngle = angle;
+    this.prevHeading = heading;
+    this.redirAcc = 0;
     this.placed = true;
     this.state = 'fuera';
     this.inVessel = null;
@@ -168,6 +172,8 @@ export class Needle {
     const d1 = this.depth;
     const a1 = this.angle;
     const h1 = this.heading;
+    // giro más corto entre rumbos (evita barrer 360° al cruzar ±180°)
+    const dh = ((((h1 - h0) % 360) + 540) % 360) - 180;
     const move = this.tipAt(d0, a0, h0, tmpA).distanceTo(this.tipAt(d1, a1, h1, tmpB));
     if (move < 1e-5 && d0 === d1) {
       this.computeGeometry();
@@ -175,7 +181,7 @@ export class Needle {
     }
     // redirección: pivotar la aguja con la punta dentro del tejido
     if (Math.max(d0, d1) > 2) {
-      this.redirAcc += Math.abs(a1 - a0) + Math.abs(h1 - h0);
+      this.redirAcc += Math.abs(a1 - a0) + Math.abs(dh);
       if (this.redirAcc > 4) {
         this.redirections++;
         this.redirAcc = 0;
@@ -183,13 +189,15 @@ export class Needle {
       }
     }
     const withdrawing = d1 < d0 - 1e-6;
-    const pivot = a1 !== a0 || h1 !== h0;
+    const pivot = a1 !== a0 || dh !== 0;
     const advancing = d1 > d0 + 1e-6 || (!withdrawing && pivot);
-    const steps = Math.max(1, Math.ceil(move / 0.2), Math.ceil(Math.abs(d1 - d0) / 0.2));
+    // el recorrido de la punta en un pivote es un arco: acotar por la longitud del arco
+    const arc = (Math.max(d0, d1, 0) * (Math.abs(a1 - a0) + Math.abs(dh)) * Math.PI) / 180;
+    const steps = Math.min(400, Math.max(1, Math.ceil(Math.max(move, arc) / 0.2), Math.ceil(Math.abs(d1 - d0) / 0.2)));
     for (let i = 1; i <= steps; i++) {
       const f = i / steps;
       this.angle = a0 + (a1 - a0) * f;
-      this.heading = h0 + (h1 - h0) * f;
+      this.heading = h0 + dh * f;
       const d = d0 + (d1 - d0) * f;
       const stop = this.step(model, t, d, advancing, accessIds);
       if (stop !== null) {
@@ -199,6 +207,7 @@ export class Needle {
       this.depth = d;
     }
     if (this.depth > 0 || d0 > 0) this.pathInTissue += move;
+    this.heading = ((((this.heading + 180) % 360) + 360) % 360) - 180;
     this.prevDepth = this.depth;
     this.prevAngle = this.angle;
     this.prevHeading = this.heading;
