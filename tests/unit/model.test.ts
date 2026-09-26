@@ -5,7 +5,8 @@ import { caseById, CASES } from '../../src/anatomy/cases';
 import { waveFactor, waveStats } from '../../src/anatomy/hemo';
 import { AnatomyModel } from '../../src/anatomy/model';
 import { Needle } from '../../src/interaction/needle';
-import { skinParamAbove } from '../../src/interaction/probePose';
+import { computePose, defaultProbeState, skinParamAbove } from '../../src/interaction/probePose';
+import type { ProbePose } from '../../src/sim/UltrasoundSim';
 import { Metrics } from '../../src/training/metrics';
 import { FLUSH_INJECT_S, flushParams, innerDiameter, jetVelocity } from '../../src/sim/flush';
 
@@ -50,6 +51,21 @@ describe('forma del brazo', () => {
       const offAxis = d.addScaledVector(f.N, -d.dot(f.N)).length();
       expect(offAxis).toBeLessThan(0.05); // mm
     }
+  });
+
+  it('en eje largo sobre el vaso hay una sola etiqueta para él', () => {
+    const { arm, model } = build('rc_madura');
+    const fav = model.byId('fav')!;
+    const st = { ...defaultProbeState(), ...skinParamAbove(arm, fav.samples[70].p), rot: 90 };
+    const pose = computePose(arm, st, { F: new Vector3(), L: new Vector3(), B: new Vector3(), E: new Vector3(), press: 0, width: 38 } as ProbePose);
+    const cr = model.planeCrossings(pose.F, pose.L, pose.B, pose.E, 38, 25).filter((c) => c.st === fav);
+    expect(cr.length).toBe(1);
+    expect(cr[0].along).toBe(true);
+    // en eje corto sigue siendo un cruce (las lecciones distinguen así el corte transversal)
+    const tr = computePose(arm, { ...st, rot: 0 }, { ...pose } as ProbePose);
+    const cc = model.planeCrossings(tr.F, tr.L, tr.B, tr.E, 38, 25).filter((c) => c.st === fav);
+    expect(cc.length).toBe(1);
+    expect(cc[0].along).toBe(false);
   });
 
   it('surfacePoint y skinDepth son coherentes', () => {

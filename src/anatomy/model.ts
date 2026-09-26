@@ -605,13 +605,21 @@ export class AnatomyModel {
       if (st.def.hideLabel && !includeHidden) continue;
       const sm = st.samples;
       let inRun: number[] = [];
+      // cruces detectados mientras la línea central va por el plano
+      let runCross: { st: Structure; u: number; w: number; along: boolean }[] = [];
+      const addCross = (c: { st: Structure; u: number; w: number; along: boolean }) => {
+        if (!res.some((q) => q.st === st && Math.hypot(q.u - c.u, q.w - c.w) < 4)) res.push(c);
+      };
       const flush = () => {
         if (inRun.length > 6) {
+          // recorrido en plano (eje largo): una etiqueta en su punto medio; los cambios de lado del
+          // plano dentro del recorrido son ruido de la línea central, no cruces
           const mid = sm[inRun[Math.floor(inRun.length / 2)]].p;
           const rel = tmpA.subVectors(mid, F);
           res.push({ st, u: rel.dot(L), w: rel.dot(B), along: true });
-        }
+        } else runCross.forEach(addCross);
         inRun = [];
+        runCross = [];
       };
       for (let i = 0; i < sm.length; i++) {
         const rel = tmpA.subVectors(sm[i].p, F);
@@ -619,18 +627,21 @@ export class AnatomyModel {
         const u = rel.dot(L);
         const w = rel.dot(B);
         const inside = Math.abs(u) < W / 2 && w > 0 && w < D;
-        if (inside && Math.abs(e) < Math.max(0.6, sm[i].r * 0.6)) inRun.push(i);
-        else flush();
+        let cross: { st: Structure; u: number; w: number; along: boolean } | null = null;
         if (i > 0 && inside) {
           const relp = tmpB.subVectors(sm[i - 1].p, F);
           const ep = relp.dot(E);
           if ((ep < 0 && e >= 0) || (ep > 0 && e <= 0)) {
             const f = ep / (ep - e);
-            const up = relp.dot(L) * (1 - f) + u * f;
-            const wp = relp.dot(B) * (1 - f) + w * f;
-            // evitar duplicar si es un recorrido en plano
-            if (!res.some((q) => q.st === st && Math.hypot(q.u - up, q.w - wp) < 4)) res.push({ st, u: up, w: wp, along: false });
+            cross = { st, u: relp.dot(L) * (1 - f) + u * f, w: relp.dot(B) * (1 - f) + w * f, along: false };
           }
+        }
+        if (inside && Math.abs(e) < Math.max(0.6, sm[i].r * 0.6)) {
+          inRun.push(i);
+          if (cross) runCross.push(cross);
+        } else {
+          flush();
+          if (cross) addCross(cross);
         }
       }
       flush();
