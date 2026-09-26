@@ -2,7 +2,8 @@
 //   node tests/e2e-puncion.mjs <url> [carpeta_capturas] [corto|largo|corto-dntp]
 //   corto: eje corto con la tecla N desde el modo Exploración (avance sin seguir la punta).
 //   largo: eje largo con buena técnica: compresor (K), vista longitudinal (2), «Colocar en plano»,
-//          avance con ↑ hasta la luz y hasta dejar la punta centrada, lavado con suero (J), Intro.
+//          avance con ↑ hasta la luz, aplanar (AvPág) y avanzar hasta alinear la aguja con el vaso,
+//          lavado con suero (J) visto en plano y con Doppler color (C), Intro.
 //   corto-dntp: eje corto con buena técnica: compresor, N, posicionamiento dinámico de la punta
 //          (↑ hasta ver la punta, Mayús+W hasta perderla, y repetir), aplanar (AvPág) y avanzar,
 //          lavado con suero (J) sobre la punta, aguas abajo y con Doppler color (C), Intro.
@@ -217,65 +218,83 @@ if (eje === 'corto-dntp') {
   await page.waitForFunction(() => !window.app.flush, null, { timeout: 240000, polling: 100 });
   await page.keyboard.press('c');
   s = await state();
+} else if (eje === 'largo') {
+  // 2. modo Punción (pestaña), sonda centrada (◎), compresor (K) y vista longitudinal (2)
+  await page.click('#modeTabs button[data-mode="cannulate"]');
+  await page.click('button[title^="Centrar sobre el vaso"]');
+  await page.keyboard.press('k');
+  await page.keyboard.press('2');
+  await page.waitForTimeout(1500);
+  await log('2. Punción, compresor, eje largo');
+  // 3. aguja en plano con el botón de la consola: entra por el extremo distal de la sonda
+  await page.getByRole('button', { name: 'Colocar en plano' }).click();
+  await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
+  await log('3. «Colocar en plano»');
+  await shot('01-aguja-en-plano');
+  // 4. avanzar (↑) viendo la aguja entera hasta la pared (signo de la tienda) y la luz (reflujo)
+  let t = await holdFrames(['ArrowUp'], (x) => WALL.includes(x.estado), 300);
+  if (!WALL.includes(t.estado)) throw new Error(`La aguja no llegó al vaso (estado ${t.estado}, ${t.depth.toFixed(1)} mm)`);
+  await log('4. ↑ hasta la pared');
+  if (t.estado === 'tienda') {
+    await shot('02-signo-tienda');
+    t = await holdFrames(['ArrowUp'], (x) => PAST.includes(x.estado), 60);
+  }
+  if (t.estado !== 'luz') throw new Error(`La punta no quedó en la luz (estado ${t.estado})`);
+  await page.waitForTimeout(2500); // reflujo en la cámara de la aguja
+  await log('5. ↑ hasta la luz (reflujo)');
+  await shot('03-reflujo');
+  // 6. bajar el ángulo (AvPág) y avanzar a la vez por el centro de la luz hasta alinear la aguja con el vaso
+  const AV = 20;
+  const goal = (x) => (x.av ?? 90) <= AV && x.luz >= 6 && (x.cen ?? 1) < 0.6;
+  for (let i = 0; i < 40 && t.estado === 'luz' && !goal(t); i++) {
+    const flatten = (t.av ?? 0) > AV && t.luz >= 2;
+    t = await holdFrames(flatten ? ['PageDown', 'ArrowUp'] : ['ArrowUp'], (x) => x.estado !== 'luz' || goal(x) || (flatten && (x.av ?? 0) <= AV), 12);
+  }
+  if (t.estado !== 'luz') throw new Error(`La punta salió de la luz al aplanar (estado ${t.estado})`);
+  await log('6. aplanar y avanzar');
+  await shot('04-aguja-alineada');
+  // 7. lavado con suero (J): chorro de microburbujas desde la punta que el flujo arrastra aguas abajo
+  await page.keyboard.press('j');
+  await waitFlush(0.5);
+  if (await page.evaluate(() => window.app.metrics.infiltrations > 0)) throw new Error('El lavado produjo una infiltración: la punta no estaba en la luz');
+  await log('7. J: chorro en la punta');
+  await shot('05-suero-chorro');
+  await waitFlush(2.0);
+  await log('8. J: la luz se llena aguas abajo');
+  await shot('06-suero-aguas-abajo');
+  // al terminar la inyección el flujo se lleva el suero y la luz vuelve a verse anecoica
+  await page.waitForFunction(() => !window.app.flush, null, { timeout: 240000, polling: 100 });
+  await shot('07-fin-del-lavado');
+  // 9. segundo lavado con Doppler color (C): chorro con aliasing junto a la punta
+  await page.keyboard.press('c');
+  await page.keyboard.press('j');
+  await waitFlush(0.7);
+  await log('9. J con Doppler color');
+  await shot('08-suero-doppler-color');
+  await page.waitForFunction(() => !window.app.flush, null, { timeout: 240000, polling: 100 });
+  await page.keyboard.press('c');
+  s = await state();
 } else {
-  if (eje === 'corto') {
-    // 2. centrar la sonda sobre el vaso (botón ◎) y vista transversal (tecla 1)
-    await page.click('button[title^="Centrar sobre el vaso"]');
-    await page.keyboard.press('1');
-    await page.waitForTimeout(1500);
-    await log('2. sonda centrada, eje corto');
-    // 3. N desde el modo Exploración: debe pasar a Punción y colocar la aguja
-    await page.keyboard.press('n');
-    await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
-    await log('3. tecla N');
-    await shot('01-aguja-colocada');
-    // 4. avanzar con ↑ hasta la pared y la luz
-    s = await holdUntil('ArrowUp', (x) => WALL.includes(x.estado));
-    await log('4. ↑ hasta la pared');
-    if (s.estado === 'tienda') {
-      await shot('02-signo-tienda');
-      s = await holdUntil('ArrowUp', (x) => PAST.includes(x.estado));
-    }
-  } else {
-    // 2. modo Punción (pestaña), sonda centrada (◎), compresor (K) y vista longitudinal (2)
-    await page.click('#modeTabs button[data-mode="cannulate"]');
-    await page.click('button[title^="Centrar sobre el vaso"]');
-    await page.keyboard.press('k');
-    await page.keyboard.press('2');
-    await page.waitForTimeout(1500);
-    await log('2. Punción, compresor, eje largo');
-    // 3. aguja en plano con el botón de la consola
-    await page.getByRole('button', { name: 'Colocar en plano' }).click();
-    await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
-    await log('3. «Colocar en plano»');
-    await shot('01-aguja-en-plano');
-    // 4. avanzar con ↑ hasta la pared (signo de la tienda, visible en el plano)
-    s = await holdUntil('ArrowUp', (x) => WALL.includes(x.estado));
-    await log('4. ↑ hasta la pared');
-    if (!WALL.includes(s.estado)) throw new Error(`La aguja no llegó al vaso a tiempo (estado ${s.estado}, ${s.insertada} mm): ¿render demasiado lento? Prueba con ?calidad=baja`);
-    if (s.estado === 'tienda') {
-      await shot('02-signo-tienda');
-      s = await holdUntil('ArrowUp', (x) => PAST.includes(x.estado));
-    }
-    await log('5. ↑ hasta la luz (reflujo)');
-    await page.waitForTimeout(3000);
-    await shot('03-reflujo');
-    // 6. seguir avanzando dentro de la luz hasta ≥ 6 mm de recorrido con la punta centrada
-    if (s.estado === 'luz') {
-      s = await holdUntil('ArrowUp', (x) => x.estado !== 'luz' || (x.luz_mm >= 6 && x.centrado !== null && x.centrado < 0.5), 120000);
-    }
+  // 2. centrar la sonda sobre el vaso (botón ◎) y vista transversal (tecla 1)
+  await page.click('button[title^="Centrar sobre el vaso"]');
+  await page.keyboard.press('1');
+  await page.waitForTimeout(1500);
+  await log('2. sonda centrada, eje corto');
+  // 3. N desde el modo Exploración: debe pasar a Punción y colocar la aguja
+  await page.keyboard.press('n');
+  await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
+  await log('3. tecla N');
+  await shot('01-aguja-colocada');
+  // 4. avanzar con ↑ hasta la pared y la luz
+  s = await holdUntil('ArrowUp', (x) => WALL.includes(x.estado));
+  await log('4. ↑ hasta la pared');
+  if (s.estado === 'tienda') {
+    await shot('02-signo-tienda');
+    s = await holdUntil('ArrowUp', (x) => PAST.includes(x.estado));
   }
   await page.waitForTimeout(3000); // dejar que aparezca el reflujo en la cámara de la aguja
-  await log(eje === 'corto' ? '5. ↑ hasta la luz' : '6. punta centrada en la luz');
-  await shot(eje === 'corto' ? '03-reflujo' : '04-punta-centrada');
-  if (eje === 'largo') {
-    // 7. comprobar la posición con un lavado de suero (tecla J): microburbujas arrastradas por el flujo
-    await page.keyboard.press('j');
-    await page.waitForFunction(() => (window.app.flush && window.app.time - window.app.flush.t0 > 1.0) || window.app.metrics.infiltrations > 0, null, { timeout: 240000 });
-    if (await page.evaluate(() => window.app.metrics.infiltrations > 0)) throw new Error('El lavado produjo una infiltración: la punta no estaba en la luz');
-    await log('7. J (lavado con suero)');
-    await shot('05-lavado-suero');
-  }
+  await log('5. ↑ hasta la luz');
+  await shot('03-reflujo');
 }
 // confirmar con Intro
 await page.keyboard.press('Enter');
@@ -288,12 +307,12 @@ const result = await page.evaluate(() => ({
   criterios: window.app.metrics.checks.map((c) => `${c.ok === null ? '·' : c.ok ? '✓' : '✗'} ${c.label}: ${c.detail}`),
 }));
 await log('Intro (evaluación)');
-await shot({ corto: '04-evaluacion', largo: '06-evaluacion', 'corto-dntp': '09-evaluacion' }[eje] ?? 'evaluacion');
+await shot({ corto: '04-evaluacion', largo: '09-evaluacion', 'corto-dntp': '09-evaluacion' }[eje] ?? 'evaluacion');
 const vis = await page.evaluate(() => window.app.metrics.snapshot().tipVisiblePct);
 console.log(JSON.stringify({ ...result, punta_visible_pct: Math.round(vis) }, null, 1));
 console.log('errores de la página:', errors.length ? errors : 'ninguno');
 await browser.close();
-const flushOk = eje === 'largo' ? result.lavados === 1 : eje === 'corto-dntp' ? result.lavados === 2 : true;
+const flushOk = eje === 'corto' ? true : result.lavados === 2;
 // ninguna ruta cambia la trayectoria en el tejido: aplanar dentro de la luz no es una redirección
 const ok = s.estado === 'luz' && !errors.length && flushOk && result.infiltraciones === 0 && result.redirecciones === 0;
 process.exit(ok ? 0 : 1);
