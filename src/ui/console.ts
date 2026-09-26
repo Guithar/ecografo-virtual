@@ -249,6 +249,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   nCol2.appendChild(adv);
   const cf = el('div', { class: 'crow' });
   add(cf, button('Confirmar punción', () => app.confirmPuncture(), { cls: 'primary', title: 'Evaluar la posición final (Intro)' }));
+  add(cf, button('Suero', () => app.flushNeedle(), { title: 'Lavar con 10 mL de suero para comprobar la posición de la punta (J): en la luz se ven microburbujas arrastradas por el flujo; fuera, infiltración' }));
   add(cf, button('Retirar aguja', () => app.withdrawNeedle(), { cls: 'danger' }));
   add(cf, button('Realce', () => (s().needleEnhance = !s().needleEnhance), { active: () => s().needleEnhance, title: 'Realce de aguja (angulación del haz hacia la aguja)' }));
   nCol2.appendChild(cf);

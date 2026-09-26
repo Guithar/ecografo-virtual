@@ -6,6 +6,7 @@ import { waveFactor, waveStats } from '../../src/anatomy/hemo';
 import { AnatomyModel } from '../../src/anatomy/model';
 import { Needle } from '../../src/interaction/needle';
 import { Metrics } from '../../src/training/metrics';
+import { FLUSH_INJECT_S, flushParams, innerDiameter, jetVelocity } from '../../src/sim/flush';
 
 function build(id: string) {
   const cd = caseById(id);
@@ -171,7 +172,46 @@ describe('aguja', () => {
   });
 });
 
+describe('lavado con suero', () => {
+  it('chorro de alta velocidad a la salida de una aguja 15G (≈ 2 m/s)', () => {
+    const v = jetVelocity(innerDiameter(1.829));
+    expect(v).toBeGreaterThan(150);
+    expect(v).toBeLessThan(300);
+  });
+
+  it('en una FAV de alto flujo el penacho sale del campo en cuanto termina la inyección', () => {
+    const fav = { t0: 10, sidx: 3, vmean: 500, qVessel: 15, jetVel: 200 };
+    const during = flushParams(fav, 11);
+    expect(during.active).toBe(true);
+    expect(during.jet).toBeCloseTo(1, 5);
+    expect(during.tail).toBe(0);
+    expect(during.intensity).toBeGreaterThan(0.5);
+    expect(flushParams(fav, 10 + FLUSH_INJECT_S + 1).active).toBe(false);
+  });
+
+  it('en una vena de flujo lento el penacho se ve más tiempo y está menos diluido', () => {
+    const vein = { t0: 0, sidx: 1, vmean: 40, qVessel: 0.5, jetVel: 200 };
+    const p = flushParams(vein, FLUSH_INJECT_S + 1);
+    expect(p.active).toBe(true);
+    expect(p.tail).toBeGreaterThan(0);
+    expect(p.front).toBeGreaterThan(p.tail);
+    expect(p.jet).toBeLessThan(0.01);
+    const fav = flushParams({ ...vein, vmean: 500, qVessel: 15 }, 1);
+    expect(flushParams(vein, 1).intensity).toBeGreaterThan(fav.intensity);
+  });
+});
+
 describe('métricas', () => {
+  it('penaliza la infiltración de suero y cuenta los lavados', () => {
+    const m = new Metrics();
+    m.onEvent({ t: 1, type: 'flush', msg: '', severity: 'ok' });
+    expect(m.score()).toBe(100);
+    m.onEvent({ t: 2, type: 'infiltration', msg: '', severity: 'error' });
+    expect(m.score()).toBe(88);
+    expect(m.snapshot().flushes).toBe(1);
+    expect(m.snapshot().infiltrations).toBe(1);
+  });
+
   it('penaliza transfixión y punción arterial', () => {
     const m = new Metrics();
     expect(m.score()).toBe(100);

@@ -29,6 +29,7 @@ export enum T {
   Needle = 15,
   Graft = 16,
   Calcium = 17,
+  Saline = 18,
 }
 
 export interface TissueProps {
@@ -63,6 +64,8 @@ export const TISSUES: TissueProps[] = [
   { id: T.Needle, name: 'Aguja (acero)', Z: 45, att: 0, echo: 3.0, color: '#d9dde3' },
   { id: T.Graft, name: 'Prótesis PTFE', Z: 1.9, att: 2.0, echo: 1.1, color: '#e8eef2' },
   { id: T.Calcium, name: 'Calcificación', Z: 5.0, att: 14.0, echo: 1.6, color: '#ffffff' },
+  // suero salino extravasado: líquido anecoico (con algunas microburbujas al principio)
+  { id: T.Saline, name: 'Suero infiltrado', Z: 1.53, att: 0.05, echo: 0.01, color: '#86cfe6' },
 ];
 
 export function tissueName(id: number): string {

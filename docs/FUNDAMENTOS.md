@@ -141,6 +141,10 @@ protocolos y las guías vigentes.
   - Ventaja: se ve toda la aguja.
   - Inconveniente: es más difícil mantener la alineación y se pierden las estructuras laterales.
 - **Posicionamiento dinámico de la punta (DNTP):** en eje corto, se avanza la sonda hasta que desaparece el punto de la punta, después se avanza la aguja, y se repite. En varios ensayos aleatorizados (acceso arterial y venoso periférico) mejora el éxito frente al abordaje en plano; en FAV es una extrapolación [43,50].
+- **Comprobación con suero:** tras el reflujo, se lava la aguja con unos mililitros de suero mientras se mira la pantalla.
+  - Si la punta está en la luz, el suero entra sin resistencia. Las microburbujas que arrastra son dispersores muy potentes: se ve un penacho de ecos brillantes que recorre la luz aguas abajo de la punta y, en Doppler color, un chorro de alta velocidad con *aliasing* junto al bisel. En una FAV de alto flujo el penacho sale del campo en cuanto termina el lavado.
+  - Si la punta está fuera de la luz (pared, tejido o pared posterior atravesada), el suero no avanza por el vaso. Aparece una colección anecoica alrededor del vaso (infiltración), con dolor y tumefacción. Hay que detener el lavado y recolocar la aguja.
+  - El mismo principio (microburbujas del suero como contraste) se usa para confirmar la posición de catéteres venosos centrales [73].
 - **Evidencia en FAV:**
   - Eves 2021 (ECA en FAV difícil): menos pases de aguja (72 frente a 99) y menos punciones cutáneas (10 frente a 25) [36].
   - Chen 2023 (ECA): mayor tasa de éxito con la guía ecográfica [37].
@@ -205,7 +209,9 @@ protocolos y las guías vigentes.
 ### 7.4 Visibilidad de la aguja
 
 - La reflexión en la aguja es **especular**: la visibilidad cae al aumentar el ángulo de inserción [44–46].
-- **Reverberación:** líneas paralelas separadas un diámetro de la aguja; la «cola de cometa» se forma dentro de la luz de la aguja [48].
+  - En plano, el eco sale desviado 2θ en la dirección lateral y lo recoge la apertura del transductor (≈ 4 cm): la aguja se ve bien hasta ≈ 40–45°.
+  - Fuera de plano, la desviación es en elevación, donde la apertura es de pocos milímetros: queda sobre todo la componente difusa (bisel, rugosidad). El punto de la aguja es tenue en el tejido y mucho más claro dentro de la luz anecoica.
+- **Reverberación:** líneas paralelas separadas un diámetro de la aguja (su cuerda a lo largo del haz) y de intensidad decreciente; la «cola de cometa» se forma dentro de la luz de la aguja [48].
 - **Artefacto en bayoneta:** aparece por las diferencias de velocidad del sonido entre tejidos [49].
 
 ## 8. Métodos de simulación (estado del arte)
@@ -316,9 +322,16 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 
 **Aguja:**
 - Intersección analítica rayo-cilindro en 7 planos de elevación.
-- Reflexión especular según el ángulo de incidencia (visibilidad menor con ángulos más pronunciados), refuerzo del bisel y reverberaciones cada cuerda de la aguja (un diámetro).
+- El eco especular de un cilindro liso procede de su **cresta** (punto de fase estacionaria): cada rayo pesa según su distancia al eje de la aguja, y los que tocan el flanco apenas devuelven eco.
+- Visibilidad según el ángulo de inserción, con un lóbulo ancho en la dirección lateral (en plano) y estrecho en elevación (fuera de plano), más una componente difusa; refuerzo del bisel.
+- El eco de la pared y sus 5 reverberaciones (separadas la cuerda del tubo a lo largo del haz, −10 dB por rebote) llevan una **fase constante a lo largo de la aguja**. Con la fase de cada píxel o de cada profundidad, el eco fino del metal se cancelaba parcialmente entre filas o entre columnas vecinas según la rejilla de la calidad elegida, y la aguja se veía discontinua.
+- Fuera de plano, cada eco se ensancha lo que la aguja desciende entre dos planos de elevación: el corte integra una banda continua (grosor de corte × tan α).
 - Sombra parcial.
 - Deformación en «tienda» de la pared antes de la perforación. Los umbrales son 1–2,6 mm según el vaso.
+
+**Lavado con suero (tecla J):**
+- Con la punta en la luz: penacho de microburbujas (dispersores brillantes que se mueven con la sangre) desde la punta hacia aguas abajo, que avanza a la velocidad media del vaso y se despega y lava al acabar la inyección (10 mL en 2,5 s). Chorro a la salida del bisel (≈ 2 m/s en 15G, caudal/área interna) con turbulencia y *aliasing* en Doppler color, que se ordena en ≈ 1 cm.
+- Con la punta fuera de la luz: infiltración. Junto a un vaso, halo anecoico perivascular que crece en 1–3 s a lo largo de ≈ 12 mm; lejos de un vaso, colección esférica. Penaliza la puntuación.
 
 **Doppler pulsado:**
 - Muestreo del volumen de muestra en el modelo: 7 puntos a lo largo del haz × 3 laterales × 3 en elevación.
@@ -381,6 +394,7 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 36. Eves J et al. *J Vasc Access* 2021.
 37. Chen S et al. *Hemodial Int* 2023;27:21–7.
 43. Estudios sobre DNTP (PMID 23059741; PMC10941806).
+73. Vezzani A et al. Ultrasound localization of central vein catheter and detection of postprocedural pneumothorax: an alternative to chest radiography. *Crit Care Med* 2010;38(2):533–538 (contraste con suero para confirmar la posición del catéter).
 
 ### Complicaciones de la punción
 

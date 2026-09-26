@@ -33,8 +33,8 @@ La imagen no es una textura pregrabada. Se calcula en cada fotograma a partir de
    - ruido electrónico.
 6. **Contacto sonda-piel:** gel, falta de contacto (aire) en los bordes y **compresión** del tejido. Las venas colapsan según su presión intraluminal; las arterias no.
 7. **Aguja analítica:**
-   - reflexión especular que depende del ángulo de inserción;
-   - **reverberaciones** («cola de cometa» y líneas paralelas), sombra y realce de la punta;
+   - reflexión especular desde la cresta del cilindro, que depende del ángulo de inserción: en plano se ve hasta ≈ 45°; fuera de plano el punto es más tenue;
+   - **reverberaciones** («cola de cometa» y líneas paralelas de intensidad decreciente), sombra y realce de la punta;
    - **signo de la tienda** de la pared antes del «pop».
 8. **Doppler:**
    - **color y power**: velocidad por continuidad Q/A, perfil de flujo, remolino en aneurismas, turbulencia, **aliasing**, filtro de pared, prioridad y angulación ±20°;
@@ -83,7 +83,8 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
   - punción cutánea, signo de la tienda, pérdida de resistencia;
   - **reflujo** (pulsátil, rojo brillante si la punción es arterial);
   - contacto con la pared posterior, **transfixión** con **hematoma que crece**;
-  - punción arterial, **parestesia** por contacto nervioso, contacto óseo.
+  - punción arterial, **parestesia** por contacto nervioso, contacto óseo;
+  - **lavado con suero** para comprobar la posición: con la punta en la luz, microburbujas arrastradas por el flujo y chorro en Doppler color; fuera de la luz, **infiltración** (halo anecoico alrededor del vaso).
 - **Métricas.** Se inspiran en NeedleTrainer, PerkTutor y Sites et al. 2007:
   - tiempo total y tiempo de piel a reflujo;
   - punciones cutáneas y redirecciones;
@@ -171,6 +172,7 @@ Parámetros de URL útiles:
 | Ángulo / rumbo de la aguja | `RePág` `AvPág` / `←` `→` |
 | Profundidad / ganancia | `+` `−` / `[` `]` |
 | Color / PW / modo B / congelar | `C` / `P` / `B` / `Espacio` |
+| Lavar la aguja con suero | `J` |
 | Medir / etiquetas / invertir I-D / compresor | `M` / `L` / `I` / `K` |
 | Vistas de cámara / ayuda | `V` / `H` |
 

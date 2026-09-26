@@ -118,17 +118,26 @@ if (eje === 'corto') {
 await page.waitForTimeout(3000); // dejar que aparezca el reflujo en la cámara de la aguja
 await log(eje === 'corto' ? '5. ↑ hasta la luz' : '6. punta centrada en la luz');
 await shot(eje === 'corto' ? '03-reflujo' : '04-punta-centrada');
+if (eje === 'largo') {
+  // 7. comprobar la posición con un lavado de suero (tecla J): microburbujas arrastradas por el flujo
+  await page.keyboard.press('j');
+  await page.waitForFunction(() => window.app.flush && window.app.time - window.app.flush.t0 > 1.0, null, { timeout: 240000 });
+  await log('7. J (lavado con suero)');
+  await shot('05-lavado-suero');
+}
 // confirmar con Intro
 await page.keyboard.press('Enter');
 await page.waitForTimeout(2000);
 const result = await page.evaluate(() => ({
   puntuacion: window.app.metrics.score(),
+  lavados: window.app.metrics.flushes,
+  infiltraciones: window.app.metrics.infiltrations,
   criterios: window.app.metrics.checks.map((c) => `${c.ok === null ? '·' : c.ok ? '✓' : '✗'} ${c.label}: ${c.detail}`),
 }));
 await log('Intro (evaluación)');
-await shot(eje === 'corto' ? '04-evaluacion' : '05-evaluacion');
+await shot(eje === 'corto' ? '04-evaluacion' : '06-evaluacion');
 console.log(JSON.stringify(result, null, 1));
 console.log('errores de la página:', errors.length ? errors : 'ninguno');
 await browser.close();
-const ok = s.estado === 'luz' && !errors.length;
+const ok = s.estado === 'luz' && !errors.length && (eje !== 'largo' || (result.lavados === 1 && result.infiltraciones === 0));
 process.exit(ok ? 0 : 1);

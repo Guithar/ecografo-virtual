@@ -34,7 +34,9 @@ export interface NeedleEvent {
     | 'exit'
     | 'withdraw'
     | 'redirect'
-    | 'hematoma';
+    | 'hematoma'
+    | 'flush'
+    | 'infiltration';
   msg: string;
   severity: 'info' | 'ok' | 'warn' | 'error';
   struct?: string;

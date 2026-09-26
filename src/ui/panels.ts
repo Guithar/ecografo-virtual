@@ -107,6 +107,7 @@ export class Panels {
       m(String(s.transfixions), 'Transfixiones', s.transfixions ? 'bad' : ''),
       m(String(s.arterialPunctures), 'Punciones arteriales', s.arterialPunctures ? 'bad' : ''),
       m(String(s.nerveContacts), 'Contactos nerviosos', s.nerveContacts ? 'bad' : ''),
+      m(`${s.flushes} / ${s.infiltrations}`, 'Lavados con suero / infiltraciones', s.infiltrations ? 'bad' : ''),
       m(`${s.probeMoveDuringAdvance.toFixed(0)} mm`, 'Movimiento de sonda al avanzar', s.probeMoveDuringAdvance > 8 ? 'warn' : ''),
       m(`${this.app.metrics.pathInTissue.toFixed(0)} mm`, 'Recorrido en tejido'),
       m(`${Math.round(s.maxCollapse * 100)} %`, 'Colapso máx. del vaso', s.maxCollapse > 0.5 ? 'warn' : ''),
@@ -313,6 +314,7 @@ export class Panels {
           <table class="tbl">
             <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda (pasa al modo Punción)</td></tr>
             <tr><td><kbd>↑</kbd>/<kbd>↓</kbd> o rueda sobre la imagen</td><td>Avanzar / retirar</td></tr>
+            <tr><td><kbd>J</kbd></td><td>Lavar con suero: en la luz se ven microburbujas arrastradas por el flujo (y un chorro en Doppler color); fuera, infiltración</td></tr>
             <tr><td><kbd>←</kbd>/<kbd>→</kbd></td><td>Rumbo (dirección)</td></tr>
             <tr><td><kbd>RePág</kbd>/<kbd>AvPág</kbd></td><td>Ángulo de inserción</td></tr>
             <tr><td><kbd>Intro</kbd></td><td>Confirmar la punción (evaluación)</td></tr>
@@ -363,6 +365,7 @@ export class Panels {
         <tr><td>Avance con punta visible</td><td>${s.tipVisiblePct.toFixed(0)} %</td><td>Cuerpo tomado por punta</td><td>${s.shaftConfusions}</td></tr>
         <tr><td>Contactos pared posterior</td><td>${s.backWallContacts}</td><td>Transfixiones</td><td>${s.transfixions}</td></tr>
         <tr><td>Punciones arteriales</td><td>${s.arterialPunctures}</td><td>Contactos nerviosos</td><td>${s.nerveContacts}</td></tr>
+        <tr><td>Lavados con suero</td><td>${s.flushes}</td><td>Infiltraciones</td><td>${s.infiltrations}</td></tr>
         <tr><td>Movimiento de sonda al avanzar</td><td>${s.probeMoveDuringAdvance.toFixed(0)} mm</td><td>Colapso máx. del vaso</td><td>${Math.round(s.maxCollapse * 100)} %</td></tr>
       </table>
       ${s.checks.length ? `<h4>Criterios</h4><ul>${s.checks.map((c) => `<li>${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'} ${c.label} — ${c.detail}</li>`).join('')}</ul>` : ''}

@@ -135,6 +135,25 @@ export interface NeedleRender {
   active: boolean;
 }
 
+/** Lavado con suero en curso, en coordenadas de tejido (ver sim/flush.ts). */
+export interface FlushRender {
+  tip: Vector3;
+  /** dirección de la aguja (chorro) */
+  dir: Vector3;
+  /** dirección del flujo en el vaso */
+  flowDir: Vector3;
+  /** índice de la estructura en cuya luz se inyecta */
+  sidx: number;
+  intensity: number;
+  tail: number;
+  front: number;
+  jet: number;
+  /** cm/s */
+  jetVel: number;
+  /** mm */
+  jetLen: number;
+}
+
 export interface TentState {
   tip: Vector3;
   dir: Vector3;
@@ -190,6 +209,7 @@ export class UltrasoundSim {
   };
   needles: NeedleRender[] = [];
   tent: TentState | null = null;
+  flush: FlushRender | null = null;
   time = 0;
   /** rendimiento: ms del último fotograma de simulación (CPU) */
   lastCull = 0;
@@ -290,6 +310,13 @@ export class UltrasoundSim {
       uPressK: { value: 7 },
       uSoftLift: { value: SOFT_LIFT },
       uNeedleEcho: { value: 4.5 },
+      // lavado con suero (coordenadas de tejido): punta + intensidad, dirección del flujo + estructura,
+      // (inicio y frente del penacho en mm aguas abajo, chorro 0–1, velocidad del chorro cm/s),
+      // dirección de la aguja + longitud de decaimiento del chorro
+      uFlushP: { value: new Vector4() },
+      uFlushD: { value: new Vector4(1, 0, 0, -1) },
+      uFlushR: { value: new Vector4() },
+      uJetD: { value: new Vector4(1, 0, 0, 4) },
     });
     this.mIface = mat(INTERFACE_FRAG, {
       uT0: { value: null },
@@ -548,7 +575,21 @@ export class UltrasoundSim {
       (u.uTent.value as Vector4).w = 0;
       (u.uTentDir.value as Vector4).w = -1;
     }
-    u.uNeedleEcho.value = s.needleEnhance ? 14 : 8;
+    // acero frente a tejido: R ≈ 0,93, muy por encima de la retrodispersión del tejido. Tras las PSF
+    // normalizadas en energía, un eco fino queda ≈ 3× por debajo de su entrada: con este factor la
+    // vaina a 20–30° queda claramente blanca sobre la grasa y las reverberaciones decrecen
+    u.uNeedleEcho.value = s.needleEnhance ? 26 : 16;
+    const fl = this.flush;
+    if (fl) {
+      (u.uFlushP.value as Vector4).set(fl.tip.x, fl.tip.y, fl.tip.z, fl.intensity);
+      (u.uFlushD.value as Vector4).set(fl.flowDir.x, fl.flowDir.y, fl.flowDir.z, fl.sidx);
+      (u.uFlushR.value as Vector4).set(fl.tail, fl.front, fl.jet, fl.jetVel);
+      (u.uJetD.value as Vector4).set(fl.dir.x, fl.dir.y, fl.dir.z, fl.jetLen);
+    } else {
+      (u.uFlushP.value as Vector4).w = 0;
+      (u.uFlushR.value as Vector4).z = 0;
+      (u.uFlushD.value as Vector4).w = -1;
+    }
     this.fs.run(r, this.mTissue, this.rtTissue);
 
     // --- B. interfaces ---

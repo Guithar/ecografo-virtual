@@ -55,6 +55,7 @@ La puntuación del simulador parte de 100 puntos y resta penalizaciones:
 | Transfixión (perforación de la pared posterior) | −18 | |
 | Punción arterial no deseada | −30 | |
 | Contacto con un nervio | −20 | |
+| Infiltración de suero (lavar con la punta fuera de la luz) | −12 | |
 | Tomar el cuerpo de la aguja por la punta (avanzar con el haz cortando el cuerpo) | −4 | |
 | Avance con la punta visible < 80 % | −0,4 por punto porcentual | NeedleTrainer; Sites 2007 |
 | Movimiento de la sonda mientras avanza la aguja > 8 mm | hasta −8 | Sites 2007 |
@@ -89,6 +90,7 @@ Niveles orientativos:
 - Cada participante lo abre en su ordenador desde <https://guithar.github.io/ecografo-virtual/>, sin instalar nada (navegador con WebGL2).
 - Un enlace con parámetros abre directamente un caso y un modo, lo que resulta útil para repartir ejercicios. Por ejemplo, `https://guithar.github.io/ecografo-virtual/?caso=rc_estenosis&modo=cannulate`.
 - Proyecta el simulador en el aula con el panel 3D maximizado (botón ⤢) para explicar la relación entre la sonda, el plano de corte y la imagen.
+- Pide que cada punción se compruebe con un **lavado de suero** (J) antes de confirmarla. Con la punta en la luz se ven microburbujas recorriendo el vaso; si se lava con la punta en la pared (signo de la tienda, antes del «pop»), aparece la infiltración. Es un buen ejercicio para aprender a reconocerla.
 - Activa **Fusión** (anatomía sobre ecografía) y **Etiquetas** para las primeras sesiones. Desactívalas, junto con las **Ayudas**, en las evaluaciones.
 - El informe (botón **Informe**) se puede imprimir o exportar en JSON o CSV para el portafolio de cada participante. El historial se guarda en el navegador.
 

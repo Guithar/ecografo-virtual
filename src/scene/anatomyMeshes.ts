@@ -28,6 +28,7 @@ export const KIND_COLORS: Record<string, string> = {
   tendon: '#eae4d8',
   bone: '#eee2c6',
   hematoma: '#5a1428',
+  infiltrado: '#86cfe6',
 };
 
 export function tubeGeometry(st: Structure, radial = 16, extra = 0, caps = true): BufferGeometry {

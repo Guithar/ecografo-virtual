@@ -13,7 +13,7 @@ import { CatmullRomCurve3, Vector3 } from 'three';
 import { ArmShape } from './armShape';
 import { WaveKind, waveFactor, pulse01, profilePeakFactor } from './hemo';
 
-export type StructKind = 'artery' | 'vein' | 'avf' | 'graft' | 'nerve' | 'tendon' | 'bone' | 'hematoma';
+export type StructKind = 'artery' | 'vein' | 'avf' | 'graft' | 'nerve' | 'tendon' | 'bone' | 'hematoma' | 'infiltrado';
 
 export const KIND_CODE: Record<StructKind, number> = {
   artery: 1,
@@ -24,6 +24,8 @@ export const KIND_CODE: Record<StructKind, number> = {
   tendon: 11,
   bone: 12,
   hematoma: 13,
+  /** suero extravasado al lavar con la punta fuera de la luz */
+  infiltrado: 14,
 };
 
 export interface CtrlPt {

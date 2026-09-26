@@ -177,6 +177,10 @@ uniform float uCompLambda;
 uniform float uPressK;      // mmHg por mm de indentación
 uniform float uSoftLift;    // mm que el tejido puede adaptarse a la sonda
 uniform float uNeedleEcho;  // factor de ecogenicidad de la aguja
+uniform vec4 uFlushP;       // lavado con suero: punta (tejido) + intensidad del penacho
+uniform vec4 uFlushD;       // dirección del flujo + índice de estructura
+uniform vec4 uFlushR;       // inicio y frente del penacho (mm aguas abajo), chorro 0–1, velocidad del chorro (cm/s)
+uniform vec4 uJetD;         // dirección de la aguja + decaimiento del chorro (mm)
 
 const float LATTICE = 0.072; // mm, red de dispersores
 
@@ -376,6 +380,10 @@ void evalSeg(inout Tis best, vec3 p, int si, float depthW, float dloc) {
     vec3 q = vec3(dot(pp, tax) * 0.12, dot(pp, cross(tax, uB)) * 3.5, dot(pp, uB) * 3.5);
     float fibr = vnoise(q);
     best.echo = T_ECHO[TI_TENDON] * (0.18 + 1.1 * aniso * (0.5 + fibr));
+  } else if (code == 14) {
+    // suero infiltrado: colección anecoica con algunas microburbujas brillantes dispersas
+    best.t = TI_SALINE;
+    best.echo = 0.012 + 0.9 * smoothstep(0.82, 0.97, vnoise(pp * 3.1));
   } else {
     best.t = TI_HEMATOMA;
     float n = fbm2(pp * 0.45);
@@ -428,6 +436,16 @@ Tis evalPoint(vec3 p, float depthW, float dloc) {
   }
   if (best.t < 0) best = baseLayers(p);
   return best;
+}
+
+// Distancia mínima entre el rayo y el eje de la aguja (rectas que se cruzan). Un cilindro liso
+// devuelve el eco especular desde su cresta (punto de fase estacionaria), donde el rayo pasa por el eje.
+float rayAxisDist(vec3 ro, vec3 rd, vec3 A, vec3 Btip) {
+  vec3 u = normalize(Btip - A);
+  vec3 c = cross(rd, u);
+  float lc = length(c);
+  if (lc < 1e-4) return length(cross(ro - A, u));
+  return abs(dot(ro - A, c)) / lc;
 }
 
 // Intersección rayo-cilindro finito (aguja). Devuelve (s_entrada, s_salida, cosIncidencia, distTip) o s<0 si no hay.
@@ -521,13 +539,33 @@ void main() {
         // la sangre se desplaza: speckle que fluye
         sp = pk - ts.axis * mod(ts.advect * 10.0 * uTime, 4000.0);
       }
+      // lavado con suero: penacho de microburbujas arrastrado por el flujo desde la punta y chorro
+      // de alta velocidad en la dirección de la aguja (sólo en la luz donde está la punta)
+      float bub = 0.0, jv = 0.0, jt = 0.0;
+      if ((uFlushP.w > 0.0 || uFlushR.z > 0.0) && ts.blood > 0.0 && ts.sidx == int(uFlushD.w + 0.5)) {
+        vec3 dp = pk - uFlushP.xyz;
+        float a = dot(dp, uFlushD.xyz);                         // mm aguas abajo de la punta
+        float plume = smoothstep(uFlushR.x - 1.0, uFlushR.x + 1.5, a) * (1.0 - smoothstep(uFlushR.y - 3.0, uFlushR.y, a));
+        plume *= 1.0 - 0.5 * exp(-max(a - uFlushR.x, 0.0) / 3.0); // tarda unos mm en llenar la luz
+        float al = dot(dp, uJetD.xyz);                          // mm a lo largo del chorro
+        float ja = max(al, 0.0);
+        float pr = length(dp - uJetD.xyz * al);
+        float jet = uFlushR.z * smoothstep(-0.4, 0.2, al) * exp(-ja / uJetD.w) * exp(-pr * pr / pow(0.5 + 0.35 * ja, 2.0));
+        bub = max(uFlushP.w * plume, jet);
+        jv = uFlushR.w * jet;
+        // la turbulencia se concentra en el chorro y se ordena en ~1 cm aguas abajo
+        jt = max(jet, 0.35 * uFlushP.w * plume * exp(-max(a, 0.0) / 8.0));
+      }
       vec2 sc = scatterField(sp / LATTICE);
-      iq += wk[k] * ts.echo * sc;
+      // las microburbujas son dispersores muy potentes: puntos brillantes dispersos («nevada») que
+      // se mueven con la sangre, más brillantes que el tejido
+      float spark = bub > 0.0 ? smoothstep(0.72, 0.95, vnoise(sp * 4.5)) : 0.0;
+      iq += wk[k] * (ts.echo + bub * (1.0 + 6.0 * spark)) * sc;
       Z += wk[k] * T_Z[t];
       att += wk[k] * T_ATT[t];
-      vW += wk[k] * ts.vtow * ts.blood;
+      vW += wk[k] * (ts.vtow - dot(uJetD.xyz, uDopDir) * jv) * ts.blood;
       bW += wk[k] * ts.blood;
-      turbW += wk[k] * ts.turb * ts.blood;
+      turbW += wk[k] * clamp(ts.turb + jt, 0.0, 0.99) * ts.blood;
       if (k == 1) label = float(t) + 32.0 * float(ts.sidx + 1);
     }
   }
@@ -539,7 +577,32 @@ void main() {
       vec3 A = uNdA[n].xyz;
       vec3 Tt = uNdB[n].xyz;
       float rn = uNdA[n].w;
-      float amp = 0.0;
+      // separación de las reverberaciones internas (pared anterior ↔ posterior del tubo): la cuerda
+      // del haz por el eje de la aguja, igual para todos los rayos → líneas paralelas y regulares
+      vec3 nAx = normalize(Tt - A);
+      float cb = dot(nAx, uB);
+      float chordC = 2.0 * rn / sqrt(max(1.0 - cb * cb, 0.04));
+      // una aguja que cruza el corte en elevación (fuera de plano) cambia de profundidad de un rayo de
+      // elevación al siguiente: cada eco se ensancha para cubrir ese hueco y el corte integra una
+      // banda continua (grosor de corte × tan α) en lugar de 7 barras separadas
+      float dsde = abs(cb * dot(nAx, uE)) / max(1.0 - cb * cb, 0.05);
+      float spreadE = 0.6 * 0.75 * sig * dsde;
+      // incidencia en la cresta = ángulo entre el haz y el plano perpendicular a la aguja (≈ ángulo de
+      // inserción respecto a la sonda), repartido entre la dirección lateral y la de elevación
+      float thA = asin(clamp(abs(cb), 0.0, 1.0));
+      float aLat = abs(dot(nAx, uL)), aEl = abs(dot(nAx, uE));
+      float hN = max(aLat + aEl, 1e-4);
+      float thL = thA * aLat / hN;
+      float thE = thA * aEl / hN;
+      // El eco especular sale desviado 2θ. En el plano (desviación lateral) lo recogen los ~38 mm de
+      // apertura del transductor y la aguja se ve hasta ~45°; fuera de plano (desviación en elevación)
+      // la apertura es de pocos mm y casi sólo queda la componente difusa (rugosidad, bisel): un punto
+      // tenue en el tejido, más claro dentro de la luz anecoica, como en la clínica.
+      float spec = 0.18 + 0.82 * exp(-pow(thL / 0.7, 2.0) - pow(thE / 0.35, 2.0));
+      // anchura de la cresta en elevación, ligada al muestreo de 7 rayos para que el brillo
+      // no dependa de cómo cae la aguja entre dos rayos
+      float wr = max(0.49 * sig, 0.2);
+      vec2 amp = vec2(0.0);
       float trans = 0.0;
       float wsum = 0.0;
       bool centerHit = false;
@@ -551,29 +614,33 @@ void main() {
         vec4 hit = needleHit(ro, uB, A, Tt, rn);
         if (hit.x < 0.0) { trans += wgt; continue; }
         float s0 = hit.x;
-        float chord = max(hit.y - hit.x, 0.2);
-        float th = acos(clamp(hit.z, 0.0, 1.0));
-        // reflexión especular (dependiente del ángulo de incidencia) + componente difusa (rugosidad,
-        // apertura finita del transductor)
-        float spec = 0.3 + 0.7 * exp(-pow(th / 0.6, 2.0));
+        // los rayos que tocan el flanco (lejos de la cresta) reflejan hacia fuera: casi no vuelven
+        float dAx = rayAxisDist(ro, uB, A, Tt);
+        float ridge = exp(-pow(dAx / wr, 2.0));
         float tipB = 1.0 + 0.9 * exp(-hit.w * 1.4);
-        float sdz = max(dz * 0.8, 0.045);
-        float e0 = exp(-pow((w - s0) / sdz, 2.0));
-        float rv = 0.0;
+        // grosor físico del eco ligado a la longitud de onda (no a la rejilla de la calidad elegida)
+        float sdz0 = max(dz * 0.9, 0.3 * uLambda);
+        float sdz = max(sdz0, spreadE);
+        float gN = sqrt(sdz0 / sdz);   // la energía del eco se reparte en la banda
+        // Fase constante a lo largo de la aguja. Con la fase del píxel (4π·w/λ) las filas del eco fino
+        // se cancelaban según cómo cayera en la rejilla; con la del reflector (4π·s0/λ) se cancelaban
+        // las columnas vecinas de una aguja oblicua (su profundidad cambia de columna a columna).
+        // En este modelo de convolución, la visibilidad de un reflector especular la fija el factor
+        // angular (spec), no una interferencia a lo largo de la línea.
+        float ec = exp(-pow((w - s0) / sdz, 2.0));
         for (int m = 1; m <= 5; m++) {
-          float sm = s0 + chord * float(m);
-          rv += pow(0.52, float(m)) * exp(-pow((w - sm) / (sdz * 1.3), 2.0));
+          float sm = s0 + chordC * float(m);
+          ec += pow(0.3, float(m)) * exp(-pow((w - sm) / (sdz * 1.3), 2.0));
         }
-        amp += wgt * spec * tipB * (e0 + rv);
+        amp += vec2(wgt * ridge * spec * tipB * gN * ec, 0.0);
         trans += wgt * (w > s0 + sdz ? 0.4 + 0.25 * (1.0 - spec) : 1.0);
-        if (k == 0 && abs(w - s0) < chord) centerHit = true;
+        if (k == 0 && abs(w - s0) < chordC) centerHit = true;
       }
       // el eco especular de cada rayo de elevación se suma con su peso del haz (sin normalizar:
       // una aguja centrada en el plano devuelve el eco completo); la transmisión sí se promedia
       trans /= wsum;
       needleT *= trans;
-      float ph = 12.566370 * w / uLambda;
-      iq += uNeedleEcho * amp * vec2(cos(ph), sin(ph));
+      iq += uNeedleEcho * amp;
       if (centerHit) label = float(TI_NEEDLE);
     }
   }

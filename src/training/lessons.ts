@@ -256,6 +256,10 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.needle()?.state === 'luz' && (c.needle()?.angle ?? 90) < 22,
       },
       {
+        text: 'Comprueba la posición con un <b>lavado de suero</b> (J o botón <b>Suero</b>): las microburbujas deben recorrer la luz aguas abajo de la punta, y en Doppler color aparece un chorro en la punta. Si el suero se acumula alrededor del vaso (halo anecoico), la punta está fuera de la luz: detén el lavado y recoloca.',
+        check: (c) => c.events.has('flush'),
+      },
+      {
         text: 'Confirma la punción.',
         check: (c) => !!c.needle()?.confirmed,
       },

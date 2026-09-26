@@ -2,7 +2,7 @@
  * Aplicación principal: orquesta el modelo anatómico, el simulador ecográfico, la escena 3D, la
  * interacción (sonda, aguja, sala) y el entrenamiento (métricas, lecciones, ergonomía).
  */
-import { Color, Vector2, Vector3, WebGLRenderer } from 'three';
+import { Color, Matrix4, Vector2, Vector3, WebGLRenderer } from 'three';
 import { ArmShape } from '../anatomy/armShape';
 import { CaseDef, CASES, caseById } from '../anatomy/cases';
 import { AnatomyModel, Structure } from '../anatomy/model';
@@ -10,6 +10,8 @@ import { Needle, NeedleEvent, NeedleRole } from '../interaction/needle';
 import { clampProbe, computePose, defaultProbeState, ProbeState, skinParamOf } from '../interaction/probePose';
 import { SceneManager, CameraPreset, defaultRoomConfig, placeDefaults, NeedleVisual } from '../scene/SceneManager';
 import { DopplerAudio, SpectralDoppler } from '../sim/spectral';
+import { FLUSH_INJECT_S, FlushState, flushParams, innerDiameter, JET_LEN_MM, jetVelocity } from '../sim/flush';
+import { GAUGES } from '../scene/instruments';
 import { defaultSettings, MachineSettings, Quality, SOFT_LIFT, UltrasoundSim } from '../sim/UltrasoundSim';
 import { evaluateErgonomics, ErgoResult } from '../training/ergonomics';
 import { LESSONS, Lesson, LessonCtx } from '../training/lessons';
@@ -23,11 +25,33 @@ export type AppMode = 'explore' | 'cannulate' | 'room' | 'learn';
 
 const CLEAR_COLOR = new Color('#0b1117');
 
+/**
+ * Matriz que escala una malla alrededor de un centro: uniforme (colección esférica) o sólo
+ * perpendicular a un eje (colección alargada que crece en grosor, no en longitud).
+ */
+function scaleAbout(center: Vector3, s: number, axis: Vector3 | null, out: Matrix4): Matrix4 {
+  if (!axis) out.makeScale(s, s, s);
+  else {
+    const t = axis;
+    const k = 1 - s;
+    out.set(s + k * t.x * t.x, k * t.x * t.y, k * t.x * t.z, 0, k * t.y * t.x, s + k * t.y * t.y, k * t.y * t.z, 0, k * t.z * t.x, k * t.z * t.y, s + k * t.z * t.z, 0, 0, 0, 0, 1);
+  }
+  const sc = center.clone().applyMatrix4(out);
+  return out.setPosition(center.x - sc.x, center.y - sc.y, center.z - sc.z);
+}
+
+/** Colección que crece en el tejido: hematoma (sangre extravasada) o infiltración de suero. */
 interface Hematoma {
   st: Structure;
   t0: number;
+  /** radio inicial y final (mm) */
+  r0: number;
   rmax: number;
   center: Vector3;
+  /** constante de tiempo del crecimiento (s) */
+  tau: number;
+  /** eje de una colección alargada (crece sólo en grosor); null = esférica */
+  axis?: Vector3 | null;
 }
 
 export interface SessionRecord {
@@ -64,6 +88,8 @@ export class App {
   labels = false;
   anatLabels = true;
   hematomas: Hematoma[] = [];
+  /** lavado con suero en curso (aguja activa al pulsar) */
+  flush: (FlushState & { flowDir: Vector3; needle: number }) | null = null;
   lesson: { lesson: Lesson; step: number; done: boolean[] } | null = null;
   lessonEvents = new Set<string>();
   lessonFlags: Record<string, number> = {};
@@ -181,6 +207,8 @@ export class App {
     this.scene?.resetNeedles();
     this.sim.needles = [];
     this.sim.tent = null;
+    this.flush = null;
+    this.sim.flush = null;
   }
 
   setMode(m: AppMode) {
@@ -405,7 +433,84 @@ export class App {
       group: 'hematoma',
       pts: [{ x: c.x, y: c.y, z: c.z, r: 0.8 }],
     });
-    this.hematomas.push({ st, t0: this.time, rmax, center: c });
+    this.hematomas.push({ st, t0: this.time, r0: 0.8, rmax, center: c, tau: 6 });
+    this.scene.rebuildAnatomy();
+  }
+
+  /**
+   * Lava la aguja activa con 10 mL de suero para comprobar la posición de la punta.
+   * En la luz: fluye sin resistencia (penacho de microburbujas y chorro en Doppler color).
+   * Fuera de la luz: infiltración (colección anecoica que crece alrededor de la punta).
+   */
+  flushNeedle() {
+    const n = this.needle;
+    if (!n.placed || n.depth <= 0) {
+      this.toast('Primero introduce la aguja; después lava con suero (J) para comprobar la posición', 'warn');
+      return;
+    }
+    if (this.flush && this.time - this.flush.t0 < FLUSH_INJECT_S) return;
+    const ev = (type: NeedleEvent['type'], msg: string, severity: NeedleEvent['severity'], struct?: string) =>
+      this.onNeedleEvent(n, { t: this.time, type, msg, severity, struct });
+    if (n.state === 'luz' && n.inVessel) {
+      const st = n.inVessel;
+      const smp = st.samples[this.model.nearestSample(st, n.tip).idx];
+      const r = smp.r * st.dyn.radiusScale;
+      const q = Math.abs(st.dyn.qNow);
+      const od = GAUGES[n.gauge]?.od ?? 1.8;
+      this.flush = {
+        t0: this.time,
+        sidx: st.index,
+        vmean: (q * 1000) / (Math.PI * r * r),
+        qVessel: q,
+        jetVel: jetVelocity(innerDiameter(od)),
+        flowDir: smp.t.clone().multiplyScalar(st.dyn.qNow >= 0 ? 1 : -1),
+        needle: this.activeNeedle,
+      };
+      ev('flush', `Lavado con suero: entra sin resistencia y las microburbujas recorren la luz (${st.def.short ?? st.def.name}): punta intraluminal`, 'ok', st.def.id);
+    } else {
+      this.addInfiltration(n);
+      ev('infiltration', 'Infiltración: el suero se acumula en el tejido y no en la luz. Detén el lavado y recoloca la aguja.', 'error');
+    }
+  }
+
+  /**
+   * Suero extravasado. Junto a un vaso no puede entrar en la luz: diseca el plano perivascular y forma
+   * un halo anecoico alrededor del vaso a lo largo de un tramo (manguito coaxial que crece desde la
+   * pared; el vaso, con más prioridad, tapa la parte interior). Lejos de un vaso, colección esférica.
+   */
+  private addInfiltration(n: Needle) {
+    if (this.hematomas.length >= 4) return;
+    const tip = n.tip.clone();
+    const near = n.tentStruct ?? n.punctures[n.punctures.length - 1]?.st ?? this.accessStruct() ?? null;
+    let a = tip.clone();
+    let b = tip.clone();
+    let center = tip.clone();
+    let axis: Vector3 | null = null;
+    let r0 = 0.8;
+    let rmax = 4;
+    if (near && near.isVessel) {
+      const smp = near.samples[this.model.nearestSample(near, tip).idx];
+      const rel = tip.clone().sub(smp.p);
+      const dist = rel.addScaledVector(smp.t, -rel.dot(smp.t)).length();
+      const rv = smp.r * near.dyn.radiusScale + smp.w;
+      if (dist < rv + 6) {
+        r0 = rv + 0.2;
+        rmax = rv + 3.2;
+        center = smp.p.clone();
+        axis = smp.t.clone().normalize();
+        a = center.clone().addScaledVector(axis, -6);
+        b = center.clone().addScaledVector(axis, 6);
+      }
+    }
+    const st = this.model.addStructure({
+      id: `infiltrado_${Date.now()}`,
+      name: 'Infiltración de suero',
+      short: 'Suero',
+      kind: 'infiltrado',
+      group: 'hematoma',
+      pts: axis ? [{ x: a.x, y: a.y, z: a.z, r: r0 }, { x: b.x, y: b.y, z: b.z, r: r0 }] : [{ x: a.x, y: a.y, z: a.z, r: r0 }],
+    });
+    this.hematomas.push({ st, t0: this.time, r0, rmax, center, tau: 1.2, axis });
     this.scene.rebuildAnatomy();
   }
 
@@ -759,6 +864,9 @@ export class App {
         case 'n':
           if (this.ensureNeedleMode()) this.placeNeedleAuto();
           break;
+        case 'j':
+          this.flushNeedle();
+          break;
         case 'v': {
           const order: CameraPreset[] = ['procedimiento', 'superior', 'lateral', 'corte', 'operador', 'sala'];
           const cur = (this as unknown as { _cam?: number })._cam ?? 0;
@@ -1009,15 +1117,27 @@ export class App {
     this.sim.needles = renders;
     this.sim.tent = tent;
 
+    // lavado con suero: penacho y chorro desde la punta de la aguja que lo inyecta
+    const fl = this.flush;
+    const nf = fl ? this.needles[fl.needle] : null;
+    const fp = fl ? flushParams(fl, t) : null;
+    if (fl && nf && nf.placed && fp && fp.active) {
+      this.sim.flush = { tip: nf.tip.clone(), dir: nf.dir.clone(), flowDir: fl.flowDir, sidx: fl.sidx, intensity: fp.intensity, tail: fp.tail, front: fp.front, jet: fp.jet, jetVel: fl.jetVel, jetLen: JET_LEN_MM };
+    } else {
+      this.flush = null;
+      this.sim.flush = null;
+    }
+
     // hematomas
     for (const h of this.hematomas) {
-      const r = 0.8 + (h.rmax - 0.8) * (1 - Math.exp(-(t - h.t0) / 6));
+      const r = h.r0 + (h.rmax - h.r0) * (1 - Math.exp(-(t - h.t0) / h.tau));
       this.model.setUniformRadius(h.st, r);
       const mesh = this.scene.anat.meshes.get(h.st);
       if (mesh) {
         const s = r / ((mesh.userData.baseR as number) || 0.8);
-        mesh.scale.setScalar(s);
-        mesh.position.copy(h.center).multiplyScalar(1 - s);
+        scaleAbout(h.center, s, h.axis ?? null, mesh.matrix);
+        mesh.matrixAutoUpdate = false;
+        mesh.matrixWorldNeedsUpdate = true;
       }
     }
 
