@@ -5,6 +5,7 @@ import { caseById, CASES } from '../../src/anatomy/cases';
 import { waveFactor, waveStats } from '../../src/anatomy/hemo';
 import { AnatomyModel } from '../../src/anatomy/model';
 import { Needle } from '../../src/interaction/needle';
+import { skinParamAbove } from '../../src/interaction/probePose';
 import { Metrics } from '../../src/training/metrics';
 import { FLUSH_INJECT_S, flushParams, innerDiameter, jetVelocity } from '../../src/sim/flush';
 
@@ -36,6 +37,21 @@ describe('hemodinámica', () => {
 });
 
 describe('forma del brazo', () => {
+  it('centrar la sonda sobre el vaso deja su eje en la normal de la piel', () => {
+    const { arm, model } = build('rc_madura');
+    const fav = model.byId('fav')!;
+    for (const k of [40, 70, 100]) {
+      const c = fav.samples[k].p;
+      const f = (() => {
+        const par = skinParamAbove(arm, c);
+        return arm.skinFrame(par.x, par.theta);
+      })();
+      const d = c.clone().sub(f.S);
+      const offAxis = d.addScaledVector(f.N, -d.dot(f.N)).length();
+      expect(offAxis).toBeLessThan(0.05); // mm
+    }
+  });
+
   it('surfacePoint y skinDepth son coherentes', () => {
     const arm = new ArmShape();
     for (const [x, th, d] of [

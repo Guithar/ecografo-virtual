@@ -7,7 +7,7 @@ import { ArmShape } from '../anatomy/armShape';
 import { CaseDef, CASES, caseById } from '../anatomy/cases';
 import { AnatomyModel, Structure } from '../anatomy/model';
 import { Needle, NeedleEvent, NeedleRole } from '../interaction/needle';
-import { clampProbe, computePose, defaultProbeState, ProbeState, skinParamOf } from '../interaction/probePose';
+import { clampProbe, computePose, defaultProbeState, ProbeState, skinParamAbove, skinParamOf } from '../interaction/probePose';
 import { SceneManager, CameraPreset, defaultRoomConfig, placeDefaults, NeedleVisual } from '../scene/SceneManager';
 import { DopplerAudio, SpectralDoppler } from '../sim/spectral';
 import { FLUSH_INJECT_S, FlushState, flushParams, innerDiameter, JET_LEN_MM, jetVelocity } from '../sim/flush';
@@ -305,7 +305,7 @@ export class App {
     const p = this.arm.surfacePoint(this.probe.x, this.probe.theta, 'skin');
     const { idx } = this.model.nearestSample(a, p);
     const c = a.samples[idx].p;
-    const par = skinParamOf(c);
+    const par = skinParamAbove(this.arm, c);
     this.probe.theta = par.theta;
     this.probe.x = par.x;
   }

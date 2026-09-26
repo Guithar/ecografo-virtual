@@ -61,3 +61,26 @@ export function computePose(arm: ArmShape, st: ProbeState, pose: ProbePose): Pro
 export function skinParamOf(p: Vector3): { x: number; theta: number } {
   return { x: p.x, theta: (Math.atan2(p.z, p.y) * 180) / Math.PI };
 }
+
+/**
+ * Punto de apoyo en la piel cuya normal pasa por un punto interior p: con la sonda ahí (sin
+ * inclinar), p queda en el eje del haz, en el centro de la imagen transversal y dentro del plano
+ * longitudinal. La proyección polar (skinParamOf) no basta: la sección del brazo es elíptica, su
+ * normal se desvía del radio y deja un vaso a 6 mm de profundidad casi 2 mm fuera del plano.
+ */
+export function skinParamAbove(arm: ArmShape, p: Vector3): { x: number; theta: number } {
+  const par = skinParamOf(p);
+  const d = new Vector3();
+  for (let i = 0; i < 8; i++) {
+    const f = arm.skinFrame(par.x, par.theta);
+    d.subVectors(p, f.S);
+    const offT = d.dot(f.Tt);
+    const offX = d.dot(f.Tx);
+    if (Math.abs(offT) < 0.01 && Math.abs(offX) < 0.01) break;
+    // longitud de piel por grado de theta en este punto
+    const mmPerDeg = arm.surfacePoint(par.x, par.theta + 0.5, 'skin').distanceTo(arm.surfacePoint(par.x, par.theta - 0.5, 'skin'));
+    par.theta += offT / Math.max(mmPerDeg, 1e-3);
+    par.x += offX;
+  }
+  return par;
+}
