@@ -691,6 +691,9 @@ export class App {
       // no interferir con atajos del navegador o del sistema (Ctrl+C, Cmd+R…)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key.toLowerCase();
+      // un deslizador con el foco (navegación con Tab) usa las flechas: no mover además sonda o aguja
+      const act = document.activeElement as HTMLInputElement | null;
+      if (act?.tagName === 'INPUT' && act.type === 'range' && ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown', 'home', 'end'].includes(k)) return;
       if (held.has(k)) this.keys.add(k);
       if (e.shiftKey) this.keys.add('shift');
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown', ' '].includes(k)) e.preventDefault();
@@ -790,6 +793,11 @@ export class App {
     document.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement | null)?.closest?.('button');
       if (b && (e as PointerEvent).pointerType) b.blur();
+    });
+    // lo mismo con los deslizadores movidos con el ratón: las flechas vuelven a la sonda y la aguja
+    document.addEventListener('pointerup', (e) => {
+      const r = (e.target as HTMLElement | null)?.closest?.('input[type=range]') as HTMLInputElement | null;
+      if (r) setTimeout(() => r.blur(), 0);
     });
 
     // ratón en la vista 3D
