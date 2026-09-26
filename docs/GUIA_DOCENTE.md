@@ -86,6 +86,8 @@ Niveles orientativos:
 
 ## Uso en grupo
 
+- Cada participante lo abre en su ordenador desde <https://guithar.github.io/ecografo-virtual/>, sin instalar nada (navegador con WebGL2).
+- Un enlace con parámetros abre directamente un caso y un modo, lo que resulta útil para repartir ejercicios. Por ejemplo, `https://guithar.github.io/ecografo-virtual/?caso=rc_estenosis&modo=cannulate`.
 - Proyecta el simulador en el aula con el panel 3D maximizado (botón ⤢) para explicar la relación entre la sonda, el plano de corte y la imagen.
 - Activa **Fusión** (anatomía sobre ecografía) y **Etiquetas** para las primeras sesiones. Desactívalas, junto con las **Ayudas**, en las evaluaciones.
 - El informe (botón **Informe**) se puede imprimir o exportar en JSON o CSV para el portafolio de cada participante. El historial se guarda en el navegador.

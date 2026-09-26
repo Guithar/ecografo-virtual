@@ -7,6 +7,8 @@ Simulador de ecografía que funciona **en el navegador**, pensado para aprender 
 - la **técnica de punción** en eje corto (fuera de plano, con posicionamiento dinámico de la punta) y en eje largo (en plano);
 - la **valoración de la FAV**: diámetro, profundidad, flujo (Qa) y criterios Doppler de estenosis.
 
+**Versión en línea:** <https://guithar.github.io/ecografo-virtual/>. No necesita instalación.
+
 > ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md). La propuesta de itinerario formativo y la rúbrica de evaluación están en [`docs/GUIA_DOCENTE.md`](docs/GUIA_DOCENTE.md).
 
 ## Funciones
@@ -124,6 +126,8 @@ Ocho lecciones guiadas con **comprobación automática** de cada paso:
 
 Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior.
 
+Para usarlo basta con abrir la [versión en línea](https://guithar.github.io/ecografo-virtual/). Para trabajar con el código:
+
 ```bash
 npm install
 npm run dev          # servidor de desarrollo en http://localhost:5173
@@ -133,7 +137,14 @@ npm run typecheck
 npm test             # pruebas unitarias (hemodinámica, modelo, aguja, métricas)
 ```
 
-El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub Pages** en cada push a `main`. Antes hay que activar Pages en *Settings → Pages → Source: GitHub Actions*.
+El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub Pages** en cada push a `main`. Antes de publicar, pasa las pruebas y compila. También se puede lanzar a mano desde la pestaña *Actions*.
+
+Configuración necesaria una sola vez, en *Settings* del repositorio:
+
+1. *General → Default branch*: `main`.
+2. *Pages → Build and deployment → Source*: **GitHub Actions**.
+
+Hay que hacerlo en este orden. El entorno `github-pages` solo admite despliegues desde la rama que era la predeterminada al activar Pages. Si el despliegue falla con «Branch "main" is not allowed to deploy to github-pages», añade `main` en *Settings → Environments → github-pages → Deployment branches and tags*.
 
 Parámetros de URL útiles:
 
