@@ -1,5 +1,7 @@
 # Ecógrafo Virtual · Punción ecoguiada de FAV
 
+[![Publicar en GitHub Pages](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml/badge.svg)](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml)
+
 Simulador de ecografía que funciona **en el navegador**, pensado para aprender la **punción ecoguiada de accesos vasculares para hemodiálisis**, sobre todo fístulas arteriovenosas (FAV). Es un primer contacto de bajo coste, previo a los simuladores físicos comerciales. Sirve para practicar:
 
 - la **posición del transductor**, del **paciente** y de la **pantalla**;
@@ -141,10 +143,10 @@ El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub 
 
 Configuración necesaria una sola vez, en *Settings* del repositorio:
 
-1. *General → Default branch*: `main`.
-2. *Pages → Build and deployment → Source*: **GitHub Actions**.
+1. *Pages → Build and deployment → Source*: **GitHub Actions**. No uses «Deploy from a branch». Ese modo publica los archivos fuente sin compilar y la página se queda en la pantalla de carga. Su selector «Branch» no es la rama predeterminada del repositorio.
+2. *General → Default branch*: `main`.
 
-Hay que hacerlo en este orden. El entorno `github-pages` solo admite despliegues desde la rama que era la predeterminada al activar Pages. Si el despliegue falla con «Branch "main" is not allowed to deploy to github-pages», añade `main` en *Settings → Environments → github-pages → Deployment branches and tags*.
+Si un despliegue falla con «Branch "main" is not allowed to deploy to github-pages», añade `main` en *Settings → Environments → github-pages → Deployment branches and tags*.
 
 Parámetros de URL útiles:
 
