@@ -598,7 +598,10 @@ void main() {
       // apertura del transductor y la aguja se ve hasta ~45°; fuera de plano (desviación en elevación)
       // la apertura es de pocos mm y casi sólo queda la componente difusa (rugosidad, bisel): un punto
       // tenue en el tejido, más claro dentro de la luz anecoica, como en la clínica.
-      float spec = 0.18 + 0.82 * exp(-pow(thL / 0.7, 2.0) - pow(thE / 0.35, 2.0));
+      float spec = 0.25 + 0.75 * exp(-pow(thL / 0.7, 2.0) - pow(thE / 0.45, 2.0));
+      // las reverberaciones internas del tubo también salen desviadas: fuera de plano vuelven poco
+      // (cola de cometa tenue) y no deben parecer una segunda punta dentro de la luz
+      float revK = mix(0.3, 1.0, aLat / hN);
       // anchura de la cresta en elevación, ligada al muestreo de 7 rayos para que el brillo
       // no dependa de cómo cae la aguja entre dos rayos
       float wr = max(0.49 * sig, 0.2);
@@ -621,7 +624,7 @@ void main() {
         // grosor físico del eco ligado a la longitud de onda (no a la rejilla de la calidad elegida)
         float sdz0 = max(dz * 0.9, 0.3 * uLambda);
         float sdz = max(sdz0, spreadE);
-        float gN = sqrt(sdz0 / sdz);   // la energía del eco se reparte en la banda
+        float gN = pow(sdz0 / sdz, 0.3);   // la energía del eco se reparte en la banda
         // Fase constante a lo largo de la aguja. Con la fase del píxel (4π·w/λ) las filas del eco fino
         // se cancelaban según cómo cayera en la rejilla; con la del reflector (4π·s0/λ) se cancelaban
         // las columnas vecinas de una aguja oblicua (su profundidad cambia de columna a columna).
@@ -630,7 +633,7 @@ void main() {
         float ec = exp(-pow((w - s0) / sdz, 2.0));
         for (int m = 1; m <= 5; m++) {
           float sm = s0 + chordC * float(m);
-          ec += pow(0.3, float(m)) * exp(-pow((w - sm) / (sdz * 1.3), 2.0));
+          ec += revK * pow(0.3, float(m)) * exp(-pow((w - sm) / (sdz * 1.3), 2.0));
         }
         amp += vec2(wgt * ridge * spec * tipB * gN * ec, 0.0);
         trans += wgt * (w > s0 + sdz ? 0.4 + 0.25 * (1.0 - spec) : 1.0);
