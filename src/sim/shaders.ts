@@ -21,6 +21,9 @@ import { KNOT_COUNT } from '../anatomy/armShape';
 import { MAX_STRUCTS } from '../anatomy/model';
 
 export const MAX_SEG_GLSL = 192;
+export const TILES_X = 8;
+export const TILES_Z = 6;
+export const TILE_MAX = 48;
 
 export const FS_VERT = /* glsl */ `
 precision highp float;
@@ -381,10 +384,36 @@ void evalSeg(inout Tis best, vec3 p, int si, float depthW, float dloc) {
   }
 }
 
+// teselas de la imagen con la lista de segmentos que pueden afectarlas (optimización)
+uniform sampler2D uTiles;
+int gTile = 0;
+
+bool segNear(vec3 p, int i) {
+  vec4 T0 = texelFetch(uSeg, ivec2(0, i), 0);
+  vec4 T1 = texelFetch(uSeg, ivec2(1, i), 0);
+  vec3 m = 0.5 * (T0.xyz + T1.xyz);
+  float hl = 0.5 * distance(T0.xyz, T1.xyz);
+  float rmax = max(T0.w, T1.w) * 1.9 + 2.2;
+  vec3 dm = p - m;
+  return dot(dm, dm) <= (hl + rmax) * (hl + rmax);
+}
+
 Tis evalPoint(vec3 p, float depthW, float dloc) {
   Tis best;
   best.prio = -1.0; best.sd = 1e9; best.sidx = -1; best.t = -1;
   best.vtow = 0.0; best.blood = 0.0; best.turb = 0.0; best.advect = 0.0; best.echo = 0.0; best.axis = vec3(1.0, 0.0, 0.0);
+  float cnt = texelFetch(uTiles, ivec2(0, gTile), 0).r;
+  if (cnt > -0.5) {
+    int nc = int(cnt + 0.5);
+    for (int j = 0; j < ${TILE_MAX}; j++) {
+      if (j >= nc) break;
+      int i = int(texelFetch(uTiles, ivec2(j + 1, gTile), 0).r + 0.5);
+      if (!segNear(p, i)) continue;
+      evalSeg(best, p, i, depthW, dloc);
+    }
+    if (best.t < 0) best = baseLayers(p);
+    return best;
+  }
   for (int i = 0; i < ${MAX_SEG_GLSL}; i++) {
     if (i >= uSegCount) break;
     vec4 T0 = texelFetch(uSeg, ivec2(0, i), 0);
@@ -430,6 +459,7 @@ vec4 needleHit(vec3 ro, vec3 rd, vec3 A, vec3 Btip, float rn) {
 
 void main() {
   vec2 fc = gl_FragCoord.xy;
+  gTile = int(floor(fc.y / uRes.y * ${TILES_Z}.0)) * ${TILES_X} + int(floor(fc.x / uRes.x * ${TILES_X}.0));
   float u = (fc.x / uRes.x - 0.5) * uW;        // lateral (mm), negativo = lado del marcador
   float w = (fc.y / uRes.y) * uD;               // profundidad (mm)
   float dz = uD / uRes.y;

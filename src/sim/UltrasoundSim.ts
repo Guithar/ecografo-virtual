@@ -14,6 +14,7 @@ import {
   PlaneGeometry,
   RawShaderMaterial,
   RGBAFormat,
+  RedFormat,
   Scene,
   UnsignedByteType,
   Vector2,
@@ -39,6 +40,9 @@ import {
   LATERAL_FRAG,
   SCAN_FRAG,
   TISSUE_FRAG,
+  TILES_X,
+  TILES_Z,
+  TILE_MAX,
 } from './shaders';
 
 export type ImagingMode = 'B' | 'color' | 'power';
@@ -203,6 +207,8 @@ export class UltrasoundSim {
   rtAnatomy!: WebGLRenderTarget;
 
   private segTex: DataTexture;
+  private tileData = new Float32Array((TILE_MAX + 1) * TILES_X * TILES_Z);
+  private tileTex: DataTexture;
   private mTissue: RawShaderMaterial;
   private mIface: RawShaderMaterial;
   private mInitScan: RawShaderMaterial;
@@ -213,6 +219,8 @@ export class UltrasoundSim {
   private mCompose: RawShaderMaterial;
   private mAnat: RawShaderMaterial;
   highlight = -1;
+  /** depuración: desactiva la optimización por teselas */
+  noTiles = false;
   // bucle cine: anillo de fotogramas de la imagen final
   private cine: WebGLRenderTarget[] = [];
   private cineTimes: number[] = [];
@@ -237,6 +245,11 @@ export class UltrasoundSim {
     this.segTex.minFilter = NearestFilter;
     this.segTex.needsUpdate = true;
 
+    this.tileTex = new DataTexture(this.tileData, TILE_MAX + 1, TILES_X * TILES_Z, RedFormat, FloatType);
+    this.tileTex.magFilter = NearestFilter;
+    this.tileTex.minFilter = NearestFilter;
+    this.tileTex.needsUpdate = true;
+
     const knots: Vector4[] = [];
     for (let i = 0; i < 64; i++) knots.push(new Vector4());
     const strA: Vector4[] = [];
@@ -260,6 +273,7 @@ export class UltrasoundSim {
       uKnotDX: { value: KNOT_DX },
       uSeg: { value: this.segTex },
       uSegCount: { value: 0 },
+      uTiles: { value: this.tileTex },
       uStrA: { value: strA },
       uStrB: { value: strB },
       uTime: { value: 0 },
@@ -465,6 +479,7 @@ export class UltrasoundSim {
     model.updateDynamics(time);
     const n = model.cull(pose.F, pose.L, pose.B, pose.E, W, D, pose.press, Math.max(4, this.sliceThickness(0) * 1.6));
     this.segTex.needsUpdate = true;
+    this.buildTiles(n, W, D, pose.press);
     this.lastCull = performance.now() - t0;
 
     const lambda = 1.54 / s.freq; // mm
@@ -623,6 +638,45 @@ export class UltrasoundSim {
     this.cineTimes[this.cineHead] = t;
     this.cineHead = (this.cineHead + 1) % this.cineSize;
     this.cineCount = Math.min(this.cineCount + 1, this.cineSize);
+  }
+
+  /** Asigna a cada tesela de la imagen los segmentos cuya esfera envolvente puede alcanzarla. */
+  private buildTiles(n: number, W: number, D: number, press: number) {
+    const td = this.tileData;
+    const stride = TILE_MAX + 1;
+    const nt = TILES_X * TILES_Z;
+    for (let t = 0; t < nt; t++) td[t * stride] = this.noTiles ? -1 : 0;
+    if (this.noTiles) {
+      this.tileTex.needsUpdate = true;
+      return;
+    }
+    const m = this.model;
+    const tw = W / TILES_X;
+    const th = D / TILES_Z;
+    const lift = SOFT_LIFT + 0.5 * press;
+    for (let i = 0; i < n; i++) {
+      const u = m.segU[i] + W / 2;
+      const w = m.segW[i];
+      const r = m.segR[i];
+      const x0 = Math.max(0, Math.floor((u - r) / tw));
+      const x1 = Math.min(TILES_X - 1, Math.floor((u + r) / tw));
+      const z0 = Math.max(0, Math.floor((w - r - lift) / th));
+      const z1 = Math.min(TILES_Z - 1, Math.floor((w + r + press) / th));
+      for (let tz = z0; tz <= z1; tz++) {
+        for (let tx = x0; tx <= x1; tx++) {
+          const t = tz * TILES_X + tx;
+          const c = td[t * stride];
+          if (c < 0) continue;
+          if (c >= TILE_MAX) {
+            td[t * stride] = -1; // desbordamiento: la tesela recorrerá todos los segmentos
+            continue;
+          }
+          td[t * stride + 1 + c] = i;
+          td[t * stride] = c + 1;
+        }
+      }
+    }
+    this.tileTex.needsUpdate = true;
   }
 
   /** Número de fotogramas disponibles en el cine. */

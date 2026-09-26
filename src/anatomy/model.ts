@@ -186,6 +186,10 @@ export class AnatomyModel {
   readonly segments: Segment[] = [];
   /** datos GPU de segmentos filtrados para el fotograma actual */
   readonly segData = new Float32Array(MAX_SEGMENTS * SEG_STRIDE * 4);
+  /** posición en la imagen (u lateral, w profundidad) y radio envolvente de cada segmento filtrado */
+  readonly segU = new Float32Array(MAX_SEGMENTS);
+  readonly segW = new Float32Array(MAX_SEGMENTS);
+  readonly segR = new Float32Array(MAX_SEGMENTS);
   segCount = 0;
   /** uniformes por estructura */
   readonly strA = new Float32Array(MAX_STRUCTS * 4);
@@ -414,7 +418,7 @@ export class AnatomyModel {
     const out = this.segData;
     let n = 0;
     const c = tmpA;
-    const cand: { seg: Segment; dist: number }[] = candBuf;
+    const cand: { seg: Segment; dist: number; u: number; w: number; rr: number }[] = candBuf;
     cand.length = 0;
     for (const seg of this.segments) {
       const st = seg.st;
@@ -429,11 +433,14 @@ export class AnatomyModel {
       if (cb < -press - 2 - R || cb > D + 1 + R) continue;
       const ce = c.dot(E);
       if (Math.abs(ce) > elevHalf + R) continue;
-      cand.push({ seg, dist: Math.abs(ce) - R });
+      cand.push({ seg, dist: Math.abs(ce) - R, u: cl, w: cb - press, rr: hl + Math.max(seg.a.r, seg.b.r) * rs * 1.9 + 2.2 + 3 });
     }
     if (cand.length > MAX_SEGMENTS) cand.sort((a, b) => a.dist - b.dist);
-    for (const { seg } of cand) {
+    for (const { seg, u, w, rr } of cand) {
       if (n >= MAX_SEGMENTS) break;
+      this.segU[n] = u;
+      this.segW[n] = w;
+      this.segR[n] = rr;
       const o = n * SEG_STRIDE * 4;
       const a = seg.a;
       const b = seg.b;
@@ -666,4 +673,4 @@ function defaultPressure(kind: StructKind): number {
 const tmpA = new Vector3();
 const tmpB = new Vector3();
 const tmpO = new Vector3();
-const candBuf: { seg: Segment; dist: number }[] = [];
+const candBuf: { seg: Segment; dist: number; u: number; w: number; rr: number }[] = [];
