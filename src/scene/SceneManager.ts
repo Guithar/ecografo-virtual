@@ -58,7 +58,7 @@ export interface ViewOptions {
 
 export function defaultViewOptions(): ViewOptions {
   return {
-    skinOpacity: 0.55,
+    skinOpacity: 0.7,
     vesselOpacity: 1,
     showMuscle: false,
     showVessels: true,
@@ -119,14 +119,20 @@ export function placeDefaults(cfg: RoomConfig) {
   cfg.operator.x = op.x;
   cfg.operator.z = op.z;
   cfg.operator.yaw = Math.atan2(-hd.x, -hd.z);
-  // pantalla: más allá del sitio de punción, en la línea de visión, desplazada hacia fuera del cuerpo
-  const lateral = new Vector3(-hd.z, 0, hd.x).multiplyScalar(cfg.side === 'left' ? -1 : 1);
-  const scr = mid.clone().addScaledVector(hd, -0.62).addScaledVector(lateral, 0.12);
+  // pantalla: más allá del sitio de punción, en la línea de visión del operador, junto al codo y por
+  // fuera del brazo (sin chocar con el sillón ni el paciente)
+  const sx = cfg.side === 'left' ? 1 : -1;
+  const perp = new Vector3().crossVectors(new Vector3(0, 1, 0), hd).multiplyScalar(sx).normalize();
+  const elbow = pl.shoulder.clone().addScaledVector(pl.dir, 0.2);
+  const scr = elbow.clone().addScaledVector(perp, 0.3);
+  void mid;
   cfg.cart.x = scr.x;
   cfg.cart.z = scr.z;
   const toOp = new Vector3(op.x - scr.x, 0, op.z - scr.z).normalize();
   cfg.cart.yaw = Math.atan2(toOp.x, toOp.z);
   cfg.cart.monitorYaw = 0;
+  cfg.cart.monitorHeight = -0.2;
+  cfg.cart.monitorPitch = -0.28;
 }
 
 export class SceneManager {
@@ -219,9 +225,10 @@ export class SceneManager {
 
     this.scanPlaneMat = new MeshBasicMaterial({ map: displayTex, side: DoubleSide, transparent: true, opacity: 0.92, toneMapped: false, depthWrite: false });
     this.scanPlane = new Mesh(new PlaneGeometry(1, 1), this.scanPlaneMat);
-    this.scanPlane.renderOrder = 10;
+    this.scanPlane.renderOrder = 30;
     this.armGroup.add(this.scanPlane);
     this.scanOutline = new LineSegments(new EdgesGeometry(new PlaneGeometry(1, 1)), new LineBasicMaterial({ color: '#7fd8ff', transparent: true, opacity: 0.9 }));
+    this.scanOutline.renderOrder = 31;
     this.armGroup.add(this.scanOutline);
     this.board = armBoard();
     this.armGroup.add(this.board);
@@ -303,7 +310,8 @@ export class SceneManager {
     if (this.skin) {
       this.skinMat.opacity = o.skinOpacity;
       this.skinMat.transparent = o.skinOpacity < 0.999;
-      this.skinMat.depthWrite = o.skinOpacity > 0.6;
+      // con piel translúcida no escribe profundidad: el plano de exploración y la anatomía se ven a través
+      this.skinMat.depthWrite = o.skinOpacity > 0.995;
       this.skin.visible = o.skinOpacity > 0.01;
     }
     if (this.fascia) this.fascia.visible = o.showMuscle;
@@ -496,12 +504,25 @@ export class SceneManager {
 
   probeE = new Vector3(1, 0, 0);
   planeCenter = new Vector3();
+  /** la cámara sigue a la sonda */
+  follow = true;
+  private lastProbe = new Vector3();
 
   /** Actualiza objetos dependientes (manos del operador, cámara del operador...). */
   update(dt: number, pose: ProbePose, depth: number) {
     this.probeE.copy(pose.E);
     this.planeCenter.copy(pose.F).addScaledVector(pose.B, pose.press + depth / 2);
     if (this.flow?.points.visible) this.flow.update(dt);
+    // seguimiento suave de la sonda por la cámara orbital
+    const pw = this.probeWorld();
+    if (this.follow && !this.useOperatorCam && this.lastProbe.lengthSq() > 0) {
+      const d = pw.clone().sub(this.lastProbe);
+      if (d.length() < 0.2) {
+        this.controls.target.add(d);
+        this.camera.position.add(d);
+      }
+    }
+    this.lastProbe.copy(pw);
     const probeHandle = this.armToWorld(pose.F.clone().addScaledVector(pose.B, -70));
     let needleHand: Vector3 | null = null;
     const nv = this.needleVis.find((n) => n.visible);

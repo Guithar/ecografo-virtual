@@ -51,7 +51,7 @@ export const TISSUES: TissueProps[] = [
   { id: T.Fat, name: 'Tejido celular subcutáneo', Z: 1.38, att: 0.55, echo: 0.2, color: '#f2d680' },
   { id: T.Fascia, name: 'Fascia', Z: 1.85, att: 1.5, echo: 1.05, color: '#f5f0e6' },
   { id: T.Muscle, name: 'Músculo', Z: 1.7, att: 0.9, echo: 0.3, color: '#b4453c' },
-  { id: T.Tendon, name: 'Tendón', Z: 1.8, att: 2.5, echo: 0.9, color: '#ece6da' },
+  { id: T.Tendon, name: 'Tendón', Z: 1.8, att: 1.4, echo: 0.9, color: '#ece6da' },
   { id: T.Nerve, name: 'Nervio', Z: 1.62, att: 0.9, echo: 0.42, color: '#f2c33a' },
   { id: T.Bone, name: 'Hueso cortical', Z: 7.6, att: 18.0, echo: 1.2, color: '#efe4c8' },
   { id: T.Wall, name: 'Pared vascular', Z: 1.72, att: 1.2, echo: 0.8, color: '#d9a0a8' },

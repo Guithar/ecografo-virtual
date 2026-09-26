@@ -312,6 +312,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
     gNd.root.classList.toggle('hidden', !cannulate);
     gRoom.root.classList.toggle('hidden', m !== 'room');
     gDop.root.classList.toggle('hidden', m === 'room');
+    gImg.root.classList.toggle('hidden', m === 'room');
     for (const b of bounds) b.update();
   };
   update();

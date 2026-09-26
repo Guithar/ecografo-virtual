@@ -208,7 +208,7 @@ Tis baseLayers(vec3 p) {
     r.t = TI_FAT;
     float R = sqrt(s.x * s.y);
     float th = atan(p.z, p.y);
-    vec3 q = vec3(p.x * 0.16, dS * 0.55, th * R * 0.16);
+    vec3 q = vec3(p.x * 0.11, dS * 0.75, th * R * 0.11);
     float n = fbm2(q);
     float septa = 1.0 - smoothstep(0.0, 0.045, abs(n - 0.5));
     float lob = vnoise(q * 1.9 + 7.0);
@@ -229,9 +229,10 @@ Tis baseLayers(vec3 p) {
   float fib = vnoise(vec3(p.x * 0.05, p.y * 1.3, p.z * 1.3));
   float dots = smoothstep(0.72, 0.9, vnoise(vec3(p.x * 0.09, p.y * 2.6, p.z * 2.6)));
   // tabiques intermusculares (compartimentos)
-  vec2 wz = worley2(p.zy * 0.065 + vec2(p.x * 0.0045, -p.x * 0.003), 11);
-  float sept = 1.0 - smoothstep(0.0, 0.06, wz.y - wz.x);
-  r.echo = T_ECHO[TI_MUSCLE] * (0.3 + 0.55 * fib * fib + 1.5 * fasc + 1.6 * dots) + 0.9 * sept;
+  vec2 warp = vec2(vnoise(vec3(p.zy * 0.08, p.x * 0.01)), vnoise(vec3(p.zy * 0.08 + 17.0, p.x * 0.01))) - 0.5;
+  vec2 wz = worley2(p.zy * 0.055 + warp * 0.9 + vec2(p.x * 0.0045, -p.x * 0.003), 11);
+  float sept = 1.0 - smoothstep(0.0, 0.05, wz.y - wz.x);
+  r.echo = T_ECHO[TI_MUSCLE] * (0.3 + 0.55 * fib * fib + 1.5 * fasc + 1.6 * dots) + 0.6 * sept;
   return r;
 }
 
@@ -295,7 +296,10 @@ void evalSeg(inout Tis best, vec3 p, int si, float depthW, float dloc) {
     best.vtow = 0.0; best.blood = 0.0; best.turb = 0.0; best.advect = 0.0;
     if (sd < 0.0) {
       vec4 T3 = texelFetch(uSeg, ivec2(3, si), 0);
-      if (T3.w > 0.0 && dot(o, T3.xyz) > r - T3.w) {
+      float ol = length(o);
+      float cth = ol > 1e-4 ? dot(o / ol, T3.xyz) : 0.0;
+      float thLocal = T3.w * sqrt(clamp((cth - 0.15) / 0.85, 0.0, 1.0));
+      if (T3.w > 0.0 && ol > r - thLocal) {
         best.t = TI_THROMBUS;
         float het = fbm2(pp * 0.9);
         best.echo = T_ECHO[TI_THROMBUS] * (0.5 + 1.3 * het) ;
@@ -317,7 +321,7 @@ void evalSeg(inout Tis best, vec3 p, int si, float depthW, float dloc) {
       best.blood = 1.0;
       best.turb = T4.x;
       best.advect = vprof;
-      best.echo = T_ECHO[best.t] * (1.0 + 18.0 * (T4.w + SB.w));
+      best.echo = T_ECHO[best.t] * (1.0 + 6.0 * (T4.w + SB.w));
       return;
     }
     // pared

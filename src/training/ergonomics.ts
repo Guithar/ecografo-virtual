@@ -52,9 +52,9 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
   const tot = deg(gs.angleTo(gm));
   items.push({
     label: 'Desplazamiento total de la mirada',
-    level: tot < 35 ? 'good' : tot < 60 ? 'fair' : 'bad',
+    level: tot < 45 ? 'good' : tot < 70 ? 'fair' : 'bad',
     value: `${tot.toFixed(0)}°`,
-    advice: tot < 35 ? 'Basta con mover los ojos.' : 'Acerca la pantalla a la línea visual (menos giro de cuello).',
+    advice: tot < 45 ? 'Basta con mover los ojos (sin girar la cabeza).' : 'Acerca la pantalla a la línea visual y bájala hacia el campo de trabajo (menos giro de cuello).',
   });
   const dist = gm.length();
   items.push({
@@ -66,9 +66,9 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
   const vert = deg(Math.atan2(gm.y, Math.hypot(gm.x, gm.z)));
   items.push({
     label: 'Altura de la pantalla (ángulo respecto a los ojos)',
-    level: vert <= 5 && vert >= -30 ? 'good' : vert <= 15 && vert >= -45 ? 'fair' : 'bad',
+    level: vert <= 5 && vert >= -35 ? 'good' : vert <= 15 && vert >= -50 ? 'fair' : 'bad',
     value: `${vert > 0 ? '+' : ''}${vert.toFixed(0)}°`,
-    advice: vert > 5 ? 'La pantalla está por encima de los ojos: baja el monitor.' : vert < -30 ? 'La pantalla está demasiado baja: súbela.' : 'Altura cómoda (a la altura de los ojos o ligeramente por debajo).',
+    advice: vert > 5 ? 'La pantalla está por encima de los ojos: baja el monitor.' : vert < -35 ? 'La pantalla está demasiado baja: súbela.' : 'Altura cómoda (a la altura de los ojos o algo por debajo, hacia el campo de trabajo).',
   });
   // orientación del monitor hacia el operador
   const head = sm.room.cart.monitor;

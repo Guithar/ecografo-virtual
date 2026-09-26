@@ -197,7 +197,7 @@ export class App {
       this.panels.showTab('case');
     }
     if (m !== 'room' && this.scene.opts.skinOpacity > 0.95) {
-      this.scene.opts.skinOpacity = 0.55;
+      this.scene.opts.skinOpacity = 0.7;
       this.scene.applyOptions();
       if (!this.scene.useOperatorCam) this.scene.setPreset('procedimiento');
     }
@@ -589,6 +589,8 @@ export class App {
     bindChk('optTendons', 'showTendons');
     bindChk('optMuscle', 'showMuscle');
     bindChk('optFlow', 'showFlow');
+    const fol = document.getElementById('optFollow') as HTMLInputElement;
+    fol.addEventListener('change', () => (this.scene.follow = fol.checked));
     const skin = document.getElementById('optSkin') as HTMLInputElement;
     skin.value = String(o.skinOpacity);
     skin.addEventListener('input', () => {
