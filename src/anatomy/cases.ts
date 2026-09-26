@@ -809,7 +809,7 @@ export const CASES: CaseDef[] = [
         veinPts: rcAvfPts({ r: 2.7, depth: 6.0 }),
         veinExtra: {
           lesions: [
-            { type: 'jet', at: 5, len: 30, sev: 0.6 },
+            { type: 'jet', at: 4, len: 16, sev: 0.4 },
             { type: 'stenosis', at: 19, len: 12, sev: 0.56, thick: 0.9 },
           ],
           flow: { q: 430, wave: 'avf', profile: 4, turb: 0.05 },

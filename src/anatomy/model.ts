@@ -302,7 +302,8 @@ export class AnatomyModel {
           r *= 1 - sev * b;
           wallExtra = Math.max(wallExtra, (L.thick ?? 0.6) * b);
           // turbulencia postestenótica (chorro) hasta ~2 cm distal
-          const post = s > L.at ? Math.exp(-(s - L.at) / 18) * sev : sev * b;
+          // turbulencia postestenótica: máxima tras la estenosis, se disipa en ~1–2 cm
+          const post = s > L.at ? Math.exp(-(s - L.at) / 9) * sev : sev * b;
           turb = Math.max(turb, Math.min(1, post * 1.3));
         } else if (L.type === 'aneurysm') {
           const dil = L.sev ?? 2;

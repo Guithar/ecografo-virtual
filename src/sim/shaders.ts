@@ -860,8 +860,8 @@ void main() {
       // ruido de color en el tejido con ganancia excesiva
       bool noiseCol = uCGain > 0.82 && nz2.x > 2.6 - (uCGain - 0.82) * 9.0 && g < 0.6;
       // ruido del estimador de autocorrelación: proporcional a la anchura espectral (turbulencia)
-      float tEff = max(turb - 0.08, 0.0);
-      v += nz.x * (0.015 * uVn + 0.06 * abs(v) + tEff * 1.2 * uVn);
+      float tEff = max(turb - 0.12, 0.0);
+      v += nz.x * (0.015 * uVn + 0.04 * abs(v) + tEff * 0.9 * uVn);
       if (noiseCol) { v = nz.y * uVn * 0.7; detect = true; power = 0.4; }
       bool pass = detect && abs(v) > uWallF && g < uPriority + 0.2 * (1.0 - power);
       if (pass) {

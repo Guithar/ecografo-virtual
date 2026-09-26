@@ -241,6 +241,56 @@ export class Panels {
     this.q('modal').classList.add('hidden');
   }
 
+  /** Bienvenida para la primera visita. */
+  showWelcome(force = false) {
+    let seen = false;
+    try {
+      seen = localStorage.getItem('ecofav-bienvenida') === '1';
+    } catch {
+      /* sin almacenamiento */
+    }
+    if (seen && !force) return;
+    this.openModal(`
+      <h2>Ecógrafo Virtual FAV</h2>
+      <p>Simulador para aprender la <b>punción ecoguiada de fístulas arteriovenosas</b> sin equipo físico. La imagen ecográfica se calcula en tiempo real a partir de la anatomía que ves en 3D.</p>
+      <div class="cols">
+        <div>
+          <h4>La pantalla</h4>
+          <ul>
+            <li><b>Arriba a la izquierda</b>: la realidad física. Brazo, anatomía interna, sonda y plano de corte (azul).</li>
+            <li><b>Arriba a la derecha</b>: el monitor del ecógrafo.</li>
+            <li><b>Abajo a la derecha</b>: la anatomía real del plano que exploras.</li>
+            <li><b>Abajo</b>: la consola (sonda, aguja, imagen y Doppler) y las pestañas de caso, métricas y lecciones.</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Primeros pasos</h4>
+          <ol>
+            <li>Arrastra la <b>sonda</b> sobre la piel o usa <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. Gira con <kbd>Q</kbd>/<kbd>E</kbd> y presiona con <kbd>X</kbd>.</li>
+            <li>Pulsa <kbd>1</kbd> o <kbd>2</kbd> para ver el vaso en transversal o en longitudinal.</li>
+            <li>En <b>Punción</b>, coloca la aguja con <kbd>N</kbd>, avanza con <kbd>↑</kbd> y confirma con <kbd>Intro</kbd>.</li>
+            <li>En <b>Aprendizaje</b> tienes 8 lecciones guiadas que se corrigen solas.</li>
+          </ol>
+        </div>
+      </div>
+      <p class="muted">Herramienta educativa: no sustituye la formación práctica supervisada. Pulsa <kbd>H</kbd> para ver todos los atajos.</p>
+      <div class="crow" style="margin-top:12px"><button class="primary" id="wlStart">Empezar</button><button id="wlLesson">Ir a la lección 1</button></div>`);
+    const done = () => {
+      try {
+        localStorage.setItem('ecofav-bienvenida', '1');
+      } catch {
+        /* */
+      }
+      this.closeModal();
+    };
+    this.q('wlStart').addEventListener('click', done);
+    this.q('wlLesson').addEventListener('click', () => {
+      done();
+      this.app.setMode('learn');
+      this.app.startLesson('orientacion');
+    });
+  }
+
   showHelp() {
     this.openModal(`
       <h2>Ayuda del Ecógrafo Virtual</h2>

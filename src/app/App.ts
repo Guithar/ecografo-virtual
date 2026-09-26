@@ -125,6 +125,7 @@ export class App {
     this.scene.setPreset((q.get('camara') as CameraPreset) ?? (this.mode === 'room' ? 'sala' : 'procedimiento'));
     window.addEventListener('resize', () => this.resize());
     this.resize();
+    if (!q.has('frames') && !q.has('max')) this.panels.showWelcome();
     requestAnimationFrame(() => this.frame());
   }
 

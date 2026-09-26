@@ -89,9 +89,11 @@ export function knob(label: string, get: Getter<number>, set: Setter<number>, o:
 export function button(label: string, onClick: () => void, o: { title?: string; cls?: string; active?: Getter<boolean> } = {}): Bound {
   const b = el('button', { title: o.title ?? '' }, label);
   if (o.cls) b.classList.add(...o.cls.split(' '));
-  b.addEventListener('click', () => {
+  b.addEventListener('click', (e) => {
     onClick();
     upd();
+    // devolver el foco al documento para que los atajos (espacio, flechas) no reactiven el botón
+    if ((e as PointerEvent).pointerType) b.blur();
   });
   const upd = () => {
     if (o.active) b.classList.toggle('on', o.active());
