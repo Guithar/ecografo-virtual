@@ -181,8 +181,10 @@ export class Needle {
       this.computeGeometry();
       return;
     }
-    // redirección: pivotar la aguja con la punta dentro del tejido
-    if (Math.max(d0, d1) > 2) {
+    // redirección: pivotar la aguja con la punta dentro del tejido. Con la punta en la luz, bajar el
+    // ángulo tras el reflujo (o al tocar la pared) y alinearla con el vaso es la maniobra indicada.
+    const inLumen = this.state === 'luz' || (this.state === 'tienda' && this.tentBack);
+    if (!inLumen && Math.max(d0, d1) > 2) {
       this.redirAcc += Math.abs(a1 - a0) + Math.abs(dh);
       if (this.redirAcc > 4) {
         this.redirections++;
@@ -397,6 +399,8 @@ export class Needle {
   private enterLumen(t: number, st: Structure, access: Set<string>, silent = false) {
     this.state = 'luz';
     this.inVessel = st;
+    // el giro acumulado en el tejido no se suma a los que se hagan tras salir de la luz
+    this.redirAcc = 0;
     if (st.def.kind === 'artery' && !access.has(st.def.id)) {
       if (!this.arteryHit) this.emit(t, 'artery', `¡Punción arterial! (${st.def.name}) — reflujo rojo brillante y pulsátil`, 'error', st.def.id);
       this.arteryHit = true;

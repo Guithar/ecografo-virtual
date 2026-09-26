@@ -531,16 +531,18 @@ export class App {
     checks.push({ label: 'Punta en la luz del acceso vascular', ok: inAccess, detail: inAccess ? `En ${n.inVessel!.def.name}` : `Estado: ${n.state}${n.inVessel ? ' en ' + n.inVessel.def.name : ''}`, penalty: 35 });
     const len = n.intraluminalLength(this.model);
     checks.push({ label: 'Recorrido intraluminal ≥ 5 mm', ok: inAccess ? len >= 5 : null, detail: `${len.toFixed(1)} mm`, penalty: 8 });
+    // cada criterio se decide sobre el valor redondeado que se muestra (nunca «25°» con ✗ en «≤ 25°»)
     const cen = n.centering(this.model);
-    checks.push({ label: 'Punta centrada en la luz', ok: cen === null ? null : cen < 0.65, detail: cen === null ? '—' : `${Math.round(cen * 100)} % del radio desde el eje`, penalty: 5 });
+    const cenPct = cen === null ? null : Math.round(cen * 100);
+    checks.push({ label: 'Punta centrada en la luz', ok: cenPct === null ? null : cenPct < 65, detail: cenPct === null ? '—' : `${cenPct} % del radio desde el eje`, penalty: 5 });
     const av = n.angleToVessel(this.model);
-    checks.push({ label: 'Aguja alineada con el vaso (≤ 25° tras bajar el ángulo)', ok: av === null ? null : av <= 25, detail: av === null ? '—' : `${av.toFixed(0)}°`, penalty: 5 });
+    const avR = av === null ? null : Math.round(av * 10) / 10;
+    checks.push({ label: 'Aguja alineada con el vaso (≤ 25° tras bajar el ángulo)', ok: avR === null ? null : avR <= 25, detail: avR === null ? '—' : `${avR.toFixed(1)}°`, penalty: 5 });
     const acc = this.caseDef.access;
     if (acc) {
       if (acc.anastomosisX !== undefined) {
-        const d = Math.abs(n.tip.x - acc.anastomosisX);
-        const ok = n.role === 'venosa' ? d >= 30 : d >= 30;
-        checks.push({ label: 'Distancia a la anastomosis ≥ 3 cm', ok, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
+        const d = Math.round(Math.abs(n.tip.x - acc.anastomosisX));
+        checks.push({ label: 'Distancia a la anastomosis ≥ 3 cm', ok: d >= 30, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
       }
       const inZone = n.tip.x >= acc.zone[0] && n.tip.x <= acc.zone[1];
       checks.push({ label: 'Dentro de la zona de punción recomendada', ok: inZone, detail: `${(n.tip.x / 10).toFixed(1)} cm desde la muñeca`, penalty: 5 });
@@ -554,7 +556,7 @@ export class App {
     }
     const other = this.needles[1 - this.activeNeedle];
     if (other.placed && other.confirmed) {
-      const d = other.tip.distanceTo(n.tip);
+      const d = Math.round(other.tip.distanceTo(n.tip));
       checks.push({ label: 'Separación entre puntas ≥ 5 cm', ok: d >= 50, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
     }
     checks.push({ label: 'Sin transfixión ni punción arterial/nerviosa', ok: !n.transfixed && !n.arteryHit && !n.nerveHit, detail: [n.transfixed ? 'transfixión' : '', n.arteryHit ? 'arteria' : '', n.nerveHit ? 'nervio' : ''].filter(Boolean).join(', ') || 'Correcto', penalty: 0 });

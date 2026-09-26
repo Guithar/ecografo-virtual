@@ -105,6 +105,7 @@ const tipInfo = () => page.evaluate(() => {
     estado: n.state,
     depth: n.depth,
     angle: n.angle,
+    av: inLumen ? n.angleToVessel(a.model) : null,
     luz: inLumen ? n.intraluminalLength(a.model) : 0,
     cen: inLumen ? n.centering(a.model) : null,
     frame: a.frameCount,
@@ -175,16 +176,18 @@ if (eje === 'corto-dntp') {
   await page.waitForTimeout(2500); // reflujo en la cámara de la aguja
   await log('4. DNTP hasta la luz');
   await shot('04-punta-en-la-luz');
-  // 5. aplanar (AvPág) y avanzar a la vez dentro de la luz, siguiendo la punta con la sonda
-  const goal = (x) => x.angle <= 23 && x.luz >= 6 && (x.cen ?? 1) < 0.6;
+  // 5. aplanar (AvPág) y avanzar a la vez dentro de la luz, siguiendo la punta con la sonda, hasta
+  //    alinear la aguja con el eje del vaso (criterio final ≤ 25°; aquí con margen)
+  const AV = 22;
+  const goal = (x) => (x.av ?? 90) <= AV && x.luz >= 6 && (x.cen ?? 1) < 0.6;
   for (let i = 0; i < 40 && t.estado === 'luz' && !goal(t); i++) {
     if (Math.abs(t.eDir) > 0.6 * t.half) {
       t = await centerOnTip();
       continue;
     }
-    const flatten = t.angle > 23 && t.luz >= 2.5;
+    const flatten = (t.av ?? 0) > AV && t.luz >= 2.5;
     const keys = flatten ? ['PageDown', 'ArrowUp'] : ['ArrowUp'];
-    t = await holdFrames(keys, (x) => x.estado !== 'luz' || Math.abs(x.eDir) > 0.6 * x.half || goal(x) || (flatten && x.angle <= 23), 12);
+    t = await holdFrames(keys, (x) => x.estado !== 'luz' || Math.abs(x.eDir) > 0.6 * x.half || goal(x) || (flatten && (x.av ?? 0) <= AV), 12);
   }
   if (t.estado !== 'luz') throw new Error(`La punta salió de la luz al aplanar (estado ${t.estado})`);
   t = await centerOnTip();
@@ -279,6 +282,7 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(2000);
 const result = await page.evaluate(() => ({
   puntuacion: window.app.metrics.score(),
+  redirecciones: window.app.metrics.redirections,
   lavados: window.app.metrics.flushes,
   infiltraciones: window.app.metrics.infiltrations,
   criterios: window.app.metrics.checks.map((c) => `${c.ok === null ? '·' : c.ok ? '✓' : '✗'} ${c.label}: ${c.detail}`),
@@ -290,5 +294,6 @@ console.log(JSON.stringify({ ...result, punta_visible_pct: Math.round(vis) }, nu
 console.log('errores de la página:', errors.length ? errors : 'ninguno');
 await browser.close();
 const flushOk = eje === 'largo' ? result.lavados === 1 : eje === 'corto-dntp' ? result.lavados === 2 : true;
-const ok = s.estado === 'luz' && !errors.length && flushOk && result.infiltraciones === 0;
+// ninguna ruta cambia la trayectoria en el tejido: aplanar dentro de la luz no es una redirección
+const ok = s.estado === 'luz' && !errors.length && flushOk && result.infiltraciones === 0 && result.redirecciones === 0;
 process.exit(ok ? 0 : 1);

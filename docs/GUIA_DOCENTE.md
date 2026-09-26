@@ -50,7 +50,7 @@ La puntuación del simulador parte de 100 puntos y resta penalizaciones:
 | Error | Penalización | Referencia |
 |---|---|---|
 | Punción cutánea adicional | −8 cada una | Eves 2021 |
-| Redirección dentro del tejido | −3 cada una | |
+| Redirección dentro del tejido (cambiar ángulo o rumbo más de 4° con la punta fuera de la luz; bajar el ángulo y alinear la aguja dentro de la luz no cuenta) | −3 cada una | |
 | Contacto con la pared posterior | −6 | Blaivas 2009 |
 | Transfixión (perforación de la pared posterior) | −18 | |
 | Punción arterial no deseada | −30 | |
@@ -68,7 +68,7 @@ Criterios finales (al pulsar *Confirmar punción*):
 | Punta en la luz del acceso | −35 |
 | Recorrido intraluminal ≥ 5 mm | −8 |
 | Punta centrada | −5 |
-| Aguja alineada con el vaso | −5 |
+| Aguja alineada con el vaso (≤ 25° entre la aguja y el eje del vaso, que puede diferir del ángulo con la piel) | −5 |
 | ≥ 3 cm de la anastomosis | −10 |
 | Dentro de la zona recomendada | −5 |
 | Fuera de las zonas a evitar | −15 |

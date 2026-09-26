@@ -142,6 +142,39 @@ describe('aguja', () => {
     expect(events).toContain('backwall');
   });
 
+  it('bajar el ángulo con la punta en la luz no es una redirección; pivotar en el tejido sí', () => {
+    const { arm, model } = build('rc_madura');
+    const fav = model.byId('fav')!;
+    const target = fav.samples[70].p;
+    const th = (Math.atan2(target.z, target.y) * 180) / Math.PI;
+    const ids = new Set(['fav']);
+    const n = new Needle('venosa');
+    n.place(arm, target.x - 9, th, 0, 35);
+    let t = 0;
+    for (let i = 0; i < 120 && n.state !== 'luz'; i++) {
+      n.depth += 0.2;
+      n.update(model, (t += 0.05), ids);
+    }
+    expect(n.state).toBe('luz');
+    // aplanar y avanzar a la vez (AvPág + ↑) hasta 23°
+    for (let i = 0; i < 12; i++) {
+      n.angle -= 1;
+      n.depth += 0.4;
+      n.update(model, (t += 0.05), ids);
+    }
+    expect(n.state).toBe('luz');
+    expect(n.redirections).toBe(0);
+    // con la punta en el tejido, un giro de 6° sí es una redirección
+    const m = new Needle('venosa');
+    m.place(arm, target.x - 9, th, 0, 35);
+    m.depth = 3;
+    m.update(model, 0, ids);
+    expect(m.state).toBe('tejido');
+    m.heading = 6;
+    m.update(model, 0.1, ids);
+    expect(m.redirections).toBe(1);
+  });
+
   it('cruzar el rumbo ±180° gira por el camino corto (sin barrido de 360°)', () => {
     const { arm, model } = build('rc_madura');
     const n = new Needle('venosa');
