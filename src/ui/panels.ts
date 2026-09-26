@@ -1,0 +1,346 @@
+/**
+ * Paneles informativos (pestañas), ayuda e informe de sesión.
+ */
+import { TISSUES } from '../anatomy/tissues';
+import type { App } from '../app/App';
+import type { NeedleEvent } from '../interaction/needle';
+import { LESSONS } from '../training/lessons';
+import { grade } from '../training/metrics';
+
+const LEVEL_ICON: Record<string, string> = { good: '✔', fair: '◐', bad: '✖', info: 'ℹ' };
+
+export class Panels {
+  currentTab = 'case';
+  private log: NeedleEvent[] = [];
+
+  constructor(private app: App) {}
+
+  private q(id: string) {
+    return document.getElementById(id)!;
+  }
+
+  showTab(tab: string) {
+    this.currentTab = tab;
+    document.querySelectorAll<HTMLButtonElement>('#tabButtons button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    for (const t of ['case', 'metrics', 'measures', 'ergo', 'lessons']) this.q(`tab-${t}`).classList.toggle('hidden', t !== tab);
+    if (tab === 'metrics') this.renderMetrics();
+    if (tab === 'measures') this.renderMeasures();
+    if (tab === 'lessons') this.renderLessons();
+    if (tab === 'ergo') this.renderErgo();
+  }
+
+  tick() {
+    if (this.currentTab === 'metrics') this.renderMetricsLive();
+    if (this.currentTab === 'ergo') this.renderErgo();
+    if (this.currentTab === 'measures') this.renderMeasuresLive();
+  }
+
+  renderCase() {
+    const c = this.app.caseDef;
+    const exp = c.expected;
+    this.q('tab-case').innerHTML = `
+      <h3>${c.title}</h3>
+      <p class="muted">${c.accessType} · dificultad ${['', 'básica', 'intermedia', 'avanzada'][c.difficulty]}</p>
+      <p>${c.description}</p>
+      <div class="cols">
+        <div><h4>Objetivos</h4><ul>${c.objectives.map((o) => `<li>${o}</li>`).join('')}</ul></div>
+        <div><h4>Consejos</h4><ul>${c.tips.map((o) => `<li>${o}</li>`).join('')}</ul></div>
+      </div>
+      <h4>Solución (hallazgos esperados)</h4>
+      <details><summary class="muted">Mostrar tras explorar el caso</summary>
+        <ul>${c.findings.map((o) => `<li>${o}</li>`).join('')}</ul>
+        ${exp ? `<div class="kv">${exp.diameter ? `<span>Diámetro</span><span>≈ ${exp.diameter} mm</span>` : ''}${exp.depth ? `<span>Profundidad (pared anterior)</span><span>≈ ${exp.depth} mm</span>` : ''}${exp.qa ? `<span>Qa (humeral)</span><span>≈ ${exp.qa} mL/min</span>` : ''}${exp.mature !== undefined ? `<span>¿Madura?</span><span>${exp.mature ? 'Sí' : 'No'}</span>` : ''}${exp.note ? `<span>Nota</span><span>${exp.note}</span>` : ''}</div>` : ''}
+      </details>
+      ${c.access ? `<h4>Acceso</h4><div class="kv"><span>Zona recomendada</span><span>${(c.access.zone[0] / 10).toFixed(0)}–${(c.access.zone[1] / 10).toFixed(0)} cm desde la muñeca</span><span>Ángulo recomendado</span><span>${c.access.angle}°</span>${c.access.anastomosisX !== undefined ? `<span>Anastomosis</span><span>${(c.access.anastomosisX / 10).toFixed(1)} cm</span>` : ''}${(c.access.avoid ?? []).map((a) => `<span>Evitar ${(a.x0 / 10).toFixed(0)}–${(a.x1 / 10).toFixed(0)} cm</span><span>${a.reason}</span>`).join('')}</div>` : ''}
+      <p class="muted" style="margin-top:10px">Herramienta educativa. No utilizar para decisiones clínicas.</p>`;
+  }
+
+  logEvent(e: NeedleEvent) {
+    this.log.push(e);
+    if (this.log.length > 200) this.log.shift();
+    if (this.currentTab === 'metrics') this.renderMetrics();
+  }
+
+  renderMetrics() {
+    const app = this.app;
+    const n = app.needle;
+    const snap = app.metrics.snapshot();
+    const g = grade(snap.score);
+    const checks = snap.checks;
+    this.q('tab-metrics').innerHTML = `
+      <div class="score"><div class="big" style="color:${g.color}" id="mScore">${snap.score}</div><div><b id="mGrade">${g.label}</b><br><span class="muted">Puntuación (100 = sin errores)</span></div>
+        <span class="grow"></span>
+        <button id="mReset">Reiniciar intento</button></div>
+      <div class="metric-grid" id="mGrid"></div>
+      ${checks.length ? `<h4>Evaluación de la punción (${n.role})</h4><ul class="checklist">${checks
+        .map((c) => `<li class="lv-${c.ok === null ? 'info' : c.ok ? 'good' : 'bad'}"><span class="ic">${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'}</span><span>${c.label} <span class="muted">— ${c.detail}</span></span></li>`)
+        .join('')}</ul>` : '<p class="muted">Pulsa <b>Confirmar punción</b> (Intro) cuando la aguja esté en posición para evaluarla según las guías.</p>'}
+      <h4>Registro de eventos</h4>
+      <div class="eventlog" id="mLog">${this.log
+        .slice(-60)
+        .map((e) => `<div class="${e.severity}">${e.t.toFixed(1).padStart(6)} s · ${e.msg}</div>`)
+        .join('') || '<span class="muted">Sin eventos</span>'}</div>`;
+    this.q('mReset').addEventListener('click', () => {
+      app.metrics.reset();
+      app.resetNeedles();
+      this.log = [];
+      this.renderMetrics();
+    });
+    this.renderMetricsLive();
+    const lg = document.getElementById('mLog');
+    if (lg) lg.scrollTop = lg.scrollHeight;
+  }
+
+  renderMetricsLive() {
+    const grid = document.getElementById('mGrid');
+    if (!grid) return;
+    const s = this.app.metrics.snapshot();
+    const m = (v: string, l: string, cls = '') => `<div class="metric ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+    grid.innerHTML = [
+      m(`${s.elapsed.toFixed(0)} s`, 'Tiempo total'),
+      m(s.timeToFlash !== null ? `${s.timeToFlash.toFixed(1)} s` : '—', 'Piel → reflujo'),
+      m(String(s.skinPunctures), 'Punciones cutáneas', s.skinPunctures > 1 ? 'warn' : ''),
+      m(String(s.redirections), 'Redirecciones', s.redirections > 2 ? 'warn' : ''),
+      m(`${s.tipVisiblePct.toFixed(0)} %`, 'Avance con punta visible', s.tipVisiblePct < 60 ? 'bad' : s.tipVisiblePct < 80 ? 'warn' : 'good'),
+      m(String(s.shaftConfusions), 'Cuerpo tomado por punta', s.shaftConfusions ? 'warn' : ''),
+      m(String(s.backWallContacts), 'Contactos pared posterior', s.backWallContacts ? 'warn' : ''),
+      m(String(s.transfixions), 'Transfixiones', s.transfixions ? 'bad' : ''),
+      m(String(s.arterialPunctures), 'Punciones arteriales', s.arterialPunctures ? 'bad' : ''),
+      m(String(s.nerveContacts), 'Contactos nerviosos', s.nerveContacts ? 'bad' : ''),
+      m(`${s.probeMoveDuringAdvance.toFixed(0)} mm`, 'Movimiento de sonda al avanzar', s.probeMoveDuringAdvance > 8 ? 'warn' : ''),
+      m(`${this.app.metrics.pathInTissue.toFixed(0)} mm`, 'Recorrido en tejido'),
+      m(`${Math.round(s.maxCollapse * 100)} %`, 'Colapso máx. del vaso', s.maxCollapse > 0.5 ? 'warn' : ''),
+    ].join('');
+    const sc = document.getElementById('mScore');
+    if (sc) {
+      const g = grade(s.score);
+      sc.textContent = String(s.score);
+      sc.style.color = g.color;
+      const gl = document.getElementById('mGrade');
+      if (gl) gl.textContent = g.label;
+    }
+  }
+
+  renderMeasures() {
+    const app = this.app;
+    this.q('tab-measures').innerHTML = `
+      <div class="crow wrap" style="margin-bottom:6px">
+        <button id="msCal" class="${app.monitor.tool === 'caliper' ? 'on' : ''}">Calibre (M)</button>
+        <button id="msClr">Borrar medidas</button>
+        <button id="msFreeze">${app.sim.settings.frozen ? 'Descongelar' : 'Congelar'} (espacio)</button>
+      </div>
+      <div id="msBody"></div>`;
+    this.q('msCal').addEventListener('click', () => {
+      app.monitor.tool = app.monitor.tool === 'caliper' ? 'none' : 'caliper';
+      this.renderMeasures();
+    });
+    this.q('msClr').addEventListener('click', () => {
+      app.monitor.clearCalipers();
+      this.renderMeasures();
+    });
+    this.q('msFreeze').addEventListener('click', () => {
+      app.sim.settings.frozen = !app.sim.settings.frozen;
+      this.renderMeasures();
+    });
+    this.renderMeasuresLive();
+  }
+
+  renderMeasuresLive() {
+    const body = document.getElementById('msBody');
+    if (!body) return;
+    const app = this.app;
+    const cs = app.monitor.calipers.filter((c) => c.b);
+    const rows = cs.map((c, i) => `<tr><td>${i + 1}</td><td>${c.label}</td><td class="muted">${Math.abs(c.b!.w - c.a.w) > Math.abs(c.b!.u - c.a.u) ? 'vertical' : 'horizontal'}</td></tr>`).join('');
+    const m = app.spectral.measures();
+    const d = app.lastDiameter();
+    const qa = d && m.valid ? m.tamv * Math.PI * (d / 20) ** 2 * 60 : null;
+    // regla de los 6 (con medidas del usuario)
+    const vert = cs.map((c) => ({ c, dz: Math.abs(c.b!.w - c.a.w), top: Math.min(c.a.w, c.b!.w) }));
+    const diam = vert.length ? vert[vert.length - 1].dz : null;
+    const depth = vert.length > 1 ? vert[vert.length - 2] : null;
+    const r6 = (ok: boolean | null, label: string, val: string) => `<li class="lv-${ok === null ? 'info' : ok ? 'good' : 'bad'}"><span class="ic">${ok === null ? '·' : ok ? '✔' : '✖'}</span><span>${label}: <b>${val}</b></span></li>`;
+    body.innerHTML = `
+      <table class="tbl"><tr><th>#</th><th>Distancia</th><th>Orientación</th></tr>${rows || '<tr><td colspan="3" class="muted">Sin medidas: activa el calibre y haz clic en dos puntos de la imagen</td></tr>'}</table>
+      <h4>Doppler pulsado</h4>
+      ${m.valid ? `<div class="kv"><span>VPS</span><span>${m.psv.toFixed(0)} cm/s</span><span>VFD</span><span>${m.edv.toFixed(0)} cm/s</span><span>IR</span><span>${m.ri.toFixed(2)}</span><span>IP</span><span>${m.pi.toFixed(2)}</span><span>TAMV</span><span>${m.tamv.toFixed(0)} cm/s</span><span>Flujo (Q = TAMV·área·60)</span><span>${qa !== null ? qa.toFixed(0) + ' mL/min' : 'mide el diámetro'}</span></div>` : '<p class="muted">Activa PW (tecla P) y sitúa el volumen de muestra en un vaso.</p>'}
+      <h4>Criterios de maduración (con tus medidas)</h4>
+      <ul class="checklist">
+        ${r6(diam === null ? null : diam >= 6, 'Diámetro (último calibre) ≥ 6 mm (KDOQI) / ≥ 4–5 mm (GEMAV)', diam === null ? '—' : diam.toFixed(1) + ' mm')}
+        ${r6(depth === null ? null : depth.dz < 6, 'Profundidad (penúltimo calibre) < 6 mm', depth === null ? '—' : depth.dz.toFixed(1) + ' mm')}
+        ${r6(qa === null ? null : qa > 600, 'Flujo > 600 mL/min (KDOQI) / > 500 (GEMAV)', qa === null ? '—' : qa.toFixed(0) + ' mL/min')}
+      </ul>
+      <p class="muted">Convención: mide primero la profundidad (piel → pared anterior) y después el diámetro (pared interna a pared interna). El flujo del acceso se mide en la arteria humeral.</p>`;
+  }
+
+  renderErgo() {
+    const e = this.app.ergo;
+    const el = this.q('tab-ergo');
+    const cfg = this.app.scene.cfg;
+    if (!e) {
+      el.innerHTML = '<p class="muted">Calculando…</p>';
+      return;
+    }
+    const col = e.score >= 80 ? 'var(--ok)' : e.score >= 55 ? 'var(--warn)' : 'var(--bad)';
+    el.innerHTML = `
+      <div class="score"><div class="big" style="color:${col}">${e.score}</div><div><b>Ergonomía de la disposición</b><br><span class="muted">Operador · paciente · pantalla</span></div></div>
+      <ul class="checklist">${e.items.map((i) => `<li class="lv-${i.level}"><span class="ic">${LEVEL_ICON[i.level]}</span><span><b>${i.label}</b>: ${i.value}<br><span class="muted">${i.advice}</span></span></li>`).join('')}</ul>
+      <h4>Cómo usar</h4>
+      <p class="muted">En el modo <b>Sala y ergonomía</b> arrastra el <b>ecógrafo</b> o al <b>operador</b> por el suelo. Ajusta el brazo del paciente y la pantalla en la consola. Pulsa la vista <b>Operador</b> para ver la escena con sus ojos.</p>
+      <p class="muted">Brazo ${cfg.side === 'left' ? 'izquierdo' : 'derecho'} · operador ${cfg.operator.seated ? 'sentado' : 'de pie'}.</p>`;
+  }
+
+  renderLessons() {
+    const app = this.app;
+    const el = this.q('tab-lessons');
+    const L = app.lesson;
+    if (!L) {
+      el.innerHTML = `<h3>Lecciones guiadas</h3><p class="muted">Cada lección carga su caso y comprueba automáticamente cada paso.</p>
+        <div class="lesson-list">${LESSONS.map((l) => `<button data-lesson="${l.id}"><b>${l.title}</b><br><span class="muted">${l.summary}</span></button>`).join('')}</div>`;
+      el.querySelectorAll<HTMLButtonElement>('[data-lesson]').forEach((b) => b.addEventListener('click', () => app.startLesson(b.dataset.lesson!)));
+      return;
+    }
+    const step = L.lesson.steps[L.step];
+    const pct = (100 * L.done.filter(Boolean).length) / L.lesson.steps.length;
+    el.innerHTML = `
+      <div class="crow"><h3 style="flex:1">${L.lesson.title}</h3><button id="lsExit">Salir</button></div>
+      <div class="progress"><div style="width:${pct}%"></div></div>
+      <div class="muted">Paso ${L.step + 1} de ${L.lesson.steps.length}</div>
+      <div class="lesson-step ${L.done[L.step] ? 'done' : ''}">${step.text}${step.hint ? `<div class="muted" style="margin-top:6px">${step.hint}</div>` : ''}${step.check ? `<div class="mini" style="margin-top:6px">${L.done[L.step] ? '✔ completado' : '⏳ se comprueba automáticamente'}</div>` : ''}</div>
+      <div class="crow"><button id="lsPrev" ${L.step === 0 ? 'disabled' : ''}>◀ Anterior</button><button id="lsNext" class="primary">${L.step === L.lesson.steps.length - 1 ? 'Finalizar' : 'Siguiente ▶'}</button></div>`;
+    this.q('lsExit').addEventListener('click', () => {
+      app.lesson = null;
+      this.renderLessons();
+    });
+    this.q('lsPrev').addEventListener('click', () => {
+      L.step = Math.max(0, L.step - 1);
+      this.renderLessons();
+    });
+    this.q('lsNext').addEventListener('click', () => {
+      if (L.step >= L.lesson.steps.length - 1) {
+        app.toast('Lección finalizada', 'ok');
+        app.lesson = null;
+      } else L.step++;
+      this.renderLessons();
+    });
+  }
+
+  renderLegend() {
+    const shown = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16];
+    this.q('anatLegend').innerHTML = shown.map((i) => `<span><i style="background:${TISSUES[i].color}"></i>${TISSUES[i].name}</span>`).join('');
+  }
+
+  // ---------------------------------------------------------------------------------------
+  // Modales
+  // ---------------------------------------------------------------------------------------
+  openModal(html: string) {
+    this.q('modalBody').innerHTML = html;
+    this.q('modal').classList.remove('hidden');
+  }
+
+  closeModal() {
+    this.q('modal').classList.add('hidden');
+  }
+
+  showHelp() {
+    this.openModal(`
+      <h2>Ayuda del Ecógrafo Virtual</h2>
+      <p>Simulador de ecografía para aprender la <b>punción ecoguiada de accesos vasculares</b> (FAV y prótesis). A la izquierda ves la <b>realidad física</b> (brazo, anatomía interna, sonda, aguja y plano de corte); a la derecha, la <b>pantalla del ecógrafo</b> y la <b>anatomía real</b> del plano que estás explorando.</p>
+      <div class="cols">
+        <div>
+          <h4>Sonda (maniobras PART)</h4>
+          <table class="tbl">
+            <tr><td><kbd>W</kbd>/<kbd>S</kbd></td><td>Deslizar a lo largo del brazo (proximal/distal)</td></tr>
+            <tr><td><kbd>A</kbd>/<kbd>D</kbd></td><td>Deslizar alrededor del brazo</td></tr>
+            <tr><td><kbd>Q</kbd>/<kbd>E</kbd></td><td>Rotación</td></tr>
+            <tr><td><kbd>R</kbd>/<kbd>F</kbd></td><td>Inclinación (basculación / abanico)</td></tr>
+            <tr><td><kbd>T</kbd>/<kbd>G</kbd></td><td>Balanceo (talón-punta)</td></tr>
+            <tr><td><kbd>X</kbd>/<kbd>Z</kbd></td><td>Más / menos presión</td></tr>
+            <tr><td><kbd>1</kbd>/<kbd>2</kbd></td><td>Transversal / longitudinal respecto al vaso</td></tr>
+            <tr><td><kbd>Mayús</kbd></td><td>Movimiento fino</td></tr>
+            <tr><td>Ratón</td><td>Arrastra la sonda sobre la piel en la vista 3D</td></tr>
+          </table>
+          <h4>Aguja (modo Punción)</h4>
+          <table class="tbl">
+            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda</td></tr>
+            <tr><td><kbd>↑</kbd>/<kbd>↓</kbd> o rueda sobre la imagen</td><td>Avanzar / retirar</td></tr>
+            <tr><td><kbd>←</kbd>/<kbd>→</kbd></td><td>Rumbo (dirección)</td></tr>
+            <tr><td><kbd>RePág</kbd>/<kbd>AvPág</kbd></td><td>Ángulo de inserción</td></tr>
+            <tr><td><kbd>Intro</kbd></td><td>Confirmar la punción (evaluación)</td></tr>
+            <tr><td><kbd>K</kbd></td><td>Compresor on/off</td></tr>
+          </table>
+        </div>
+        <div>
+          <h4>Ecógrafo</h4>
+          <table class="tbl">
+            <tr><td><kbd>+</kbd>/<kbd>−</kbd></td><td>Profundidad</td></tr>
+            <tr><td><kbd>[</kbd>/<kbd>]</kbd></td><td>Ganancia</td></tr>
+            <tr><td><kbd>C</kbd> · <kbd>P</kbd> · <kbd>B</kbd></td><td>Doppler color · Doppler pulsado · Modo B</td></tr>
+            <tr><td><kbd>Espacio</kbd></td><td>Congelar</td></tr>
+            <tr><td><kbd>M</kbd></td><td>Calibre (medir)</td></tr>
+            <tr><td><kbd>L</kbd></td><td>Etiquetas anatómicas</td></tr>
+            <tr><td><kbd>I</kbd></td><td>Invertir izquierda/derecha</td></tr>
+            <tr><td>Clic/arrastre en la imagen</td><td>Mover la caja de color / el volumen de muestra</td></tr>
+            <tr><td><kbd>Mayús</kbd>+rueda</td><td>Tamaño del volumen de muestra</td></tr>
+            <tr><td><kbd>Alt</kbd>+rueda</td><td>Tamaño de la caja de color</td></tr>
+          </table>
+          <h4>Vistas</h4>
+          <table class="tbl"><tr><td><kbd>V</kbd></td><td>Alternar vistas de cámara</td></tr><tr><td><kbd>H</kbd></td><td>Esta ayuda</td></tr></table>
+          <h4>Modos</h4>
+          <ul>
+            <li><b>Exploración</b>: libre, con ayudas visuales y etiquetas.</li>
+            <li><b>Punción</b>: agujas arterial y venosa, métricas y evaluación.</li>
+            <li><b>Sala y ergonomía</b>: coloca paciente, operador y pantalla.</li>
+            <li><b>Aprendizaje</b>: lecciones guiadas paso a paso.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted">Los fundamentos médicos y físicos, con referencias (KDOQI 2019, GEMAV 2017, ESVS 2018…), están en <code>docs/FUNDAMENTOS.md</code>. Herramienta educativa: no sustituye la formación práctica supervisada.</p>`);
+  }
+
+  showReport() {
+    const app = this.app;
+    const s = app.metrics.snapshot();
+    const g = grade(s.score);
+    const hist = app.history.slice(-15).reverse();
+    this.openModal(`
+      <h2>Informe de la sesión</h2>
+      <p><b>Caso:</b> ${app.caseDef.title}<br><b>Fecha:</b> ${new Date().toLocaleString('es-ES')}</p>
+      <h4>Punción actual</h4>
+      <p>Puntuación: <b style="color:${g.color}">${s.score}/100 (${g.label})</b></p>
+      <table class="tbl">
+        <tr><td>Tiempo total</td><td>${s.elapsed.toFixed(0)} s</td><td>Piel → reflujo</td><td>${s.timeToFlash !== null ? s.timeToFlash.toFixed(1) + ' s' : '—'}</td></tr>
+        <tr><td>Punciones cutáneas</td><td>${s.skinPunctures}</td><td>Redirecciones</td><td>${s.redirections}</td></tr>
+        <tr><td>Avance con punta visible</td><td>${s.tipVisiblePct.toFixed(0)} %</td><td>Cuerpo tomado por punta</td><td>${s.shaftConfusions}</td></tr>
+        <tr><td>Contactos pared posterior</td><td>${s.backWallContacts}</td><td>Transfixiones</td><td>${s.transfixions}</td></tr>
+        <tr><td>Punciones arteriales</td><td>${s.arterialPunctures}</td><td>Contactos nerviosos</td><td>${s.nerveContacts}</td></tr>
+        <tr><td>Movimiento de sonda al avanzar</td><td>${s.probeMoveDuringAdvance.toFixed(0)} mm</td><td>Colapso máx. del vaso</td><td>${Math.round(s.maxCollapse * 100)} %</td></tr>
+      </table>
+      ${s.checks.length ? `<h4>Criterios</h4><ul>${s.checks.map((c) => `<li>${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'} ${c.label} — ${c.detail}</li>`).join('')}</ul>` : ''}
+      <h4>Historial (este navegador)</h4>
+      ${hist.length ? `<table class="tbl"><tr><th>Fecha</th><th>Caso</th><th>Abordaje</th><th>Aguja</th><th>Puntuación</th></tr>${hist.map((h) => `<tr><td>${new Date(h.date).toLocaleString('es-ES')}</td><td>${h.caseTitle}</td><td>${h.approach}</td><td>${h.needle}</td><td>${h.score}</td></tr>`).join('')}</table>` : '<p class="muted">Sin punciones evaluadas todavía.</p>'}
+      <div class="crow no-print" style="margin-top:14px"><button class="primary" id="rpPrint">Imprimir / PDF</button><button id="rpJson">Exportar JSON</button><button id="rpCsv">Exportar CSV</button><button class="danger" id="rpClear">Borrar historial</button></div>`);
+    this.q('rpPrint').addEventListener('click', () => window.print());
+    this.q('rpJson').addEventListener('click', () => download('sesion-ecofav.json', JSON.stringify({ caso: app.caseDef.id, metricas: s, eventos: app.metrics.log, historial: app.history }, null, 2), 'application/json'));
+    this.q('rpCsv').addEventListener('click', () => {
+      const lines = ['fecha;caso;abordaje;aguja;puntuacion'].concat(app.history.map((h) => `${h.date};${h.caseId};${h.approach};${h.needle};${h.score}`));
+      download('historial-ecofav.csv', lines.join('\n'), 'text/csv');
+    });
+    this.q('rpClear').addEventListener('click', () => {
+      app.history = [];
+      try {
+        localStorage.removeItem('ecofav-historial');
+      } catch {
+        /* */
+      }
+      this.showReport();
+    });
+  }
+}
+
+function download(name: string, content: string, type: string) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
