@@ -318,13 +318,29 @@ export class Panels {
       ${s.checks.length ? `<h4>Criterios</h4><ul>${s.checks.map((c) => `<li>${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'} ${c.label} — ${c.detail}</li>`).join('')}</ul>` : ''}
       <h4>Historial (este navegador)</h4>
       ${hist.length ? `<table class="tbl"><tr><th>Fecha</th><th>Caso</th><th>Abordaje</th><th>Aguja</th><th>Puntuación</th></tr>${hist.map((h) => `<tr><td>${new Date(h.date).toLocaleString('es-ES')}</td><td>${h.caseTitle}</td><td>${h.approach}</td><td>${h.needle}</td><td>${h.score}</td></tr>`).join('')}</table>` : '<p class="muted">Sin punciones evaluadas todavía.</p>'}
-      <div class="crow no-print" style="margin-top:14px"><button class="primary" id="rpPrint">Imprimir / PDF</button><button id="rpJson">Exportar JSON</button><button id="rpCsv">Exportar CSV</button><button class="danger" id="rpClear">Borrar historial</button></div>`);
-    this.q('rpPrint').addEventListener('click', () => window.print());
-    this.q('rpJson').addEventListener('click', () => download('sesion-ecofav.json', JSON.stringify({ caso: app.caseDef.id, metricas: s, eventos: app.metrics.log, historial: app.history }, null, 2), 'application/json'));
-    this.q('rpCsv').addEventListener('click', () => {
-      const lines = ['fecha;caso;abordaje;aguja;puntuacion'].concat(app.history.map((h) => `${h.date};${h.caseId};${h.approach};${h.needle};${h.score}`));
-      download('historial-ecofav.csv', lines.join('\n'), 'text/csv');
-    });
+      <div class="crow no-print" style="margin-top:14px">${embedded ? '' : '<button class="primary" id="rpPrint">Imprimir / PDF</button><button id="rpJson">Exportar JSON</button><button id="rpCsv">Exportar CSV</button>'}<button id="rpCopyJson">Copiar JSON</button><button id="rpCopyCsv">Copiar CSV</button><button class="danger" id="rpClear">Borrar historial</button></div>
+      <textarea id="rpText" class="hidden" readonly rows="6" style="width:100%;margin-top:8px;background:#0d141a;color:#cfe;border:1px solid #243240;font:11px var(--mono)"></textarea>`);
+    const json = () => JSON.stringify({ caso: app.caseDef.id, metricas: s, eventos: app.metrics.log, historial: app.history }, null, 2);
+    const csv = () => ['fecha;caso;abordaje;aguja;puntuacion'].concat(app.history.map((h) => `${h.date};${h.caseId};${h.approach};${h.needle};${h.score}`)).join('\n');
+    if (!embedded) {
+      this.q('rpPrint').addEventListener('click', () => window.print());
+      this.q('rpJson').addEventListener('click', () => download('sesion-ecofav.json', json(), 'application/json'));
+      this.q('rpCsv').addEventListener('click', () => download('historial-ecofav.csv', csv(), 'text/csv'));
+    }
+    const copy = (txt: string) => {
+      const ta = this.q('rpText') as HTMLTextAreaElement;
+      navigator.clipboard
+        .writeText(txt)
+        .then(() => app.toast('Copiado al portapapeles', 'ok'))
+        .catch(() => {
+          ta.classList.remove('hidden');
+          ta.value = txt;
+          ta.select();
+          app.toast('Selecciona y copia el texto (Ctrl+C)', 'info');
+        });
+    };
+    this.q('rpCopyJson').addEventListener('click', () => copy(json()));
+    this.q('rpCopyCsv').addEventListener('click', () => copy(csv()));
     this.q('rpClear').addEventListener('click', () => {
       app.history = [];
       try {
@@ -336,6 +352,15 @@ export class Panels {
     });
   }
 }
+
+/** Dentro de un marco (p. ej. un artefacto publicado) las descargas y la impresión están bloqueadas. */
+const embedded = (() => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
 
 function download(name: string, content: string, type: string) {
   const a = document.createElement('a');

@@ -72,8 +72,9 @@ export class Monitor {
     const vh = this.view.clientHeight;
     const W = this.sim.pose.width;
     const D = this.sim.settings.depth;
-    const ml = 62;
-    const mr = 150;
+    const narrow = vw < 560;
+    const ml = narrow ? 30 : 62;
+    const mr = narrow ? 104 : 150;
     const mt = 12;
     const mb = 10;
     const s = Math.max(0.5, Math.min((vw - ml - mr) / W, (vh - mt - mb) / D));

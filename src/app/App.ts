@@ -643,6 +643,7 @@ export class App {
     addMax('pane3d', 'max-3d');
     addMax('paneMonitor', 'max-us');
     addMax('paneAnat', 'max-anat');
+    document.getElementById('mobileInfo')!.addEventListener('click', () => grid.classList.toggle('show-info'));
     const mx = new URLSearchParams(location.search).get('max');
     if (mx) grid.classList.add(`max-${mx}`);
   }

@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Simulador virtual de ecografía para la punción ecoguiada de fístulas arteriovenosas de hemodiálisis." />
-    <title>Ecógrafo Virtual · Punción ecoguiada de FAV</title>
+    <title>Ecógrafo Virtual FAV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23101820'/%3E%3Cpath d='M14 18h36l-6 30H20z' fill='%233fc1c9' opacity='.35'/%3E%3Ccircle cx='32' cy='33' r='8' fill='none' stroke='%239fe7ff' stroke-width='3'/%3E%3C/svg%3E" />
   </head>
   <body>
@@ -48,6 +51,7 @@
             <option value="media" selected>Calidad media</option>
             <option value="baja">Calidad baja</option>
           </select>
+          <button id="mobileInfo" style="display:none" title="Mostrar/ocultar la información del caso y las métricas">Info</button>
           <button id="btnReport" title="Informe de la sesión">Informe</button>
           <button id="btnHelp" title="Ayuda y atajos de teclado">Ayuda</button>
         </div>
