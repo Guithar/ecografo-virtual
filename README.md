@@ -7,7 +7,7 @@ Simulador de ecografía que funciona **en el navegador**, pensado para aprender 
 - la **técnica de punción** en eje corto (fuera de plano, con posicionamiento dinámico de la punta) y en eje largo (en plano);
 - la **valoración de la FAV**: diámetro, profundidad, flujo (Qa) y criterios Doppler de estenosis.
 
-> ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md).
+> ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md). La propuesta de itinerario formativo y la rúbrica de evaluación están en [`docs/GUIA_DOCENTE.md`](docs/GUIA_DOCENTE.md).
 
 ## Funciones
 
@@ -130,6 +130,7 @@ npm run dev          # servidor de desarrollo en http://localhost:5173
 npm run build        # sitio estático en dist/ (p. ej. GitHub Pages)
 npm run build:single # un único HTML autocontenido en dist-single/ (abre sin servidor)
 npm run typecheck
+npm test             # pruebas unitarias (hemodinámica, modelo, aguja, métricas)
 ```
 
 El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub Pages** en cada push a `main`. Antes hay que activar Pages en *Settings → Pages → Source: GitHub Actions*.

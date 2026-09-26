@@ -244,6 +244,89 @@ protocolos y las guías vigentes.
 - **Brazo del paciente:** relajado, apoyado y extendido [26].
 - **Hombro del operador:** evitar las abducciones excesivas [68,69].
 
+
+## 12. Cómo se implementa en el simulador
+
+### 12.1 Geometría
+
+- **Brazo izquierdo canónico**, con el antebrazo supinado y el codo extendido. La sección transversal es una elipse muscular (fascia profunda) rodeada de grasa subcutánea y piel.
+- **Perímetros de un adulto medio**: ≈ 16,5 cm en la muñeca, ≈ 23 cm en el antebrazo medio y ≈ 29 cm en el brazo.
+- **Grasa subcutánea**: 3–7 mm. El caso de obesidad añade ≈ 8,5 mm.
+- **Vasos, nervios, tendones y huesos**: curvas de Catmull-Rom con radio variable, colocadas en coordenadas anatómicas (ángulo alrededor del brazo y profundidad bajo la piel o la fascia). Se remuestrean cada 1,5 mm (vasos) o cada 3 mm (resto).
+- **Lesiones** aplicadas sobre la luz del vaso:
+  - estenosis (reducción del diámetro y engrosamiento intimal);
+  - aneurisma (dilatación, flujo en remolino, eco espontáneo);
+  - trombo mural en semiluna;
+  - chorro postanastomótico (turbulencia).
+
+### 12.2 Hemodinámica
+
+- **Caudal** de cada vaso: Q(t) = Q̄ · w(fase). Las formas de onda están normalizadas a media 1.
+- **Índices de resistencia** obtenidos:
+
+  | Vaso | IR |
+  |---|---|
+  | Arteria nutricia de la FAV | 0,50 |
+  | Vena de la FAV | 0,40 |
+  | Arteria en reposo | 0,97 |
+  | Cubital en FAV radiocefálica | 0,69 |
+
+- **Velocidad local**: v(ρ) = v̄·(n+2)/n·(1−ρⁿ), con v̄ = Q/A (continuidad). Una estenosis acelera el flujo y un aneurisma lo enlentece sin ajustes manuales.
+- **Validación** (`tests/unit/model.test.ts`):
+  - La integral de la velocidad sobre la sección reproduce el caudal definido con un error inferior al 15 %.
+  - En la estenosis yuxtaanastomótica, la velocidad es más de 3 veces la del segmento de salida.
+  - En la arteria humeral nutricia, el Doppler pulsado mide IR ≈ 0,44 y un Qa ≈ 880 mL/min frente a los 830 mL/min del modelo.
+- **Compresibilidad**:
+  - La presión local es 7 mmHg por mm de indentación, con un decaimiento exponencial en profundidad (λ = 14 mm).
+  - Un vaso colapsa cuando esa presión supera su presión intraluminal:
+
+    | Vaso | Presión intraluminal |
+    |---|---|
+    | Vena | ≈ 8 mmHg |
+    | FAV | ≈ 22 mmHg (+25 con compresor) |
+    | Prótesis | ≈ 60 mmHg |
+    | Arteria | ≈ 90 mmHg |
+
+### 12.3 Formación de la imagen
+
+La imagen se calcula en ocho pases de GPU, uno tras otro.
+
+1. **Mapa tisular.**
+   - Para cada muestra (320 × 600 en calidad media) se calcula su posición real en el tejido. Se tiene en cuenta la compresión y la adaptación del tejido a la cara plana de la sonda; donde no hay contacto queda gel o aire.
+   - Se integra el grosor de corte con 3 nodos de Gauss-Hermite. La anchura a media altura (FWHM) es de ≈ 1,1 mm en el foco de elevación (18 mm) y aumenta en superficie.
+2. **Speckle.** Dispersores complejos sobre una red fija al tejido de 0,072 mm, con varianza constante. La amplitud media de cada tejido y sus patrones (septos, fascículos, fibras) modulan el speckle.
+3. **Interfaces.**
+   - Coeficiente de reflexión R = ((Z₂−Z₁)/(Z₂+Z₁))².
+   - Eco especular ∝ √R·(0,25 + 0,75·cos³θ).
+   - Pérdida de transmisión ln(1−R) en ida y vuelta.
+   - Atenuación α·f·2·Δz.
+   - Sombra de borde en incidencia rasante sobre las interfaces de la sangre.
+4. **Suma prefija** de la log-transmisión a lo largo de cada línea (algoritmo de Hillis-Steele).
+5. **PSF axial** gaussiana, con σ = 0,5 λ.
+6. **PSF lateral** dependiente de la profundidad. Es de ≈ 1 λ·F# en el foco y se ensancha fuera de él; hay opción de dos zonas focales.
+7. **Modo B:**
+   - ruido electrónico (visible a gran profundidad con ganancia alta);
+   - compensación automática de 0,72 dB/cm/MHz más la TGC del usuario;
+   - compresión logarítmica con el rango dinámico elegido y curva de grises en «S»;
+   - reducción de speckle con un filtro bilateral y persistencia.
+8. **Doppler color y power:**
+   - media de la velocidad sanguínea proyectada en la celda de color, con ruido del estimador proporcional a la anchura espectral;
+   - aliasing al superar ±v_Nyquist, filtro de pared y umbral de prioridad;
+   - caja de color en paralelogramo cuando se angula (±20°).
+
+**Aguja:**
+- Intersección analítica rayo-cilindro en 7 planos de elevación.
+- Reflexión especular según el ángulo de incidencia (visibilidad menor con ángulos más pronunciados), refuerzo del bisel y reverberaciones cada cuerda de la aguja (un diámetro).
+- Sombra parcial.
+- Deformación en «tienda» de la pared antes de la perforación. Los umbrales son 1–2,6 mm según el vaso.
+
+**Doppler pulsado:**
+- Muestreo del volumen de muestra en el modelo: 7 puntos a lo largo del haz × 3 laterales × 3 en elevación.
+- Histograma con ensanchamiento espectral (tránsito, geometría y turbulencia) y plegado por aliasing.
+- Speckle espectral de distribución exponencial.
+- Envolvente automática; cálculo de VPS, VFD, IR, IP, TAMV y Q = TAMV·π(d/2)²·60.
+- Audio sintetizado a la frecuencia Doppler f_D = 2f₀v·cosθ/c, en estéreo según el sentido del flujo.
+
 ---
 
 ## Referencias
