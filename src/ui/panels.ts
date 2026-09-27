@@ -4,6 +4,7 @@
 import { TISSUES } from '../anatomy/tissues';
 import type { App } from '../app/App';
 import type { NeedleEvent } from '../interaction/needle';
+import { procedureChecklist } from '../training/checklist';
 import { LESSONS } from '../training/lessons';
 import { grade } from '../training/metrics';
 
@@ -42,6 +43,7 @@ export class Panels {
       <h3>${c.title}</h3>
       <p class="muted">${c.accessType} · dificultad ${['', 'básica', 'intermedia', 'avanzada'][c.difficulty]}</p>
       <p>${c.description}</p>
+      <div class="indication"><b>¿Por qué ecoguiada?</b> ${c.indication}</div>
       <div class="cols">
         <div><h4>Objetivos</h4><ul>${c.objectives.map((o) => `<li>${o}</li>`).join('')}</ul></div>
         <div><h4>Consejos</h4><ul>${c.tips.map((o) => `<li>${o}</li>`).join('')}</ul></div>
@@ -71,6 +73,8 @@ export class Panels {
       <div class="score"><div class="big" style="color:${g.color}" id="mScore">${snap.score}</div><div><b id="mGrade">${g.label}</b><br><span class="muted">Puntuación (100 = sin errores)</span></div>
         <span class="grow"></span>
         <button id="mReset">Reiniciar intento</button></div>
+      <h4>Pasos de la punción</h4>
+      <ul class="steps" id="mSteps"></ul>
       <div class="metric-grid" id="mGrid"></div>
       ${checks.length ? `<h4>Evaluación de la punción (${n.role})</h4><ul class="checklist">${checks
         .map((c) => `<li class="lv-${c.ok === null ? 'info' : c.ok ? 'good' : 'bad'}"><span class="ic">${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'}</span><span>${c.label} <span class="muted">— ${c.detail}</span></span></li>`)
@@ -94,6 +98,14 @@ export class Panels {
   renderMetricsLive() {
     const grid = document.getElementById('mGrid');
     if (!grid) return;
+    const steps = document.getElementById('mSteps');
+    if (steps) {
+      const items = procedureChecklist(this.app.checklistState());
+      const next = items.findIndex((i) => !i.done);
+      steps.innerHTML = items
+        .map((it, k) => `<li class="${it.done ? 'done' : k === next ? 'next' : ''}" title="${it.how}"><span class="ic">${it.done ? '✔' : k + 1}</span><span><span class="lbl">${it.label}</span>${k === next ? ` <span class="how">· ${it.how}</span>` : ''}</span></li>`)
+        .join('');
+    }
     const s = this.app.metrics.snapshot();
     const m = (v: string, l: string, cls = '') => `<div class="metric ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
     grid.innerHTML = [
@@ -252,8 +264,8 @@ export class Panels {
     }
     if (seen && !force) return;
     this.openModal(`
-      <h2>Ecógrafo Virtual FAV</h2>
-      <p>Simulador para aprender la <b>punción ecoguiada de fístulas arteriovenosas</b> sin equipo físico. La imagen ecográfica se calcula en tiempo real a partir de la anatomía que ves en 3D.</p>
+      <h2>EcoPunción FAV</h2>
+      <p>Simulador de <b>punción ecoguiada del acceso vascular para hemodiálisis</b> (FAV nativa y protésica), para practicar sin equipo físico. La imagen ecográfica se calcula en tiempo real a partir de la anatomía que ves en 3D.</p>
       <div class="cols">
         <div>
           <h4>La pantalla</h4>
@@ -268,10 +280,11 @@ export class Panels {
           <h4>Primeros pasos</h4>
           <ol>
             <li>Arrastra la <b>sonda</b> sobre la piel o usa <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. Gira con <kbd>Q</kbd>/<kbd>E</kbd> y presiona con <kbd>X</kbd>.</li>
-            <li>Pulsa <kbd>1</kbd> o <kbd>2</kbd> para ver el vaso en transversal o en longitudinal.</li>
-            <li>Coloca la aguja con <kbd>N</kbd> (pasa al modo <b>Punción</b>), avanza con <kbd>↑</kbd> y confirma con <kbd>Intro</kbd>.</li>
+            <li>Pulsa <kbd>1</kbd> para localizar la vena en transversal y <kbd>2</kbd> para verla en longitudinal.</li>
+            <li>En el modo <b>Punción</b>, sigue la lista de <b>pasos</b>: se marca sola. Coloca la aguja con <kbd>N</kbd> (en plano si la sonda está en longitudinal, el abordaje preferido), avanza con <kbd>↑</kbd> viendo la punta y confirma con <kbd>Intro</kbd>.</li>
             <li>En <b>Aprendizaje</b> tienes 8 lecciones guiadas que se corrigen solas.</li>
           </ol>
+          <p class="muted">Empiezas en <b>modo básico</b>, con los controles de la punción. El botón <b>Más controles</b>, a la derecha de la consola, muestra todos (Doppler, PW, ajustes de imagen).</p>
         </div>
       </div>
       <p class="muted">Herramienta educativa: no sustituye la formación práctica supervisada. Pulsa <kbd>H</kbd> para ver todos los atajos.</p>
@@ -294,8 +307,8 @@ export class Panels {
 
   showHelp() {
     this.openModal(`
-      <h2>Ayuda del Ecógrafo Virtual</h2>
-      <p>Simulador de ecografía para aprender la <b>punción ecoguiada de accesos vasculares</b> (FAV y prótesis). A la izquierda ves la <b>realidad física</b> (brazo, anatomía interna, sonda, aguja y plano de corte); a la derecha, la <b>pantalla del ecógrafo</b> y la <b>anatomía real</b> del plano que estás explorando.</p>
+      <h2>Ayuda de EcoPunción FAV</h2>
+      <p>Simulador de <b>punción ecoguiada del acceso vascular para hemodiálisis</b> (FAV nativa y protésica). A la izquierda ves la <b>realidad física</b> (brazo, anatomía interna, sonda, aguja y plano de corte); a la derecha, la <b>pantalla del ecógrafo</b> y la <b>anatomía real</b> del plano que estás explorando.</p>
       <div class="cols">
         <div>
           <h4>Sonda (maniobras PART)</h4>
@@ -312,7 +325,8 @@ export class Panels {
           </table>
           <h4>Aguja (modo Punción)</h4>
           <table class="tbl">
-            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda (pasa al modo Punción)</td></tr>
+            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda (pasa al modo Punción): con la sonda en longitudinal, abordaje longitudinal (en plano, el preferido); en transversal, abordaje transversal (fuera de plano)</td></tr>
+            <tr><td>Botón <b>Asepsia</b></td><td>Piel desinfectada, funda y gel estériles antes de puncionar</td></tr>
             <tr><td><kbd>↑</kbd>/<kbd>↓</kbd> o rueda sobre la imagen</td><td>Avanzar / retirar</td></tr>
             <tr><td><kbd>J</kbd></td><td>Lavar con suero: en la luz se ven microburbujas arrastradas por el flujo (y un chorro en Doppler color); fuera, infiltración</td></tr>
             <tr><td><kbd>←</kbd>/<kbd>→</kbd></td><td>Rumbo (dirección)</td></tr>
@@ -344,9 +358,10 @@ export class Panels {
             <li><b>Sala y ergonomía</b>: coloca paciente, operador y pantalla.</li>
             <li><b>Aprendizaje</b>: lecciones guiadas paso a paso.</li>
           </ul>
+          <p class="muted"><b>Modo básico / avanzado</b>: el botón <b>Más controles</b> / <b>Menos controles</b>, a la derecha de la consola, muestra u oculta el Doppler, el PW y los ajustes finos de imagen. Los atajos de teclado funcionan en los dos modos.</p>
         </div>
       </div>
-      <p class="muted">Los fundamentos médicos y físicos, con referencias (KDOQI 2019, GEMAV 2017, ESVS 2018…), están en <code>docs/FUNDAMENTOS.md</code>. Herramienta educativa: no sustituye la formación práctica supervisada.</p>`);
+      <p class="muted">Los fundamentos médicos y físicos, con referencias, están en <code>docs/FUNDAMENTOS.md</code>: <i>Punción ecoguiada del acceso vascular para hemodiálisis</i> (Moyano Franco, Salgueira Lazo, Roca-Tey; <i>Nefrología al día</i>), GEMAV 2017, KDOQI 2019 y ESVS 2018. Herramienta educativa: no sustituye la formación práctica supervisada.</p>`);
   }
 
   showReport() {

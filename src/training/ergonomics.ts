@@ -8,10 +8,13 @@
  *    (SDMS: estándares para la prevención de lesiones musculoesqueléticas en ecografía).
  *  - Orientación coherente: marcador de la sonda a la izquierda del operador ↔ indicador a la izquierda
  *    de la pantalla (ASRA/ESRA, NYSORA): lo que se mueve a la izquierda de las manos se ve a la izquierda.
- *  - Brazo del paciente apoyado, extendido y relajado; operador sentado, sin sobre-extender el hombro.
+ *  - Brazo del paciente apoyado en una superficie dura y plana, a unos 45° del cuerpo, extendido y
+ *    relajado (Nefrología al día: punción ecoguiada del acceso vascular); operador sentado, sin
+ *    sobre-extender el hombro.
  */
 import { Quaternion, Vector3 } from 'three';
 import type { SceneManager } from '../scene/SceneManager';
+import { armPositionOk } from './checklist';
 import type { UltrasoundSim } from '../sim/UltrasoundSim';
 
 export type Level = 'good' | 'fair' | 'bad' | 'info';
@@ -107,12 +110,23 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
         ? 'Lo que está a tu izquierda aparece a la izquierda de la pantalla.'
         : 'El marcador está a tu derecha: los movimientos se verán invertidos. Gira la sonda 180° o usa "Invertir I/D".',
   });
+  // brazo apoyado en una superficie dura y plana, a unos 45° del cuerpo (Nefrología al día)
   const roll = sm.cfg.armRoll;
+  const armAngle = 90 - sm.cfg.armYaw;
+  const pitch = sm.cfg.armPitch;
+  const armOk = armPositionOk(armAngle, pitch);
+  const armNear = armAngle >= 20 && armAngle <= 70 && pitch <= 35;
   items.push({
-    label: 'Brazo del paciente',
-    level: Math.abs(roll) < 25 ? 'good' : 'fair',
-    value: `${sm.cfg.armPitch.toFixed(0)}° desc., ${roll.toFixed(0)}° rot.`,
-    advice: 'Brazo apoyado en el soporte, extendido, relajado y con la zona de punción accesible.',
+    label: 'Brazo del paciente (≈ 45° del cuerpo, apoyado)',
+    level: armOk && Math.abs(roll) < 25 ? 'good' : armNear ? 'fair' : 'bad',
+    value: `${armAngle.toFixed(0)}° con el cuerpo, ${pitch.toFixed(0)}° desc., ${roll.toFixed(0)}° rot.`,
+    advice: armOk
+      ? 'Brazo apoyado en una superficie firme y plana, a unos 45° del cuerpo, extendido y relajado.'
+      : armAngle > 60
+        ? 'Separa el brazo del cuerpo hasta unos 45°, apoyado en una superficie firme y plana.'
+        : armAngle < 30
+          ? 'Acerca el brazo al cuerpo hasta unos 45°: en cruz el hombro se cansa y la zona queda lejos.'
+          : 'Apoya el brazo en una superficie firme y plana, sin que cuelgue.',
   });
   items.push({
     label: 'Postura del operador',

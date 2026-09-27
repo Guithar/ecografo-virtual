@@ -13,6 +13,7 @@ import { DopplerAudio, SpectralDoppler } from '../sim/spectral';
 import { FLUSH_INJECT_S, FlushState, flushParams, innerDiameter, JET_LEN_MM, jetVelocity } from '../sim/flush';
 import { GAUGES } from '../scene/instruments';
 import { defaultSettings, MachineSettings, Quality, SOFT_LIFT, UltrasoundSim } from '../sim/UltrasoundSim';
+import type { ChecklistState } from '../training/checklist';
 import { evaluateErgonomics, ErgoResult } from '../training/ergonomics';
 import { LESSONS, Lesson, LessonCtx } from '../training/lessons';
 import { FinalCheck, Metrics } from '../training/metrics';
@@ -80,6 +81,10 @@ export class App {
   probe: ProbeState = defaultProbeState();
   mode: AppMode = 'explore';
   tourniquet = false;
+  /** preparación aséptica: piel desinfectada, funda y gel estériles */
+  asepsis = false;
+  /** interfaz básica (solo los controles de la punción) o avanzada (todos) */
+  uiLevel: 'basico' | 'avanzado' = 'basico';
   needles: Needle[] = [new Needle('arterial'), new Needle('venosa')];
   activeNeedle = 0;
   approach: 'oop' | 'ip' = 'oop';
@@ -122,6 +127,11 @@ export class App {
       this.history = JSON.parse(localStorage.getItem('ecofav-historial') ?? '[]');
     } catch {
       this.history = [];
+    }
+    try {
+      if (localStorage.getItem('ecofav-nivel') === 'avanzado') this.uiLevel = 'avanzado';
+    } catch {
+      /* sin almacenamiento: interfaz básica */
     }
   }
 
@@ -171,6 +181,7 @@ export class App {
     this.spectral.setModel(this.model);
     this.scene.setModel(this.model);
     this.hematomas = [];
+    this.asepsis = false;
     Object.assign(this.probe, { x: cd.probeStart.x, theta: cd.probeStart.theta, rot: cd.probeStart.rot, tilt: 0, rock: 0, press: 0.6 });
     // preajuste de profundidad según el vaso de acceso
     const s = this.sim.settings;
@@ -322,8 +333,18 @@ export class App {
     return this.needles[this.activeNeedle];
   }
 
+  /**
+   * Abordaje que corresponde a la vista actual: con la sonda en longitudinal sobre el acceso, en plano;
+   * en transversal, fuera de plano. Sin el acceso en la imagen, el último usado.
+   */
+  viewApproach(): 'oop' | 'ip' {
+    const a = this.accessStruct();
+    const v = a ? this.vesselInImage(a.def.id) : null;
+    return v ? (v.along ? 'ip' : 'oop') : this.approach;
+  }
+
   /** Coloca la aguja activa junto a la sonda según el abordaje (fuera de plano / en plano). */
-  placeNeedleAuto(approach: 'oop' | 'ip' = this.approach) {
+  placeNeedleAuto(approach: 'oop' | 'ip' = this.viewApproach()) {
     this.approach = approach;
     const n = this.needle;
     if (n.placed && n.depth > 0) {
@@ -362,8 +383,29 @@ export class App {
     const f = this.arm.skinFrame(par.x, par.theta);
     const heading = (Math.atan2(dirH.dot(f.Tt), dirH.dot(f.Tx)) * 180) / Math.PI;
     n.place(this.arm, par.x, par.theta, heading, Math.round(angle));
-    this.toast(`Aguja ${n.role} (${n.gauge}G) colocada: ${approach === 'oop' ? 'fuera de plano' : 'en plano'}, ${Math.round(angle)}°`, 'info');
+    this.toast(`Aguja ${n.role} (${n.gauge}G): abordaje ${approach === 'oop' ? 'transversal (fuera de plano)' : 'longitudinal (en plano)'}, ${Math.round(angle)}°`, 'info');
+    this.remindAsepsis();
     this.panels.renderMetrics();
+  }
+
+  private remindAsepsis() {
+    if (!this.asepsis) this.toast('Sin asepsia: desinfecta la piel y pon funda y gel estériles antes de puncionar (botón Asepsia)', 'warn');
+  }
+
+  setAsepsis(on: boolean) {
+    this.asepsis = on;
+    this.toast(on ? 'Asepsia: piel desinfectada, funda estéril en la sonda y gel estéril' : 'Asepsia retirada', on ? 'ok' : 'info');
+  }
+
+  setUiLevel(level: 'basico' | 'avanzado') {
+    this.uiLevel = level;
+    document.body.classList.toggle('basic', level === 'basico');
+    this.consoleUpdate();
+    try {
+      localStorage.setItem('ecofav-nivel', level);
+    } catch {
+      /* sin almacenamiento */
+    }
   }
 
   placeNeedleAt(p: Vector3) {
@@ -381,6 +423,7 @@ export class App {
     n.place(this.arm, par.x, par.theta, heading, this.caseDef.access?.angle ?? 30);
     this.placingNeedle = false;
     this.toast('Aguja colocada en la piel. Avanza con ↑ o la rueda del ratón.', 'info');
+    this.remindAsepsis();
   }
 
   withdrawNeedle() {
@@ -560,6 +603,7 @@ export class App {
       checks.push({ label: 'Separación entre puntas ≥ 5 cm', ok: d >= 50, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
     }
     checks.push({ label: 'Sin transfixión ni punción arterial/nerviosa', ok: !n.transfixed && !n.arteryHit && !n.nerveHit, detail: [n.transfixed ? 'transfixión' : '', n.arteryHit ? 'arteria' : '', n.nerveHit ? 'nervio' : ''].filter(Boolean).join(', ') || 'Correcto', penalty: 0 });
+    checks.push({ label: 'Técnica aséptica (piel desinfectada, funda y gel estériles)', ok: this.asepsis, detail: this.asepsis ? 'Sí' : 'No', penalty: 5 });
     const graft = acc?.graft;
     if (graft) checks.push({ label: 'Sin compresor en prótesis', ok: !this.tourniquet, detail: this.tourniquet ? 'Compresor aplicado' : 'Correcto', penalty: 5 });
     else checks.push({ label: 'Compresor aplicado (FAV nativa)', ok: this.tourniquet, detail: this.tourniquet ? 'Sí' : 'No (la vena se distiende menos)', penalty: 2 });
@@ -570,7 +614,7 @@ export class App {
       date: new Date().toISOString(),
       caseId: this.caseDef.id,
       caseTitle: this.caseDef.short,
-      approach: this.approach === 'oop' ? 'Eje corto' : 'Eje largo',
+      approach: this.approach === 'oop' ? 'Transversal (fuera de plano)' : 'Longitudinal (en plano)',
       score,
       needle: `${n.role} ${n.gauge}G`,
       checks,
@@ -643,10 +687,34 @@ export class App {
       calipers: this.monitor.calipers,
       spectral: this.spectral,
       tourniquet: this.tourniquet,
+      asepsis: this.asepsis,
       labels: this.labels,
       collapse: (id) => this.collapseOf(id),
       events: this.lessonEvents,
       flags: this.lessonFlags,
+    };
+  }
+
+  /** Estado para la lista de pasos de la punción. */
+  checklistState(): ChecklistState {
+    const n = this.needle;
+    const other = this.needles[1 - this.activeNeedle];
+    const cfg = this.scene.cfg;
+    return {
+      armAngle: 90 - cfg.armYaw,
+      armPitch: cfg.armPitch,
+      measures: this.monitor.calipers.filter((c) => c.b).length,
+      probeX: this.probe.x,
+      access: this.caseDef.access,
+      otherTipX: other.placed && other.confirmed ? other.tip.x : null,
+      tourniquet: this.tourniquet,
+      asepsis: this.asepsis,
+      placed: n.placed,
+      flashed: n.firstFlashTime >= 0,
+      inLumen: n.state === 'luz',
+      angleToVessel: n.placed ? n.angleToVessel(this.model) : null,
+      flushes: this.metrics.flushes,
+      confirmed: n.confirmed,
     };
   }
 
@@ -710,6 +778,7 @@ export class App {
     const ql = document.getElementById('quality') as HTMLSelectElement;
     ql.addEventListener('change', () => this.setQuality(ql.value as Quality));
     document.getElementById('btnHelp')!.addEventListener('click', () => this.panels.showHelp());
+    this.setUiLevel(this.uiLevel);
     document.getElementById('btnReport')!.addEventListener('click', () => this.panels.showReport());
     document.getElementById('modalClose')!.addEventListener('click', () => this.panels.closeModal());
     document.getElementById('modal')!.addEventListener('click', (e) => {
@@ -1255,7 +1324,7 @@ export class App {
       `Sonda: <b>${view}</b>\n` +
       `Posición: ${(p.x / 10).toFixed(1)} cm desde la muñeca${distAn}\n` +
       `Rotación ${p.rot.toFixed(0)}° · Inclinación ${p.tilt.toFixed(0)}° · Balanceo ${p.rock.toFixed(0)}°\n` +
-      `Presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · <b>compresor</b>' : ''}` +
+      `Presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · <b>compresor</b>' : ''}${this.asepsis ? ' · <b>asepsia</b>' : ''}` +
       (s.frozen ? '\n<b>IMAGEN CONGELADA</b>' : '');
     const n = this.needle;
     const nh = document.getElementById('needleHud')!;

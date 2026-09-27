@@ -1,17 +1,17 @@
-# Ecógrafo Virtual · Punción ecoguiada de FAV
+# EcoPunción FAV · Simulador de punción ecoguiada del acceso vascular para hemodiálisis
 
 [![Publicar en GitHub Pages](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml/badge.svg)](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml)
 
-Simulador de ecografía que funciona **en el navegador**, pensado para aprender la **punción ecoguiada de accesos vasculares para hemodiálisis**, sobre todo fístulas arteriovenosas (FAV). Es un primer contacto de bajo coste, previo a los simuladores físicos comerciales. Sirve para practicar:
+**EcoPunción FAV** es un simulador de ecografía que funciona **en el navegador**, pensado para aprender la **punción ecoguiada del acceso vascular para hemodiálisis**: fístulas arteriovenosas (FAV) nativas y protésicas. Es un primer contacto de bajo coste, previo a los simuladores físicos comerciales. Sirve para practicar:
 
 - la **posición del transductor**, del **paciente** y de la **pantalla**;
 - la relación entre lo que muestra la pantalla y la **realidad física** que se explora: anatomía 3D con el plano de corte y la sección anatómica real;
-- la **técnica de punción** en eje corto (fuera de plano, con posicionamiento dinámico de la punta) y en eje largo (en plano);
+- la **técnica de punción** paso a paso, con **abordaje longitudinal (en plano)**, el preferido en la mayoría de las unidades, y **transversal (fuera de plano)**, con posicionamiento dinámico de la punta;
 - la **valoración de la FAV**: diámetro, profundidad, flujo (Qa) y criterios Doppler de estenosis.
 
 **Versión en línea:** <https://guithar.github.io/ecografo-virtual/>. No necesita instalación.
 
-> ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md). La propuesta de itinerario formativo y la rúbrica de evaluación están en [`docs/GUIA_DOCENTE.md`](docs/GUIA_DOCENTE.md).
+> ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md); la técnica sigue, entre otras fuentes, [*Punción ecoguiada del acceso vascular para hemodiálisis*](https://nefrologiaaldia.org/articulo/puncion-ecoguiada-del-acceso-vascular-para-hemodialisis/) (Moyano Franco, Salgueira Lazo, Roca-Tey; *Nefrología al día*) y la guía GEMAV 2017. La propuesta de itinerario formativo y la rúbrica de evaluación están en [`docs/GUIA_DOCENTE.md`](docs/GUIA_DOCENTE.md).
 
 ## Funciones
 
@@ -77,7 +77,9 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
 
 ### Punción y evaluación
 
-- Agujas **arterial y venosa** de 14–17G, de 25 o 32 mm. Tres formas de colocarlas: fuera de plano, en plano o con un clic sobre la piel.
+- Agujas **arterial y venosa** de 14–17G, de 25 o 32 mm. Tres formas de colocarlas: abordaje longitudinal (en plano), transversal (fuera de plano) o con un clic sobre la piel. La tecla N elige el abordaje según la vista de la sonda.
+- **Lista de pasos de la punción** que se marca sola: brazo a unos 45° del cuerpo, vena localizada y medida, zona adecuada, compresor, **asepsia** (funda y gel estériles), aguja colocada, punta en la luz, alineación y lavado con suero, confirmación.
+- Cada caso explica **por qué está indicada la punción ecoguiada** (primeras punciones, FAV profunda, maduración escasa, estenosis, hematoma…).
 - Control del ángulo, del rumbo y del avance.
 - **Eventos clínicos:**
   - punción cutánea, signo de la tienda, pérdida de resistencia;
@@ -99,18 +101,20 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
   - ≥ 3 cm de la anastomosis y ≥ 5 cm entre agujas;
   - aguja venosa anterógrada;
   - fuera de zonas a evitar (aneurisma, estenosis, hematoma);
+  - técnica aséptica;
   - uso correcto del compresor.
 - **Informe** imprimible y exportable (JSON y CSV), con historial guardado en el navegador.
 
 ### Ergonomía (sala)
 
-- Arrastra el ecógrafo y al operador. Ajusta el brazo del paciente (abducción, descenso, rotación) y el monitor (giro, inclinación, altura).
+- Arrastra el ecógrafo y al operador. Ajusta el brazo del paciente (ángulo con el cuerpo, descenso, rotación) y el monitor (giro, inclinación, altura).
 - El simulador evalúa:
   - la **alineación de la mirada** entre el sitio de punción y la pantalla;
   - el desplazamiento total de la mirada;
   - la distancia y la altura de la pantalla, y su orientación;
   - el alcance del operador;
-  - la **coherencia entre el marcador de la sonda y la pantalla**.
+  - la **coherencia entre el marcador de la sonda y la pantalla**;
+  - el **brazo del paciente**, apoyado en una superficie firme y plana, a unos 45° del cuerpo.
 
 ### Aprendizaje
 
@@ -120,14 +124,16 @@ Ocho lecciones guiadas con **comprobación automática** de cada paso:
 2. Optimización de la imagen.
 3. Arteria frente a vena.
 4. Regla de los 6.
-5. Punción en eje corto con posicionamiento dinámico de la punta (DNTP).
-6. Punción en eje largo.
+5. Abordaje longitudinal (en plano), el preferido.
+6. Abordaje transversal (fuera de plano), con posicionamiento dinámico de la punta (DNTP).
 7. Artefactos.
 8. Doppler en la FAV.
 
 ## Uso
 
 Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior.
+
+Empieza en **modo básico**, con los controles de la punción. El botón **Más controles**, a la derecha de la consola, muestra el Doppler, el PW y los ajustes finos de imagen.
 
 Para usarlo basta con abrir la [versión en línea](https://guithar.github.io/ecografo-virtual/). Para trabajar con el código:
 

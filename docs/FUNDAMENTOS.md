@@ -1,4 +1,4 @@
-# Fundamentos médicos y físicos del Ecógrafo Virtual FAV
+# Fundamentos médicos y físicos de EcoPunción FAV
 
 Este documento recoge los parámetros clínicos y físicos que usa el simulador y de dónde salen.
 Se consultaron guías clínicas, estudios revisados por pares y bibliografía de física de ultrasonidos.
@@ -133,13 +133,19 @@ protocolos y las guías vigentes.
 
 ## 5. Punción ecoguiada
 
-- **Sonda:** lineal de alta frecuencia, 7–15 MHz [11,26].
-- **Eje corto / fuera de plano:**
-  - Ventaja: centra el vaso y muestra las estructuras vecinas.
-  - Riesgo: **confundir el cuerpo de la aguja con la punta** y perforar la pared posterior. En maniquí, el 64 % de los residentes perforó la pared posterior de la yugular interna con este abordaje [64].
-- **Eje largo / en plano:**
-  - Ventaja: se ve toda la aguja.
+- **Indicaciones:** es especialmente útil en las **primeras punciones** e indicada en **pacientes obesos**, **vasos muy profundos** y **FAV difíciles de puncionar a ciegas** [11]. Una FAV es difícil por escasa maduración o desarrollo, estenosis de la vena yuxtaanastomótica, venas accesorias, colaterales no puncionables o hematomas de punciones previas [11]. Cada caso del simulador explica por qué la punción ecoguiada está indicada en él.
+- **Ecografía a pie de cama (POCUS) por el personal de la unidad:** permite detectar antes la patología del acceso, facilita la punción y reduce los intentos fallidos, con lo que preserva mejor la FAV [11].
+- **Sonda:** lineal de alta frecuencia, 7,5–12,5 MHz: mucha resolución y poca penetración, adecuada para el acceso vascular [11,26].
+- **Posición:** paciente tumbado o sentado, con el brazo apoyado en una **superficie dura y plana, a unos 45° del cuerpo** [11]. El simulador lo comprueba en *Sala y ergonomía* y en la lista de pasos.
+- **Asepsia:** la punción se hace con técnica aséptica; algunos centros usan **funda y gel estériles** [11]. En el simulador es un paso (botón *Asepsia*) y un criterio de la evaluación.
+- **Técnica:** la sonda se sujeta con una mano y la aguja con la otra, viendo el vaso en todo momento. En el abordaje transversal, el punto de entrada queda a pocos milímetros del centro del transductor. Hay que **localizar siempre la punta** y ajustar el ángulo en consecuencia [11].
+- **Abordaje longitudinal (eje largo, en plano):**
+  - Es el **preferido en la mayoría de las unidades de hemodiálisis**: la aguja se mantiene en el campo de visión durante todo el trayecto, también al abordar y canalizar el vaso [11].
   - Inconveniente: es más difícil mantener la alineación y se pierden las estructuras laterales.
+- **Abordaje transversal (eje corto, fuera de plano):**
+  - Ventaja: centra el vaso y muestra las estructuras vecinas.
+  - Inconveniente: **no se ve la entrada en la pared del vaso** y cuesta ver la aguja completa; requiere más experiencia [11].
+  - Riesgo: **confundir el cuerpo de la aguja con la punta** y perforar la pared posterior. En maniquí, el 64 % de los residentes perforó la pared posterior de la yugular interna con este abordaje [64].
 - **Posicionamiento dinámico de la punta (DNTP):** en eje corto, se avanza la sonda hasta que desaparece el punto de la punta, después se avanza la aguja, y se repite. En varios ensayos aleatorizados (acceso arterial y venoso periférico) mejora el éxito frente al abordaje en plano; en FAV es una extrapolación [43,50].
 - **Comprobación con suero:** tras el reflujo, se lava la aguja con unos mililitros de suero mientras se mira la pantalla.
   - Si la punta está en la luz, el suero entra sin resistencia. Las microburbujas que arrastra son dispersores muy potentes: se ve un penacho de ecos brillantes que recorre la luz aguas abajo de la punta y, en Doppler color, un chorro de alta velocidad con *aliasing* junto al bisel. En una FAV de alto flujo el penacho sale del campo en cuanto termina el lavado.
@@ -362,7 +368,7 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 ### Nefrología al día y procedimientos de enfermería
 
 10. Aragoncillo I, Caldés S. Ecografía Doppler en el acceso vascular. *Nefrología al día*.
-11. Punción ecoguiada del acceso vascular para hemodiálisis. *Nefrología al día*.
+11. Moyano Franco MJ, Salgueira Lazo M, Roca-Tey R. Punción ecoguiada del acceso vascular para hemodiálisis. *Nefrología al día*. https://nefrologiaaldia.org/articulo/puncion-ecoguiada-del-acceso-vascular-para-hemodialisis/
 12. Síndrome de hiperaflujo de la FAV. *Nefrología al día*.
 14. SEDEN. Procedimientos de enfermería nefrológica 3.3 y 3.4.
 

@@ -9,6 +9,7 @@ import { computePose, defaultProbeState, skinParamAbove } from '../../src/intera
 import type { ProbePose } from '../../src/sim/UltrasoundSim';
 import { Metrics } from '../../src/training/metrics';
 import { FLUSH_INJECT_S, flushParams, innerDiameter, jetVelocity } from '../../src/sim/flush';
+import { armPositionOk, ChecklistState, procedureChecklist, zoneOk } from '../../src/training/checklist';
 
 function build(id: string) {
   const cd = caseById(id);
@@ -263,6 +264,52 @@ describe('lavado con suero', () => {
     expect(p.jet).toBeLessThan(0.01);
     const fav = flushParams({ ...vein, vmean: 500, qVessel: 15 }, 1);
     expect(flushParams(vein, 1).intensity).toBeGreaterThan(fav.intensity);
+  });
+});
+
+describe('lista de pasos de la punción', () => {
+  const base: ChecklistState = {
+    armAngle: 58,
+    armPitch: 17,
+    measures: 0,
+    probeX: 110,
+    access: { anastomosisX: 27, zone: [60, 230] },
+    otherTipX: null,
+    tourniquet: false,
+    asepsis: false,
+    placed: false,
+    flashed: false,
+    inLumen: false,
+    angleToVessel: null,
+    flushes: 0,
+    confirmed: false,
+  };
+
+  it('brazo a unos 45° del cuerpo y apoyado', () => {
+    expect(armPositionOk(45, 10)).toBe(true);
+    expect(armPositionOk(58, 17)).toBe(true); // disposición por defecto de la sala
+    expect(armPositionOk(80, 10)).toBe(false); // pegado al cuerpo
+    expect(armPositionOk(15, 10)).toBe(false); // abierto en cruz
+    expect(armPositionOk(45, 35)).toBe(false); // colgando
+  });
+
+  it('zona: ≥ 3 cm de la anastomosis, dentro de la zona y ≥ 5 cm de la otra aguja', () => {
+    expect(zoneOk(base)).toBe(true);
+    expect(zoneOk({ ...base, probeX: 50 })).toBe(false); // a 2,3 cm de la anastomosis
+    expect(zoneOk({ ...base, probeX: 250 })).toBe(false); // fuera de la zona
+    expect(zoneOk({ ...base, otherTipX: 140 })).toBe(false); // 3 cm de la otra punta
+    expect(zoneOk({ ...base, probeX: 160, otherTipX: 102 })).toBe(true);
+    expect(zoneOk({ ...base, access: { ...base.access!, avoid: [{ x0: 100, x1: 120 }] } })).toBe(false);
+  });
+
+  it('los pasos se marcan con el estado y el compresor depende del tipo de acceso', () => {
+    const done = (s: ChecklistState) => procedureChecklist(s).filter((i) => i.done).length;
+    expect(done(base)).toBe(2); // brazo y zona
+    const full = { ...base, measures: 2, tourniquet: true, asepsis: true, placed: true, flashed: true, inLumen: true, angleToVessel: 20, flushes: 1, confirmed: true };
+    expect(done(full)).toBe(9);
+    const graft = procedureChecklist({ ...full, access: { ...base.access!, graft: true } });
+    expect(graft[3].label).toContain('Sin compresor');
+    expect(graft[3].done).toBe(false);
   });
 });
 

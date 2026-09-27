@@ -49,17 +49,17 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   gProbe.body.appendChild(pad);
   const pc = el('div', { class: 'ccol' });
   pc.style.cssText = 'display:flex;flex-direction:column;gap:4px';
-  const rb = el('div', { class: 'crow' });
+  const rb = el('div', { class: 'crow adv' });
   rb.appendChild(hold('Balanceo ◁', 'g', 'Balanceo talón-punta (G)'));
   rb.appendChild(hold('▷', 't', 'Balanceo talón-punta (T)'));
   pc.appendChild(rb);
   const vb = el('div', { class: 'crow' });
-  add(vb, button('Transversal', () => app.setProbeView('trans'), { title: 'Eje corto respecto al vaso (1)' }));
-  add(vb, button('Longitudinal', () => app.setProbeView('long'), { title: 'Eje largo respecto al vaso (2)' }));
+  add(vb, button('Transversal', () => app.setProbeView('trans'), { title: 'Corte transversal del vaso: eje corto (1)' }));
+  add(vb, button('Longitudinal', () => app.setProbeView('long'), { title: 'Corte longitudinal del vaso: eje largo (2)' }));
   pc.appendChild(vb);
   const tb = el('div', { class: 'crow' });
   add(tb, button('Compresor', () => app.setTourniquet(!app.tourniquet), { title: 'Aplicar/retirar compresor (K)', active: () => app.tourniquet }));
-  add(tb, button('Neutro', () => Object.assign(app.probe, { tilt: 0, rock: 0 }), { title: 'Inclinación y balanceo a 0°' }));
+  add(tb, button('Neutro', () => Object.assign(app.probe, { tilt: 0, rock: 0 }), { title: 'Inclinación y balanceo a 0°' })).el.classList.add('adv');
   pc.appendChild(tb);
   gProbe.body.appendChild(pc);
   add(gProbe.body, vslider('Presión', () => app.probe.press, (v) => (app.probe.press = v), { min: 0, max: 12, step: 0.1, title: 'Presión de la sonda (Z/X): colapsa las venas' }));
@@ -86,7 +86,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
       },
       'Preajuste de examen',
     ),
-  );
+  ).el.classList.add('adv');
   add(prCol, button('Congelar', () => (s().frozen = !s().frozen), { title: 'Congelar imagen (espacio)', active: () => s().frozen }));
   add(prCol, button('Medir', () => (app.monitor.tool = app.monitor.tool === 'caliper' ? 'none' : 'caliper'), { title: 'Calibre (M)', active: () => app.monitor.tool === 'caliper' }));
   add(prCol, button('Etiquetas', () => (app.labels = !app.labels), { title: 'Nombres de estructuras sobre la imagen (L)', active: () => app.labels }));
@@ -94,7 +94,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   gImg.body.appendChild(prCol);
   add(gImg.body, knob('Ganancia', () => s().gain, (v) => (s().gain = v), { min: -25, max: 25, step: 1, def: 0, fmt: (v) => String(55 + v) }));
   add(gImg.body, knob('Profund.', () => s().depth, (v) => (s().depth = v), { min: 15, max: 60, step: 5, def: 25, fmt: (v) => `${(v / 10).toFixed(1)} cm` }));
-  add(gImg.body, knob('Foco', () => s().focus, (v) => (s().focus = Math.min(v, s().depth - 1)), { min: 2, max: 50, step: 1, def: 8, fmt: (v) => `${v} mm` }));
+  add(gImg.body, knob('Foco', () => s().focus, (v) => (s().focus = Math.min(v, s().depth - 1)), { min: 2, max: 50, step: 1, def: 8, fmt: (v) => `${v} mm` })).el.classList.add('adv');
   add(
     gImg.body,
     knob(
@@ -104,14 +104,14 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
         s().freq = v;
         app.lessonFlags.freqChanged = 1;
       },
-      { min: 6, max: 15, step: 1, def: 12, fmt: (v) => `${v} MHz` },
+      { min: 6, max: 15, step: 1, def: 12, fmt: (v) => `${v} MHz`, title: 'Frecuencia: sonda lineal de alta frecuencia (7,5–12,5 MHz para el acceso vascular)' },
     ),
-  );
-  add(gImg.body, knob('Rango din.', () => s().dr, (v) => (s().dr = v), { min: 40, max: 90, step: 5, def: 60, fmt: (v) => `${v} dB` }));
-  const tgc = el('div', { class: 'tgc', title: 'Compensación de ganancia en profundidad (TGC)' });
+  ).el.classList.add('adv');
+  add(gImg.body, knob('Rango din.', () => s().dr, (v) => (s().dr = v), { min: 40, max: 90, step: 5, def: 60, fmt: (v) => `${v} dB` })).el.classList.add('adv');
+  const tgc = el('div', { class: 'tgc adv', title: 'Compensación de ganancia en profundidad (TGC)' });
   for (let i = 0; i < 8; i++) add(tgc, vslider(i === 0 ? 'TGC' : '', () => s().tgc[i], (v) => (s().tgc[i] = v), { min: -15, max: 15, step: 1, title: `TGC banda ${i + 1}` }));
   gImg.body.appendChild(tgc);
-  const imCol = el('div', { class: 'ccol' });
+  const imCol = el('div', { class: 'ccol adv' });
   imCol.style.cssText = 'display:flex;flex-direction:column;gap:3px';
   add(imCol, field('Persist.', () => s().persistence, (v) => (s().persistence = v), { min: 0, max: 0.85, step: 0.05, fmt: (v) => String(Math.round(v * 10)) }));
   add(imCol, field('Speckle', () => s().sri, (v) => (s().sri = v), { min: 0, max: 1, step: 0.05, fmt: (v) => String(Math.round(v * 5)), title: 'Reducción de speckle' }));
@@ -130,6 +130,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   // ---------------- Doppler ----------------
   const gDop = group('Doppler');
   gDop.root.dataset.grp = 'doppler';
+  gDop.root.classList.add('adv');
   const mCol = el('div', { class: 'ccol' });
   mCol.style.cssText = 'display:flex;flex-direction:column;gap:4px';
   add(mCol, button('Modo B', () => {
@@ -218,19 +219,21 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
       (v) => (app.needle.length = parseInt(v)),
       'Longitud de la aguja',
     ),
-  );
+  ).el.classList.add('adv');
   nCol.appendChild(nr2);
-  add(nCol, button('Colocar fuera de plano', () => app.placeNeedleAuto('oop'), { title: 'Eje corto: la aguja entra en la línea media de la sonda (N)' }));
-  add(nCol, button('Colocar en plano', () => app.placeNeedleAuto('ip'), { title: 'Eje largo: la aguja entra por el extremo de la sonda' }));
+  add(nCol, button('Asepsia', () => app.setAsepsis(!app.asepsis), { title: 'Preparación aséptica antes de puncionar: piel desinfectada, funda estéril en la sonda y gel estéril', active: () => app.asepsis }));
+  nCol.appendChild(el('div', { class: 'mini' }, 'Colocar la aguja · abordaje'));
+  add(nCol, button('Longitudinal · en plano', () => app.placeNeedleAuto('ip'), { title: 'Abordaje longitudinal (en plano), el preferido: la aguja entra por el extremo de la sonda y se ve entera (N con la sonda en longitudinal)' }));
+  add(nCol, button('Transversal · fuera de plano', () => app.placeNeedleAuto('oop'), { title: 'Abordaje transversal (fuera de plano): la aguja entra en la línea media de la sonda; no se ve la entrada en la pared, hay que seguir la punta (N con la sonda en transversal)' }));
   add(nCol, button('Clic en la piel…', () => {
     app.placingNeedle = !app.placingNeedle;
     if (app.placingNeedle) app.toast('Haz clic sobre la piel en la vista 3D para elegir el punto de punción', 'info');
-  }, { active: () => app.placingNeedle }));
+  }, { active: () => app.placingNeedle })).el.classList.add('adv');
   gNd.body.appendChild(nCol);
   const nCol2 = el('div', { class: 'ccol' });
   nCol2.style.cssText = 'display:flex;flex-direction:column;gap:4px';
   add(nCol2, field('Ángulo', () => app.needle.angle, (v) => (app.needle.angle = v), { min: 5, max: 70, step: 1, fmt: (v) => `${v.toFixed(0)}°`, title: 'Ángulo de inserción respecto a la piel (FAV 20–35°, prótesis ≈45°)' }));
-  add(nCol2, field('Rumbo', () => app.needle.heading, (v) => (app.needle.heading = v), { min: -180, max: 180, step: 1, fmt: (v) => `${v.toFixed(0)}°`, title: 'Dirección de la aguja sobre la piel' }));
+  add(nCol2, field('Rumbo', () => app.needle.heading, (v) => (app.needle.heading = v), { min: -180, max: 180, step: 1, fmt: (v) => `${v.toFixed(0)}°`, title: 'Dirección de la aguja sobre la piel' })).el.classList.add('adv');
   add(nCol2, field('Insertada', () => Math.max(0, app.needle.depth), (v) => {
     if (app.needle.placed && !app.needle.confirmed) app.needle.depth = v;
   }, { min: 0, max: 30, step: 0.1, fmt: (v) => `${v.toFixed(1)} mm` }));
@@ -245,13 +248,13 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
       return;
     }
     n.heading = n.heading > 0 ? n.heading - 180 : n.heading + 180;
-  }, { title: 'Invertir la dirección (anterógrada/retrógrada), con la aguja fuera de la piel' }));
+  }, { title: 'Invertir la dirección (anterógrada/retrógrada), con la aguja fuera de la piel' })).el.classList.add('adv');
   nCol2.appendChild(adv);
   const cf = el('div', { class: 'crow' });
   add(cf, button('Confirmar punción', () => app.confirmPuncture(), { cls: 'primary', title: 'Evaluar la posición final (Intro)' }));
   add(cf, button('Suero', () => app.flushNeedle(), { title: 'Lavar con 10 mL de suero para comprobar la posición de la punta (J): en la luz se ven microburbujas arrastradas por el flujo; fuera, infiltración' }));
   add(cf, button('Retirar aguja', () => app.withdrawNeedle(), { cls: 'danger' }));
-  add(cf, button('Realce', () => (s().needleEnhance = !s().needleEnhance), { active: () => s().needleEnhance, title: 'Realce de aguja (angulación del haz hacia la aguja)' }));
+  add(cf, button('Realce', () => (s().needleEnhance = !s().needleEnhance), { active: () => s().needleEnhance, title: 'Realce de aguja (angulación del haz hacia la aguja)' })).el.classList.add('adv');
   nCol2.appendChild(cf);
   gNd.body.appendChild(nCol2);
   root.appendChild(gNd.root);
@@ -264,10 +267,11 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   const rc1 = el('div', { class: 'ccol' });
   rc1.style.cssText = 'display:flex;flex-direction:column;gap:3px';
   rc1.appendChild(el('div', { class: 'mini' }, 'Brazo del paciente'));
-  add(rc1, field('Abducción', () => cfg().armYaw, (v) => {
-    cfg().armYaw = v;
+  // armYaw: 0° = brazo en cruz (lateral puro), 90° = hacia delante, junto al cuerpo
+  add(rc1, field('Con el cuerpo', () => 90 - cfg().armYaw, (v) => {
+    cfg().armYaw = 90 - v;
     apply(true);
-  }, { min: 0, max: 75, step: 1, fmt: (v) => `${v}°`, title: 'Ángulo del brazo hacia delante (0° = lateral puro)' }));
+  }, { min: 15, max: 90, step: 1, fmt: (v) => `${v}°`, title: 'Ángulo entre el brazo y el cuerpo del paciente: recomendado ≈ 45°, apoyado en una superficie firme y plana' }));
   add(rc1, field('Descenso', () => cfg().armPitch, (v) => {
     cfg().armPitch = v;
     apply(true);
@@ -314,6 +318,24 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   rc3.appendChild(el('div', { class: 'mini' }, 'Arrastra el ecógrafo o al operador<br>por el suelo en la vista 3D'));
   gRoom.body.appendChild(rc3);
   root.appendChild(gRoom.root);
+
+  // ---------------- Modo básico / avanzado ----------------
+  // siempre visible en el borde derecho de la consola (también cuando esta se desplaza)
+  const gLvl = el('div', { class: 'cgroup level-toggle' });
+  const lvlTitle = el('h5', {}, '');
+  gLvl.appendChild(lvlTitle);
+  const lvlBtn = add(gLvl, button('', () => app.setUiLevel(app.uiLevel === 'basico' ? 'avanzado' : 'basico')));
+  const lvlUpd = lvlBtn.update;
+  lvlBtn.update = () => {
+    lvlUpd();
+    const basic = app.uiLevel === 'basico';
+    lvlTitle.innerHTML = `<span>${basic ? 'Modo básico' : 'Modo avanzado'}</span>`;
+    lvlBtn.el.textContent = basic ? 'Más controles ▸' : '◂ Menos controles';
+    lvlBtn.el.title = basic
+      ? 'Mostrar todos los controles: Doppler color y pulsado, foco, frecuencia, TGC, rumbo de la aguja…'
+      : 'Volver al modo básico: solo los controles de la punción';
+  };
+  root.appendChild(gLvl);
 
   // orden: sonda, aguja, imagen, Doppler, sala (la aguja justo tras la sonda para verla sin desplazar)
   root.insertBefore(gNd.root, gImg.root);

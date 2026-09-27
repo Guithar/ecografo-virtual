@@ -22,6 +22,7 @@ export interface LessonCtx {
   calipers: Caliper[];
   spectral: SpectralDoppler;
   tourniquet: boolean;
+  asepsis: boolean;
   labels: boolean;
   collapse(id: string): number;
   events: Set<string>;
@@ -194,57 +195,25 @@ export const LESSONS: Lesson[] = [
     ],
   },
   {
-    id: 'eje-corto',
-    title: '5. Punción en eje corto con posicionamiento dinámico de la punta (DNTP)',
-    caseId: 'rc_madura',
-    mode: 'cannulate',
-    summary: 'Abordaje fuera de plano siguiendo la punta de la aguja.',
-    steps: [
-      {
-        text: 'Centra la vena en transversal en el antebrazo medio (≥ 3 cm de la anastomosis). Aplica el <b>compresor</b> (tecla K).',
-        check: (c) => {
-          const v = nearAccess(c);
-          return !!v && !v.along && Math.abs(v.u) < 3 && c.tourniquet;
-        },
-      },
-      {
-        text: 'Pulsa <b>Colocar aguja (fuera de plano)</b>: la aguja se sitúa en la línea media de la sonda, a una distancia similar a la profundidad del vaso, con 30–40°.',
-        check: (c) => !!c.needle()?.placed,
-      },
-      {
-        text: 'Avanza la aguja (↑ o rueda) hasta ver aparecer un <b>punto hiperecogénico</b> con cola de cometa. ¿Es la punta o el cuerpo? Desliza la sonda hacia proximal (W) hasta que el punto desaparezca: justo antes de desaparecer está la punta.',
-        check: (c) => (c.needle()?.depth ?? 0) > 3,
-      },
-      {
-        text: 'Repite: avanza la aguja 1–2 mm y desliza la sonda hasta volver a ver la punta. Observa cómo la pared anterior se <b>indenta</b> ("signo de la tienda") antes de ceder.',
-        check: (c) => c.events.has('pop') || c.events.has('flash'),
-      },
-      {
-        text: 'Al ver la punta en la luz y el <b>reflujo</b>, <b>baja el ángulo</b> (PgDn) y avanza unos milímetros siguiendo la punta, sin tocar la pared posterior.',
-        check: (c) => (c.needle()?.state === 'luz' && (c.needle()?.angle ?? 90) < 22) || false,
-      },
-      {
-        text: 'Pulsa <b>Confirmar punción</b> para evaluar el resultado.',
-        check: (c) => !!c.needle()?.confirmed,
-      },
-    ],
-  },
-  {
     id: 'eje-largo',
-    title: '6. Punción en eje largo (en plano)',
+    title: '5. Abordaje longitudinal (en plano): el preferido',
     caseId: 'rc_madura',
     mode: 'cannulate',
-    summary: 'Toda la aguja visible: alineación sonda-aguja.',
+    summary: 'Toda la aguja visible durante el trayecto. Es el abordaje preferido en la mayoría de las unidades (Nefrología al día).',
     steps: [
       {
-        text: 'Coloca la sonda en longitudinal sobre un segmento recto de la vena (≥ 3 cm de la anastomosis).',
+        text: 'Coloca la sonda en <b>longitudinal</b> (2) sobre un segmento recto de la vena, a ≥ 3 cm de la anastomosis. Aplica el <b>compresor</b> (K).',
         check: (c) => {
           const v = nearAccess(c);
-          return !!v && v.along;
+          return !!v && v.along && c.tourniquet;
         },
       },
       {
-        text: 'Pulsa <b>Colocar aguja (en plano)</b>: entra por el extremo de la sonda, alineada con el haz.',
+        text: 'Prepara la <b>asepsia</b>: piel desinfectada, funda estéril en la sonda y gel estéril (botón <b>Asepsia</b>).',
+        check: (c) => c.asepsis,
+      },
+      {
+        text: 'Sujeta la sonda con una mano y la aguja con la otra. Pulsa <b>N</b> o <b>Longitudinal · en plano</b>: la aguja entra por el extremo de la sonda, alineada con el haz.',
         check: (c) => !!c.needle()?.placed,
       },
       {
@@ -261,6 +230,46 @@ export const LESSONS: Lesson[] = [
       },
       {
         text: 'Confirma la punción.',
+        check: (c) => !!c.needle()?.confirmed,
+      },
+    ],
+  },
+  {
+    id: 'eje-corto',
+    title: '6. Abordaje transversal (fuera de plano): seguir la punta',
+    caseId: 'rc_madura',
+    mode: 'cannulate',
+    summary: 'No se ve la entrada en la pared: hay que seguir la punta con posicionamiento dinámico (DNTP). Requiere más experiencia.',
+    steps: [
+      {
+        text: 'Centra la vena en <b>transversal</b> (1) en el antebrazo medio (≥ 3 cm de la anastomosis). Aplica el <b>compresor</b> (tecla K).',
+        check: (c) => {
+          const v = nearAccess(c);
+          return !!v && !v.along && Math.abs(v.u) < 3 && c.tourniquet;
+        },
+      },
+      {
+        text: 'Prepara la <b>asepsia</b>: piel desinfectada, funda estéril en la sonda y gel estéril (botón <b>Asepsia</b>).',
+        check: (c) => c.asepsis,
+      },
+      {
+        text: 'Pulsa <b>N</b> o <b>Transversal · fuera de plano</b>: la aguja se sitúa en la línea media de la sonda, a una distancia similar a la profundidad del vaso, con 30–40°.',
+        check: (c) => !!c.needle()?.placed,
+      },
+      {
+        text: 'Avanza la aguja (↑ o rueda) hasta ver aparecer un <b>punto hiperecogénico</b> con cola de cometa. ¿Es la punta o el cuerpo? Desliza la sonda hacia proximal (W) hasta que el punto desaparezca: justo antes de desaparecer está la punta.',
+        check: (c) => (c.needle()?.depth ?? 0) > 3,
+      },
+      {
+        text: 'Repite: avanza la aguja 1–2 mm y desliza la sonda hasta volver a ver la punta. Observa cómo la pared anterior se <b>indenta</b> ("signo de la tienda") antes de ceder: en este abordaje no se ve la entrada en la pared.',
+        check: (c) => c.events.has('pop') || c.events.has('flash'),
+      },
+      {
+        text: 'Al ver la punta en la luz y el <b>reflujo</b>, <b>baja el ángulo</b> (PgDn) y avanza unos milímetros siguiendo la punta, sin tocar la pared posterior.',
+        check: (c) => (c.needle()?.state === 'luz' && (c.needle()?.angle ?? 90) < 22) || false,
+      },
+      {
+        text: 'Pulsa <b>Confirmar punción</b> para evaluar el resultado.',
         check: (c) => !!c.needle()?.confirmed,
       },
     ],

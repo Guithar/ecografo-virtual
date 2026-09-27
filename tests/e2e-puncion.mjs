@@ -1,7 +1,8 @@
 // Punción completa manejando la interfaz como un usuario (clics y teclado), con capturas.
 //   node tests/e2e-puncion.mjs <url> [carpeta_capturas] [corto|largo|corto-dntp]
 //   corto: eje corto con la tecla N desde el modo Exploración (avance sin seguir la punta).
-//   largo: eje largo con buena técnica: compresor (K), vista longitudinal (2), «Colocar en plano»,
+//   largo: abordaje longitudinal con buena técnica: compresor (K), vista longitudinal (2), asepsia,
+//          «Longitudinal · en plano»,
 //          avance con ↑ hasta la luz, aplanar (AvPág) y avanzar hasta alinear la aguja con el vaso,
 //          lavado con suero (J) visto en plano y con Doppler color (C), Intro.
 //   largo-venosa: lo mismo con la aguja venosa, unos 5 cm proximal a la zona de la arterial (W),
@@ -134,6 +135,29 @@ const centerOnTip = async () => {
   else if (t.eDir < -0.4 * t.half) t = await holdFrames(['Shift', 's'], (x) => x.eDir >= -0.2 * x.half, 60);
   return t;
 };
+/** Mide con el calibre (M) la profundidad y el diámetro de la FAV, con la sonda en transversal. */
+const measureVein = async () => {
+  await page.keyboard.press('m');
+  const pts = await page.evaluate(() => {
+    const a = window.app;
+    const v = a.vesselInImage('fav');
+    if (!v) return null;
+    const r = document.getElementById('usView').getBoundingClientRect();
+    const at = (u, w) => {
+      const [x, y] = a.monitor.toPx(u, w);
+      return [r.left + x, r.top + y];
+    };
+    const top = v.w - v.r;
+    return [at(v.u, 0.3), at(v.u, top), at(v.u, top), at(v.u, v.w + v.r)];
+  });
+  if (!pts) throw new Error('La FAV no está en la imagen para medirla');
+  for (const [x, y] of pts) {
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(200);
+  }
+  await page.keyboard.press('m');
+  return page.evaluate(() => window.app.monitor.calipers.filter((c) => c.b).map((c) => c.label));
+};
 const waitFlush = (tau) => page.waitForFunction((tau) => { const a = window.app; return (a.flush && a.time - a.flush.t0 >= tau) || a.metrics.infiltrations > 0; }, tau, { timeout: 240000, polling: 50 });
 
 await page.goto(url);
@@ -149,8 +173,10 @@ if (eje === 'corto-dntp') {
   await page.keyboard.press('k');
   await page.keyboard.press('1');
   await page.waitForTimeout(1500);
+  console.log('   medidas (profundidad, diámetro):', (await measureVein()).join(', '));
   await log('2. Punción, compresor, eje corto');
-  // 3. aguja fuera de plano (N): en la línea media de la sonda, apuntando al vaso
+  // 3. asepsia (funda y gel estériles) y aguja fuera de plano (N con la sonda en transversal)
+  await page.getByRole('button', { name: 'Asepsia', exact: true }).click();
   await page.keyboard.press('n');
   await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
   await log('3. tecla N (fuera de plano)');
@@ -231,14 +257,19 @@ if (eje === 'corto-dntp') {
   }
   await page.click('button[title^="Centrar sobre el vaso"]');
   await page.keyboard.press('k');
+  // localizar y medir la vena en transversal (1) y pasar a longitudinal (2)
+  await page.keyboard.press('1');
+  await page.waitForTimeout(1500);
+  console.log('   medidas (profundidad, diámetro):', (await measureVein()).join(', '));
   await page.keyboard.press('2');
   await page.waitForTimeout(1500);
   if (venosa) await page.getByRole('button', { name: 'Venosa', exact: true }).click();
   await log(`2. Punción, compresor, eje largo${venosa ? ', aguja venosa' : ''}`);
-  // 3. aguja en plano con el botón de la consola: entra por el extremo distal de la sonda
-  await page.getByRole('button', { name: 'Colocar en plano' }).click();
+  // 3. asepsia y aguja en plano con el botón de la consola: entra por el extremo distal de la sonda
+  await page.getByRole('button', { name: 'Asepsia', exact: true }).click();
+  await page.getByRole('button', { name: 'Longitudinal · en plano' }).click();
   await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
-  await log('3. «Colocar en plano»');
+  await log('3. asepsia y «Longitudinal · en plano»');
   await shot('01-aguja-en-plano');
   // 4. avanzar (↑) viendo la aguja entera hasta la pared (signo de la tienda) y la luz (reflujo)
   let t = await holdFrames(['ArrowUp'], (x) => WALL.includes(x.estado), 300);
@@ -310,6 +341,7 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(2000);
 const result = await page.evaluate(() => ({
   puntuacion: window.app.metrics.score(),
+  pasos: `${document.querySelectorAll('#mSteps li.done').length}/${document.querySelectorAll('#mSteps li').length}`,
   redirecciones: window.app.metrics.redirections,
   lavados: window.app.metrics.flushes,
   infiltraciones: window.app.metrics.infiltrations,
