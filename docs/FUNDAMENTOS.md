@@ -211,7 +211,7 @@ protocolos y las guías vigentes.
 - La reflexión en la aguja es **especular**: la visibilidad cae al aumentar el ángulo de inserción [44–46].
   - En plano, el eco sale desviado 2θ en la dirección lateral y lo recoge la apertura del transductor (≈ 4 cm): la aguja se ve bien hasta ≈ 40–45°.
   - Fuera de plano, la desviación es en elevación, donde la apertura es de pocos milímetros: queda sobre todo la componente difusa (bisel, rugosidad). El punto de la aguja es tenue en el tejido y mucho más claro dentro de la luz anecoica.
-- **Reverberación:** líneas paralelas separadas un diámetro de la aguja (su cuerda a lo largo del haz) y de intensidad decreciente; la «cola de cometa» se forma dentro de la luz de la aguja [48].
+- **Reverberación:** el sonido rebota dentro del tubo, entre las caras interiores de sus paredes anterior y posterior. Se ven líneas paralelas, separadas el diámetro interior de la aguja (su cuerda a lo largo del haz), bastante más tenues que la aguja y cada vez más débiles. Son más numerosas con la aguja plana y desaparecen al inclinarla. Se ven sobre todo sobre la luz anecoica del vaso. La «cola de cometa» se forma dentro de la luz de la aguja [48].
 - **Artefacto en bayoneta:** aparece por las diferencias de velocidad del sonido entre tejidos [49].
 
 ## 8. Métodos de simulación (estado del arte)
@@ -324,7 +324,7 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 - Intersección analítica rayo-cilindro en 7 planos de elevación.
 - El eco especular de un cilindro liso procede de su **cresta** (punto de fase estacionaria): cada rayo pesa según su distancia al eje de la aguja, y los que tocan el flanco apenas devuelven eco.
 - Visibilidad según el ángulo de inserción, con un lóbulo ancho en la dirección lateral (en plano) y estrecho en elevación (fuera de plano), más una componente difusa; refuerzo del bisel.
-- El eco de la pared y sus 5 reverberaciones (separadas la cuerda del tubo a lo largo del haz, −10 dB por rebote) llevan una **fase constante a lo largo de la aguja**. Con la fase de cada píxel o de cada profundidad, el eco fino del metal se cancelaba parcialmente entre filas o entre columnas vecinas según la rejilla de la calidad elegida, y la aguja se veía discontinua.
+- El eco de la pared y sus 5 reverberaciones llevan una **fase constante a lo largo de la aguja**. Las reverberaciones van separadas la cuerda interior del tubo a lo largo del haz, con diámetro interior ≈ exterior − 0,3 mm. La 1.ª queda ≈ 20 dB por debajo del eco de la aguja con la aguja plana, y cada rebote resta ≈ 8 dB más. En plano, cada rebote se atenúa además con el ángulo de inserción (factor exp[−(θ/26°)²] por rebote): a 10° se ven 3–4 líneas, a 20° dos o tres y a 35° ninguna. Con la fase de cada píxel o de cada profundidad, el eco fino del metal se cancelaba parcialmente entre filas o entre columnas vecinas según la rejilla de la calidad elegida, y la aguja se veía discontinua.
 - Fuera de plano, cada eco se ensancha lo que la aguja desciende entre dos planos de elevación: el corte integra una banda continua (grosor de corte × tan α).
 - Sombra parcial.
 - Deformación en «tienda» de la pared antes de la perforación. Los umbrales son 1–2,6 mm según el vaso.

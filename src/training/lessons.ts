@@ -286,7 +286,7 @@ export const LESSONS: Lesson[] = [
         check: (c) => Math.abs(c.probe.tilt) > 12 && c.probe.x < 60,
       },
       {
-        text: '<b>Reverberación</b>: en el modo Punción, la aguja genera líneas paralelas equiespaciadas bajo ella (un diámetro de separación) y una "cola de cometa" en eje corto.',
+        text: '<b>Reverberación</b>: en el modo Punción, la aguja genera bajo ella líneas paralelas equiespaciadas, separadas su diámetro interior y cada vez más tenues. Son más visibles con la aguja plana y sobre la luz del vaso. En eje corto forma una "cola de cometa".',
       },
       {
         text: '<b>Grosor de corte (volumen parcial)</b>: por encima del foco de elevación el haz es más grueso; una aguja fuera del plano puede parecer dentro de la luz.',

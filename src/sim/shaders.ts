@@ -577,11 +577,14 @@ void main() {
       vec3 A = uNdA[n].xyz;
       vec3 Tt = uNdB[n].xyz;
       float rn = uNdA[n].w;
-      // separación de las reverberaciones internas (pared anterior ↔ posterior del tubo): la cuerda
-      // del haz por el eje de la aguja, igual para todos los rayos → líneas paralelas y regulares
+      // separación de las reverberaciones internas: el sonido rebota dentro del tubo, entre las caras
+      // interiores de la pared anterior y la posterior, así que cuenta la cuerda del haz por la luz de
+      // la aguja (diámetro interior ≈ exterior − 0,3 mm, como en flush.ts). Igual para todos los
+      // rayos → líneas paralelas y regulares
       vec3 nAx = normalize(Tt - A);
       float cb = dot(nAx, uB);
-      float chordC = 2.0 * rn / sqrt(max(1.0 - cb * cb, 0.04));
+      float ri = max(0.3, rn - 0.15);
+      float chordC = 2.0 * ri / sqrt(max(1.0 - cb * cb, 0.04));
       // una aguja que cruza el corte en elevación (fuera de plano) cambia de profundidad de un rayo de
       // elevación al siguiente: cada eco se ensancha para cubrir ese hueco y el corte integra una
       // banda continua (grosor de corte × tan α) en lugar de 7 barras separadas
@@ -602,6 +605,9 @@ void main() {
       // las reverberaciones internas del tubo también salen desviadas: fuera de plano vuelven poco
       // (cola de cometa tenue) y no deben parecer una segunda punta dentro de la luz
       float revK = mix(0.3, 1.0, aLat / hN);
+      // En plano, cada rebote interno es otra reflexión especular que se desplaza a lo largo de la
+      // aguja: con la aguja plana vuelven casi todos y se ven 3–4 líneas; al inclinarla se apagan antes
+      float revAng = exp(-pow(thL / 0.45, 2.0));
       // anchura de la cresta en elevación, ligada al muestreo de 7 rayos para que el brillo
       // no dependa de cómo cae la aguja entre dos rayos
       float wr = max(0.49 * sig, 0.2);
@@ -631,9 +637,11 @@ void main() {
         // En este modelo de convolución, la visibilidad de un reflector especular la fija el factor
         // angular (spec), no una interferencia a lo largo de la línea.
         float ec = exp(-pow((w - s0) / sdz, 2.0));
+        // la 1.ª reverberación ~20 dB por debajo del eco de la aguja (0,1 con la aguja plana) y cada
+        // una ~8 dB más débil que la anterior (×0,4): sobre la luz anecoica se ven líneas decrecientes
         for (int m = 1; m <= 5; m++) {
           float sm = s0 + chordC * float(m);
-          ec += revK * pow(0.3, float(m)) * exp(-pow((w - sm) / (sdz * 1.3), 2.0));
+          ec += revK * 0.25 * pow(0.4 * revAng, float(m)) * exp(-pow((w - sm) / (sdz * 1.3), 2.0));
         }
         amp += vec2(wgt * ridge * spec * tipB * gN * ec, 0.0);
         trans += wgt * (w > s0 + sdz ? 0.4 + 0.25 * (1.0 - spec) : 1.0);
