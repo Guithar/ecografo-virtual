@@ -4,6 +4,8 @@
 //   largo: eje largo con buena técnica: compresor (K), vista longitudinal (2), «Colocar en plano»,
 //          avance con ↑ hasta la luz, aplanar (AvPág) y avanzar hasta alinear la aguja con el vaso,
 //          lavado con suero (J) visto en plano y con Doppler color (C), Intro.
+//   largo-venosa: lo mismo con la aguja venosa, unos 5 cm proximal a la zona de la arterial (W),
+//          anterógrada (hacia el corazón).
 //   corto-dntp: eje corto con buena técnica: compresor, N, posicionamiento dinámico de la punta
 //          (↑ hasta ver la punta, Mayús+W hasta perderla, y repetir), aplanar (AvPág) y avanzar,
 //          lavado con suero (J) sobre la punta, aguas abajo y con Doppler color (C), Intro.
@@ -109,6 +111,7 @@ const tipInfo = () => page.evaluate(() => {
     av: inLumen ? n.angleToVessel(a.model) : null,
     luz: inLumen ? n.intraluminalLength(a.model) : 0,
     cen: inLumen ? n.centering(a.model) : null,
+    probeX: a.probe.x,
     frame: a.frameCount,
   };
 });
@@ -218,14 +221,20 @@ if (eje === 'corto-dntp') {
   await page.waitForFunction(() => !window.app.flush, null, { timeout: 240000, polling: 100 });
   await page.keyboard.press('c');
   s = await state();
-} else if (eje === 'largo') {
+} else if (eje === 'largo' || eje === 'largo-venosa') {
+  const venosa = eje === 'largo-venosa';
   // 2. modo Punción (pestaña), sonda centrada (◎), compresor (K) y vista longitudinal (2)
   await page.click('#modeTabs button[data-mode="cannulate"]');
+  if (venosa) {
+    // la aguja venosa va proximal a la arterial (≥ 5 cm entre puntas): deslizar la sonda hacia el codo
+    await holdFrames(['w'], (x) => x.probeX >= 160, 80);
+  }
   await page.click('button[title^="Centrar sobre el vaso"]');
   await page.keyboard.press('k');
   await page.keyboard.press('2');
   await page.waitForTimeout(1500);
-  await log('2. Punción, compresor, eje largo');
+  if (venosa) await page.getByRole('button', { name: 'Venosa', exact: true }).click();
+  await log(`2. Punción, compresor, eje largo${venosa ? ', aguja venosa' : ''}`);
   // 3. aguja en plano con el botón de la consola: entra por el extremo distal de la sonda
   await page.getByRole('button', { name: 'Colocar en plano' }).click();
   await page.waitForFunction(() => window.app.needle.placed, null, { timeout: 60000 });
@@ -307,7 +316,7 @@ const result = await page.evaluate(() => ({
   criterios: window.app.metrics.checks.map((c) => `${c.ok === null ? '·' : c.ok ? '✓' : '✗'} ${c.label}: ${c.detail}`),
 }));
 await log('Intro (evaluación)');
-await shot({ corto: '04-evaluacion', largo: '09-evaluacion', 'corto-dntp': '09-evaluacion' }[eje] ?? 'evaluacion');
+await shot(eje === 'corto' ? '04-evaluacion' : '09-evaluacion');
 const vis = await page.evaluate(() => window.app.metrics.snapshot().tipVisiblePct);
 console.log(JSON.stringify({ ...result, punta_visible_pct: Math.round(vis) }, null, 1));
 console.log('errores de la página:', errors.length ? errors : 'ninguno');
