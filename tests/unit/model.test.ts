@@ -277,6 +277,15 @@ describe('métricas', () => {
     expect(m.snapshot().infiltrations).toBe(1);
   });
 
+  it('el avance en plano antes de que la punta entre en la imagen no cuenta como avance a ciegas', () => {
+    const m = new Metrics();
+    m.frame(0, 4, null, false, 0, 0); // bajo el extremo de la sonda
+    m.frame(1, 10, true, false, 0, 0);
+    expect(m.tipVisiblePct()).toBe(100);
+    m.frame(2, 10, false, false, 0, 0); // fuera del haz dentro del campo: sí cuenta
+    expect(m.tipVisiblePct()).toBe(50);
+  });
+
   it('penaliza transfixión y punción arterial', () => {
     const m = new Metrics();
     expect(m.score()).toBe(100);

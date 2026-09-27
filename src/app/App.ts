@@ -1089,7 +1089,10 @@ export class App {
         const tipVisible = inImg && Math.abs(im.e) < half;
         const entryIm = this.sim.tissueToImage(n.entry);
         const crosses = Math.sign(entryIm.e) !== Math.sign(im.e) && Math.abs(im.e) > half + 0.8;
-        this.metrics.frame(t, Math.max(0, adv), tipVisible, crosses, probeMove, this.accessCollapse);
+        // en plano, la punta aún bajo el extremo de la sonda (fuera del campo, del lado de la entrada):
+        // no se puede ver con ninguna técnica, así que ese avance no cuenta para el % de punta visible
+        const beforeField = Math.abs(im.e) < half && Math.abs(im.u) >= W / 2 && Math.sign(im.u) === Math.sign(entryIm.u);
+        this.metrics.frame(t, Math.max(0, adv), beforeField ? null : tipVisible, crosses, probeMove, this.accessCollapse);
         this.monitor.flags.tipMarker = { u: im.u, w: im.w, visible: tipVisible, inPlane: Math.abs(im.e) < 3 };
         // trayectoria prevista (línea recta de la aguja más allá de la punta)
         const guide: { u: number; w: number; e: number }[] = [];

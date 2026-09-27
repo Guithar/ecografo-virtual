@@ -117,16 +117,19 @@ export class Metrics {
   /**
    * Registro por fotograma durante el avance de la aguja.
    * @param advance mm avanzados en este fotograma (>0 avanzando)
-   * @param tipVisible punta dentro del haz (lateral, profundidad y grosor de corte)
+   * @param tipVisible punta dentro del haz (lateral, profundidad y grosor de corte); null si ninguna
+   *   técnica permite verla (en plano, antes de entrar en la imagen): ese avance no cuenta
    * @param shaftInBeamTipBeyond el haz corta el cuerpo de la aguja pero la punta está más allá
    * @param probeMove mm de desplazamiento de la sonda en este fotograma
    */
-  frame(t: number, advance: number, tipVisible: boolean, shaftInBeamTipBeyond: boolean, probeMove: number, collapse: number) {
+  frame(t: number, advance: number, tipVisible: boolean | null, shaftInBeamTipBeyond: boolean, probeMove: number, collapse: number) {
     this.now = t;
     if (advance > 0.001) {
       this.start(t);
-      this.advTotal += advance;
-      if (tipVisible) this.advVisible += advance;
+      if (tipVisible !== null) {
+        this.advTotal += advance;
+        if (tipVisible) this.advVisible += advance;
+      }
       if (probeMove > 0.02) this.probeMoveDuringAdvance += probeMove;
       if (shaftInBeamTipBeyond) {
         if (!this.confusionActive) {

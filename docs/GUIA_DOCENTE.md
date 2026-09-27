@@ -57,7 +57,7 @@ La puntuación del simulador parte de 100 puntos y resta penalizaciones:
 | Contacto con un nervio | −20 | |
 | Infiltración de suero (lavar con la punta fuera de la luz) | −12 | |
 | Tomar el cuerpo de la aguja por la punta (avanzar con el haz cortando el cuerpo) | −4 | |
-| Avance con la punta visible < 80 % | −0,4 por punto porcentual | NeedleTrainer; Sites 2007 |
+| Avance con la punta visible < 80 % (en plano no cuenta el tramo en que la punta, alineada con el plano, aún no ha entrado en la imagen) | −0,4 por punto porcentual | NeedleTrainer; Sites 2007 |
 | Movimiento de la sonda mientras avanza la aguja > 8 mm | hasta −8 | Sites 2007 |
 | Colapso del vaso > 50 % por exceso de presión | −5 | |
 
