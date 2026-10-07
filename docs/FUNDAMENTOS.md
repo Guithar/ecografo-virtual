@@ -1,4 +1,4 @@
-# Fundamentos médicos y físicos de EcoPunción FAV
+# Fundamentos médicos y físicos de Fistulab
 
 Este documento recoge los parámetros clínicos y físicos que usa el simulador y de dónde salen.
 Se consultaron guías clínicas, estudios revisados por pares y bibliografía de física de ultrasonidos.

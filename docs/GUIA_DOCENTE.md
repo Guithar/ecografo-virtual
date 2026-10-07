@@ -1,4 +1,4 @@
-# Guía docente de EcoPunción FAV
+# Guía docente de Fistulab
 
 Propuesta de itinerario formativo para personal de enfermería y medicina de unidades de hemodiálisis.
 El simulador cubre la fase de **aprendizaje cognitivo y de coordinación ojo-mano-pantalla**, previa a:
@@ -89,8 +89,8 @@ Niveles orientativos:
 
 ## Uso en grupo
 
-- Cada participante lo abre en su ordenador desde <https://guithar.github.io/ecografo-virtual/>, sin instalar nada (navegador con WebGL2).
-- Un enlace con parámetros abre directamente un caso y un modo, lo que resulta útil para repartir ejercicios. Por ejemplo, `https://guithar.github.io/ecografo-virtual/?caso=rc_estenosis&modo=cannulate`.
+- Cada participante lo abre en su ordenador desde <https://fistulab.com>, sin instalar nada ni registrarse (navegador con WebGL2).
+- Un enlace con parámetros abre directamente un caso y un modo, lo que resulta útil para repartir ejercicios. Por ejemplo, `https://fistulab.com/?caso=rc_estenosis&modo=cannulate`.
 - Proyecta el simulador en el aula con el panel 3D maximizado (botón ⤢) para explicar la relación entre la sonda, el plano de corte y la imagen.
 - Pide que cada punción se compruebe con un **lavado de suero** (J) antes de confirmarla. Con la punta en la luz se ven microburbujas recorriendo el vaso; si se lava con la punta en la pared (signo de la tienda, antes del «pop»), aparece la infiltración. Es un buen ejercicio para aprender a reconocerla.
 - Empieza en **modo básico** (solo los controles de la punción) y sigue la lista de **pasos de la punción** de la pestaña *Punción*, que se marca sola. El botón **Más controles**, a la derecha de la consola, muestra el Doppler, el PW y los ajustes de imagen para las sesiones 2–4.

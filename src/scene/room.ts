@@ -416,7 +416,7 @@ export function buildUltrasoundCart(displayTex: Texture): UltrasoundCart {
         c.fillRect(0, 0, 512, 32);
         c.fillStyle = '#9fd3ff';
         c.font = '18px sans-serif';
-        c.fillText('EcoPunción FAV  ·  L12-5  ·  Vascular', 10, 22);
+        c.fillText('Fistulab  ·  L12-5  ·  Vascular', 10, 22);
       }),
       toneMapped: false,
     }),
