@@ -166,6 +166,17 @@ Configuración necesaria una sola vez:
    | AAAA | `@` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` (cuatro registros) |
    | CNAME | `www` | `guithar.github.io` |
 
+   Sin registros comodín (`*.fistulab.com`): GitHub los desaconseja y llevarían cualquier subdominio a otro sitio.
+
+   **Correo.** Las direcciones `@fistulab.com` van con Banahosting. Sus registros se añaden en esta misma zona de DonDominio, con los valores que da cPanel en *Entregabilidad del correo*:
+   - MX;
+   - `mail`;
+   - SPF: solo puede haber uno, así que sustituye el de DonDominio por el de Banahosting;
+   - DKIM (`default._domainkey`);
+   - DMARC (`_dmarc`).
+
+   No cambies los servidores de nombres a los de Banahosting: la web dejaría de apuntar a GitHub Pages.
+
 4. *Settings → Pages → Custom domain*: `fistulab.com`. Cuando GitHub compruebe el DNS y emita el certificado, marca **Enforce HTTPS**. `www.fistulab.com` y la dirección antigua (`guithar.github.io/ecografo-virtual`) redirigen solas a `https://fistulab.com`.
 5. Recomendado: verifica el dominio en la configuración de tu cuenta de GitHub (*Settings → Pages → Add a domain*, con un registro TXT). Así nadie más puede usarlo en GitHub Pages.
 
