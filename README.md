@@ -120,9 +120,26 @@ Ocho lecciones guiadas con **comprobación automática** de cada paso:
 7. Artefactos.
 8. Doppler en la FAV.
 
+### Versión móvil
+
+En el móvil, la tableta en vertical y las ventanas pequeñas se abre una **interfaz táctil** con el mismo simulador:
+
+- **Pantalla:**
+  - en vertical, el monitor del ecógrafo ocupa casi toda la pantalla y el brazo 3D va en una **miniatura** (⇄ intercambia las vistas, «Vista» cambia la cámara y «–» oculta el 3D);
+  - en horizontal, el monitor queda en el centro y el 3D, con los controles, a la derecha.
+- **Sonda:**
+  - un dedo sobre el brazo en 3D lleva la sonda a ese punto; fuera del brazo gira la cámara y con dos dedos se acerca;
+  - las maniobras finas (a lo largo, alrededor, girar, inclinar, balanceo, presión) se hacen con una **rueda de ajuste**, igual que la profundidad, la ganancia y el foco.
+- **Punción:** la rueda pasa a controlar el **avance**, el ángulo y el rumbo de la aguja. Al **confirmar** aparece la evaluación.
+- **Lecciones:** las ocho, con los textos adaptados a los controles táctiles.
+- **Más ajustes:** caso, brazo, calidad, frecuencia, Doppler completo, aguja, capas del 3D e informe.
+- **Rendimiento:** en móviles y tabletas se dibuja a 30 fps, sin sombras y sin la sala (se puede activar en «Más»).
+- **Instalable:** desde el navegador se puede **añadir a la pantalla de inicio**. Así se abre a pantalla completa y funciona sin conexión después de la primera visita.
+- **Solo en escritorio:** la sala y la ergonomía, la sección anatómica en un panel aparte (en el móvil se usa «Fusión») y el TGC por bandas.
+
 ## Uso
 
-Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior.
+Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior (en el móvil, en «Más»).
 
 ```bash
 npm install
@@ -144,6 +161,7 @@ Parámetros de URL útiles:
 | `?calidad=` | `alta`, `media`, `baja` |
 | `?camara=` | vista inicial de la cámara |
 | `?max=` | `3d`, `us`, `anat` (panel maximizado) |
+| `?movil=` | `1` fuerza la interfaz táctil, `0` la de escritorio |
 
 ### Controles principales
 
@@ -169,9 +187,12 @@ src/
   scene/       escena 3D: piel (surface nets), anatomía, sonda, aguja, sala, cámaras
   interaction/ pose de la sonda (maniobras PART) y física de la aguja
   training/    métricas, ergonomía y lecciones
-  ui/          monitor, consola, paneles e informe
+  ui/          monitor, consola, paneles e informe; mobile.ts: interfaz táctil
   app/App.ts   orquestación y bucle principal
+  pwa.ts       aplicación instalable (public/: manifiesto, iconos y service worker)
 ```
+
+Los iconos de `public/icons` se generan con `node scripts/make-icons.mjs`.
 
 La misma descripción anatómica alimenta:
 

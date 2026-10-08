@@ -2,7 +2,7 @@
  * Aplicación principal: orquesta el modelo anatómico, el simulador ecográfico, la escena 3D, la
  * interacción (sonda, aguja, sala) y el entrenamiento (métricas, lecciones, ergonomía).
  */
-import { Color, Vector2, Vector3, WebGLRenderer } from 'three';
+import { Color, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three';
 import { ArmShape } from '../anatomy/armShape';
 import { CaseDef, CASES, caseById } from '../anatomy/cases';
 import { AnatomyModel, Structure } from '../anatomy/model';
@@ -17,6 +17,8 @@ import { FinalCheck, Metrics } from '../training/metrics';
 import { elementRect, ImageView } from '../ui/imageView';
 import { Monitor } from '../ui/monitor';
 import { buildConsole } from '../ui/console';
+import { deviceText, isLowPower } from '../ui/device';
+import { MobileUI } from '../ui/mobile';
 import { Panels } from '../ui/panels';
 
 export type AppMode = 'explore' | 'cannulate' | 'room' | 'learn';
@@ -84,12 +86,19 @@ export class App {
   toastsEl: HTMLElement;
   quality: Quality = 'media';
   private defaultsSettings: MachineSettings = defaultSettings();
+  /** móvil o tableta: menos resolución, sin sombras ni sala y 30 fps */
+  readonly lowPower = isLowPower();
+  /** interfaz móvil activa (la gestiona MobileUI) */
+  touchUI = false;
+  mobile: MobileUI | null = null;
+  private lastDraw = 0;
 
   constructor() {
     this.canvas = document.getElementById('gl') as HTMLCanvasElement;
-    this.renderer = new WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: false });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+    this.renderer = new WebGLRenderer({ canvas: this.canvas, antialias: !this.lowPower, powerPreference: 'high-performance', preserveDrawingBuffer: false });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.lowPower ? 1.5 : 2));
+    // tamaño CSS explícito: en el móvil 100vh no coincide con la zona visible cuando aparecen las barras del navegador
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.autoClear = false;
     this.toastsEl = document.getElementById('toasts')!;
     try {
@@ -102,7 +111,7 @@ export class App {
   async init() {
     const q = new URLSearchParams(location.search);
     if (q.has('frames')) this.maxFrames = parseInt(q.get('frames')!);
-    this.quality = (q.get('calidad') as Quality) || (isMobile() ? 'baja' : 'media');
+    this.quality = (q.get('calidad') as Quality) || (this.lowPower ? 'baja' : 'media');
     (document.getElementById('quality') as HTMLSelectElement).value = this.quality;
     const cd = caseById(q.get('caso') ?? 'rc_madura');
     this.caseDef = cd;
@@ -113,10 +122,11 @@ export class App {
     this.spectral.audio = this.audio;
     this.monitor = new Monitor(document.getElementById('paneMonitor')!, this.sim, () => this.model, this.spectral);
     this.monitor.onMeasure = (c) => this.onCaliper(c);
-    this.scene = new SceneManager(this.renderer, this.sim.displayTexture, this.sim.anatomyTexture, document.getElementById('view3d')!);
+    this.scene = new SceneManager(this.renderer, this.sim.displayTexture, this.sim.anatomyTexture, document.getElementById('view3d')!, this.lowPower);
     this.scene.setRoomConfig(defaultRoomConfig('left'), true);
     this.panels = new Panels(this);
     this.consoleUpdate = buildConsole(this, document.getElementById('console')!);
+    this.mobile = new MobileUI(this);
     this.loadCase(cd.id);
     this.bindTopbar();
     this.bindInput();
@@ -184,6 +194,8 @@ export class App {
   }
 
   setMode(m: AppMode) {
+    // la sala y la ergonomía sólo están en la versión de escritorio
+    if (m === 'room' && this.touchUI) m = 'explore';
     this.mode = m;
     document.querySelectorAll('#modeTabs button').forEach((b) => b.classList.toggle('active', (b as HTMLElement).dataset.mode === m));
     document.body.dataset.mode = m;
@@ -207,6 +219,17 @@ export class App {
     }
     document.getElementById('needleHud')!.classList.toggle('hidden', m !== 'cannulate' && !(m === 'learn' && this.lesson?.lesson.mode === 'cannulate'));
     this.consoleUpdate();
+    this.mobile?.update();
+  }
+
+  /** Modo punción, directo o dentro de una lección de punción. */
+  get cannulating(): boolean {
+    return this.mode === 'cannulate' || (this.mode === 'learn' && this.lesson?.lesson.mode === 'cannulate');
+  }
+
+  /** Texto según el dispositivo (ver `deviceText`). */
+  dt(s: string): string {
+    return deviceText(s, this.touchUI);
   }
 
   startLesson(id: string) {
@@ -332,7 +355,7 @@ export class App {
     if (toProbe.length() < 60) heading = (Math.atan2(toProbe.dot(f.Tt), toProbe.dot(f.Tx)) * 180) / Math.PI;
     n.place(this.arm, par.x, par.theta, heading, this.caseDef.access?.angle ?? 30);
     this.placingNeedle = false;
-    this.toast('Aguja colocada en la piel. Avanza con ↑ o la rueda del ratón.', 'info');
+    this.toast(this.dt('Aguja colocada en la piel. {{Avanza con ↑ o la rueda del ratón.|Avanza con «Avance» en la rueda de ajuste.}}'), 'info');
   }
 
   withdrawNeedle() {
@@ -348,7 +371,7 @@ export class App {
   advanceNeedle(mm: number) {
     const n = this.needle;
     if (!n.placed) {
-      this.toast('Primero coloca la aguja (botón "Colocar" o clic en la piel)', 'warn');
+      this.toast(this.dt('Primero coloca la aguja {{(botón "Colocar" o clic en la piel)|(«Fuera de plano» o «En plano»)}}'), 'warn');
       return;
     }
     if (n.confirmed) return;
@@ -457,6 +480,7 @@ export class App {
     this.toast(inAccess ? `Punción ${n.role} evaluada: ${score}/100` : 'Punción no válida: la punta no está en la luz', inAccess ? 'ok' : 'error');
     this.panels.renderMetrics();
     this.panels.showTab('metrics');
+    this.mobile?.onEvaluated();
   }
 
   // ------------------------------------------------------------------------------------------
@@ -771,9 +795,52 @@ export class App {
       const r = v3.getBoundingClientRect();
       return new Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     };
+    const moveProbeTo = (p: Vector3) => {
+      const par = skinParamOf(p);
+      this.probe.x = par.x;
+      this.probe.theta = par.theta;
+    };
+    // táctil: un dedo sobre el brazo lleva la sonda a ese punto y la arrastra; fuera del brazo gira la cámara;
+    // con dos dedos se acerca y se gira. Se decide en la fase de captura, antes de que actúe OrbitControls.
+    const touchIds = new Set<number>();
+    let touchProbe = false;
+    document.getElementById('pane3d')!.addEventListener(
+      'pointerdown',
+      (e) => {
+        if (e.pointerType === 'mouse' || e.target !== v3) return;
+        touchIds.add(e.pointerId);
+        const ctl = this.scene.controls;
+        if (touchIds.size > 1) {
+          // segundo dedo: cámara
+          touchProbe = false;
+          this.dragProbe = false;
+          return;
+        }
+        ctl.touches.ONE = TOUCH.ROTATE;
+        if (this.mode === 'room' || this.placingNeedle) return;
+        const hit = this.scene.pickSkin(ndc(e));
+        if (hit && hit.point.x > -12) {
+          ctl.touches.ONE = null;
+          touchProbe = true;
+          moveProbeTo(hit.point);
+        }
+      },
+      { capture: true },
+    );
+    const touchEnd = (e: PointerEvent) => {
+      if (!touchIds.delete(e.pointerId) || touchIds.size) return;
+      touchProbe = false;
+      this.scene.controls.touches.ONE = TOUCH.ROTATE;
+    };
+    window.addEventListener('pointerup', touchEnd);
+    window.addEventListener('pointercancel', touchEnd);
     v3.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
       const p = ndc(e);
+      if (e.pointerType !== 'mouse' && this.mode !== 'room' && !this.placingNeedle) {
+        if (touchProbe) this.dragProbe = true;
+        return;
+      }
       if (this.mode === 'room') {
         const hit = this.scene.pickObject(p, ['ecografo', 'operador']);
         if (hit) {
@@ -801,11 +868,7 @@ export class App {
       const p = ndc(e);
       if (this.dragProbe) {
         const hit = this.scene.pickSkin(p);
-        if (hit && hit.point.x > -12) {
-          const par = skinParamOf(hit.point);
-          this.probe.x = par.x;
-          this.probe.theta = par.theta;
-        }
+        if (hit && hit.point.x > -12) moveProbeTo(hit.point);
       } else if (this.dragRoom) {
         const f = this.scene.pickFloor(p);
         if (f) {
@@ -856,7 +919,7 @@ export class App {
   }
 
   private resize() {
-    this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   // ------------------------------------------------------------------------------------------
@@ -899,6 +962,12 @@ export class App {
 
   private frame() {
     const now = performance.now();
+    // móviles: 30 fps (la mitad de GPU y batería); el lienzo conserva el último fotograma dibujado
+    if (this.lowPower && this.quality !== 'alta' && now - this.lastDraw < 1000 / 30 - 3) {
+      requestAnimationFrame(() => this.frame());
+      return;
+    }
+    this.lastDraw = now;
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
     if (!this.sim.settings.frozen) this.time += dt;
@@ -1005,8 +1074,14 @@ export class App {
     r.setClearColor(CLEAR_COLOR, 1);
     r.clear();
     const v3 = elementRect(document.getElementById('view3d')!, this.canvas);
-    if (v3) this.scene.render(v3);
-    this.monitor.render(r, this.canvas);
+    // la vista en miniatura (móvil, en vertical) se dibuja la última, encima de la grande
+    if (this.mobile?.pip() === '3d') {
+      this.monitor.render(r, this.canvas);
+      if (v3) this.scene.render(v3);
+    } else {
+      if (v3) this.scene.render(v3);
+      this.monitor.render(r, this.canvas);
+    }
     const av = document.getElementById('anatView')!;
     const ar = elementRect(av, this.canvas);
     if (ar) this.renderAnatomy(ar, av);
@@ -1026,6 +1101,7 @@ export class App {
       this.updateHud();
       this.consoleUpdate();
       this.panels.tick();
+      this.mobile?.update();
     }
     this.lessonTimer += dt;
     if (this.lessonTimer > 0.25) {
@@ -1170,8 +1246,4 @@ export class App {
   get softLift() {
     return SOFT_LIFT;
   }
-}
-
-function isMobile() {
-  return /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 }

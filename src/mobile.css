@@ -1,0 +1,775 @@
+/* ==========================================================================================
+   Interfaz móvil (body.mobile, ver src/ui/mobile.ts)
+   Vertical:   barra superior · monitor (con el 3D en miniatura) · lección · rueda y botones · navegación
+   Horizontal: navegación a la izquierda · monitor en el centro · 3D y rueda a la derecha
+   ========================================================================================== */
+
+body:not(.mobile) .m-only {
+  display: none !important;
+}
+
+body.mobile {
+  touch-action: pan-x pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.mobile input,
+body.mobile select {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+body.mobile #app {
+  height: 100%;
+  height: 100dvh;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: 'top' 'mon' 'lesson' 'dock' 'nav';
+}
+
+body.mobile #grid {
+  display: contents;
+}
+
+body.mobile #console,
+body.mobile #paneAnat,
+body.mobile .maxbtn,
+body.mobile .toolbar3d,
+body.mobile .hud,
+body.mobile .pane-hint,
+body.mobile .mon-top {
+  display: none !important;
+}
+
+/* ---------- barra superior: logotipo y caso ---------- */
+body.mobile #topbar {
+  grid-area: top;
+  height: auto;
+  gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 6px) 12px 6px;
+  overflow: visible;
+}
+
+body.mobile .brand > div,
+body.mobile #modeTabs,
+body.mobile .top-actions,
+body.mobile .case-sel label {
+  display: none;
+}
+
+body.mobile .brand svg {
+  width: 28px;
+  height: 28px;
+}
+
+body.mobile #topbar > .case-sel {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.mobile .case-sel select {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+/* ---------- monitor ---------- */
+body.mobile #paneMonitor {
+  grid-area: mon;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body.mobile #usParams {
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 10px;
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  background: rgba(5, 8, 11, 0.72);
+}
+
+body.mobile #usParams b {
+  color: #e2eef6;
+}
+
+body.mobile .us-readout {
+  font-size: 10.5px;
+}
+
+/* ---------- 3D en miniatura (vertical) ---------- */
+body.mobile #pane3d {
+  grid-area: mon;
+}
+
+body.mobile:not(.m-land):not(.m-swap) #pane3d,
+body.mobile.m-swap:not(.m-land) #paneMonitor {
+  justify-self: end;
+  align-self: end;
+  width: 46%;
+  z-index: 4;
+  border: 1px solid rgba(160, 200, 220, 0.5);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+body.mobile:not(.m-land):not(.m-swap) #pane3d {
+  height: 36%;
+  margin: 0 8px 30px 0;
+}
+
+body.mobile.m-swap:not(.m-land) #paneMonitor {
+  height: 40%;
+  margin: 0 8px 8px 0;
+}
+
+/* la vista grande no se dibuja bajo la miniatura: sus textos y su espectrograma no se transparentan */
+body.mobile:not(.m-land):not(.m-swap):not(.m-pipoff) #paneMonitor {
+  clip-path: polygon(0 0, 100% 0, 100% calc(64% - 38px), calc(54% - 16px) calc(64% - 38px), calc(54% - 16px) calc(100% - 22px), 100% calc(100% - 22px), 100% 100%, 0 100%);
+}
+
+body.mobile.m-swap:not(.m-land) #pane3d {
+  clip-path: polygon(0 0, 100% 0, 100% calc(60% - 16px), calc(54% - 16px) calc(60% - 16px), calc(54% - 16px) 100%, 0 100%);
+}
+
+body.mobile.m-pipoff:not(.m-land):not(.m-swap) #pane3d {
+  display: none;
+}
+
+.m-panectl {
+  position: absolute;
+  z-index: 5;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.m-panectl button {
+  min-width: 34px;
+  height: 32px;
+  padding: 0 9px;
+  font-size: 14px;
+  background: rgba(10, 16, 22, 0.8);
+  border-color: rgba(120, 160, 180, 0.5);
+}
+
+/* en el monitor, abajo a la izquierda: la zona libre bajo la imagen */
+#paneMonitor .m-panectl {
+  top: auto;
+  bottom: 28px;
+}
+
+/* ⇄ en la vista pequeña; «–» sólo en la miniatura vertical */
+body.mobile:not(.m-swap) #paneMonitor .m-panectl,
+body.mobile.m-swap #pane3d .m-panectl [data-act='swap'],
+body.mobile.m-swap #pane3d .m-panectl [data-act='hide'],
+body.mobile.m-land #pane3d .m-panectl [data-act='hide'] {
+  display: none;
+}
+
+#mPipShow {
+  position: absolute;
+  z-index: 5;
+  right: 8px;
+  bottom: 30px;
+  height: 32px;
+  font-size: 13px;
+  background: rgba(10, 16, 22, 0.85);
+}
+
+body.mobile:not(.m-pipoff) #mPipShow,
+body.mobile.m-land #mPipShow,
+body.mobile.m-swap #mPipShow {
+  display: none;
+}
+
+/* ---------- lección ---------- */
+#mLesson {
+  grid-area: lesson;
+  max-height: 34dvh;
+  overflow: auto;
+  padding: 8px 12px;
+  background: #0f1d26;
+  border-top: 1px solid #22495a;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+body.mobile:not([data-mode='learn']) #mLesson {
+  display: none;
+}
+
+.m-lhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.m-lhead .t {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-lhead button {
+  min-width: 34px;
+  height: 30px;
+  padding: 0 8px;
+}
+
+.m-ltext {
+  margin: 6px 0;
+}
+
+.m-ltext.collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.m-lhint {
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+
+/* los botones de la lección siempre a la vista, aunque el texto se desplace */
+.m-lnav {
+  position: sticky;
+  bottom: -8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -12px -8px;
+  padding: 4px 12px 8px;
+  background: #0f1d26;
+}
+
+.m-lnav button {
+  height: 34px;
+  min-width: 44px;
+}
+
+.m-lstatus {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.m-lstatus.ok {
+  color: var(--ok);
+}
+
+/* ---------- rueda de ajuste y botones ---------- */
+#mDock {
+  grid-area: dock;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 10px 8px;
+  background: linear-gradient(180deg, #0f171e, #0a1015);
+  border-top: 1px solid var(--line);
+}
+
+.m-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.m-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.m-chip {
+  flex: none;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  font-size: 13px;
+}
+
+.m-chip.g-needle {
+  border-color: #6b4a2a;
+}
+
+.m-chip.on {
+  background: #164b55;
+  border-color: var(--accent);
+  color: #e8fdff;
+}
+
+.m-sep {
+  flex: none;
+  width: 1px;
+  margin: 5px 1px;
+  background: var(--line);
+}
+
+.m-jog {
+  display: flex;
+  gap: 6px;
+  height: 44px;
+}
+
+.m-jog > button {
+  flex: none;
+  width: 46px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  touch-action: none;
+}
+
+.m-jog-strip {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background-color: #0d151c;
+  background-image: repeating-linear-gradient(90deg, rgba(159, 231, 255, 0.32) 0 1px, transparent 1px 11px);
+  background-size: 11px 60%;
+  background-repeat: repeat-x;
+  background-position-y: center;
+  touch-action: none;
+  cursor: ew-resize;
+}
+
+/* bordes en sombra: sensación de rueda */
+.m-jog-strip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #0b1117 0, transparent 22%, transparent 78%, #0b1117 100%);
+  pointer-events: none;
+}
+
+.m-jog-strip.drag {
+  border-color: var(--accent);
+}
+
+.m-jog-val {
+  position: relative;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(11, 17, 23, 0.9);
+  font: 12.5px var(--mono);
+  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.m-jog-val b {
+  color: var(--accent2);
+  font-weight: 600;
+}
+
+.m-actions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.m-actions button {
+  height: 38px;
+  padding: 0 2px;
+  font-size: 12.5px;
+  line-height: 1.1;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.m-actions button.m-art::before,
+.m-actions button.m-ven::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  vertical-align: 0;
+  background: var(--art);
+}
+
+.m-actions button.m-ven::before {
+  background: var(--ven);
+}
+
+/* ---------- navegación ---------- */
+#mNav {
+  grid-area: nav;
+  display: flex;
+  padding: 3px 4px calc(3px + env(safe-area-inset-bottom));
+  background: #0a1015;
+  border-top: 1px solid var(--line);
+}
+
+#mNav button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+#mNav svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#mNav button.on {
+  color: var(--accent2);
+  background: rgba(63, 193, 201, 0.1);
+}
+
+/* ---------- avisos ---------- */
+body.mobile #toasts {
+  position: fixed;
+  z-index: 60;
+  top: calc(env(safe-area-inset-top) + 52px);
+  left: 12px;
+  right: 12px;
+  max-width: none;
+  align-items: center;
+}
+
+body.mobile .toast {
+  max-width: 100%;
+  font-size: 13px;
+}
+
+/* ---------- hojas: información (panel de pestañas) y «Más» ---------- */
+#mBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: rgba(3, 7, 10, 0.55);
+}
+
+body.mobile:not(.m-sheet-info):not(.m-sheet-more) #mBackdrop,
+body.mobile:not(.m-sheet-more) #mMore,
+body.mobile #paneInfo {
+  display: none;
+}
+
+body.mobile.m-sheet-info #paneInfo,
+.m-sheet {
+  position: fixed;
+  z-index: 45;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 78dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  animation: mSheetIn 0.22s ease-out;
+}
+
+body.mobile.m-sheet-info #paneInfo {
+  height: min(72dvh, 680px);
+}
+
+@keyframes mSheetIn {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+body.mobile #tabButtons {
+  flex: none;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 6px 6px 0;
+}
+
+body.mobile #tabButtons [data-tab='ergo'] {
+  display: none;
+}
+
+body.mobile .tab-buttons button {
+  padding: 8px 12px;
+  font-size: 13.5px;
+}
+
+.m-close {
+  margin-left: auto;
+  flex: none;
+  min-width: 36px;
+  height: 32px;
+  border-radius: 8px !important;
+  border: 1px solid var(--line) !important;
+  margin-bottom: 4px;
+}
+
+body.mobile .tab-content {
+  padding: 12px 14px 18px;
+  font-size: 14px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+body.mobile .cols {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+body.mobile .metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.mobile .lesson-list button {
+  padding: 10px 12px;
+}
+
+.m-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.m-sheet-head button {
+  min-width: 36px;
+  height: 32px;
+}
+
+.m-sheet-body {
+  overflow: auto;
+  padding: 2px 16px 16px;
+  overscroll-behavior: contain;
+}
+
+.m-sec {
+  border-bottom: 1px solid var(--line);
+}
+
+.m-sec summary {
+  padding: 13px 2px;
+  font-weight: 600;
+  color: var(--accent2);
+  cursor: pointer;
+}
+
+.m-sec-body {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 2px 0 16px;
+}
+
+.m-sec .field {
+  display: grid;
+  grid-template-columns: 6.8em minmax(0, 1fr) 4.4em;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.m-sec .field input[type='range'] {
+  width: 100%;
+  height: 26px;
+}
+
+.m-sec .field .val {
+  text-align: right;
+}
+
+.m-lbl {
+  display: grid;
+  grid-template-columns: 6.8em minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.m-lbl select {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.m-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.m-row button,
+.m-row select {
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+.m-note a {
+  color: var(--accent2);
+}
+
+/* ---------- ventanas (bienvenida, ayuda, informe) ---------- */
+body.mobile .modal {
+  padding: 10px;
+}
+
+body.mobile .modal-card {
+  width: 100%;
+  max-height: 90dvh;
+  padding: 18px 16px;
+}
+
+body.mobile .modal-card h2 {
+  padding-right: 40px;
+  font-size: 19px;
+}
+
+body.mobile .modal-card .crow {
+  flex-wrap: wrap;
+}
+
+body.mobile .modal-card ul,
+body.mobile .modal-card ol {
+  padding-left: 20px;
+}
+
+body.mobile .modal-card button {
+  min-height: 36px;
+}
+
+/* ==========================================================================================
+   Horizontal
+   ========================================================================================== */
+body.mobile.m-land #app {
+  grid-template-columns: calc(66px + env(safe-area-inset-left)) minmax(0, 1fr) clamp(270px, 43vw, 420px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'nav lesson side'
+    'nav mon side'
+    'nav mon dock';
+}
+
+body.mobile.m-land #topbar {
+  display: none;
+}
+
+body.mobile.m-land #pane3d,
+body.mobile.m-land.m-swap #paneMonitor {
+  grid-area: side;
+  margin: 6px calc(env(safe-area-inset-right) + 6px) 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+body.mobile.m-land.m-swap #pane3d {
+  grid-area: mon;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+body.mobile.m-land #mNav {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px 6px calc(4px + env(safe-area-inset-left));
+  border-top: none;
+  border-right: 1px solid var(--line);
+}
+
+body.mobile.m-land #mNav button {
+  flex: none;
+  padding: 7px 0;
+}
+
+body.mobile.m-land #mDock {
+  padding-right: calc(env(safe-area-inset-right) + 10px);
+  background: none;
+  border-top: none;
+}
+
+body.mobile.m-land #mDock {
+  gap: 5px;
+}
+
+body.mobile.m-land .m-actions {
+  gap: 4px;
+}
+
+body.mobile.m-land .m-actions button {
+  height: 34px;
+  font-size: 11px;
+  letter-spacing: -0.1px;
+}
+
+body.mobile.m-land .m-actions button.m-art::before,
+body.mobile.m-land .m-actions button.m-ven::before {
+  margin-right: 3px;
+}
+
+body.mobile.m-land #mLesson {
+  max-height: 46dvh;
+  font-size: 13px;
+  border-top: none;
+  border-bottom: 1px solid #22495a;
+}
+
+body.mobile.m-land #toasts {
+  top: 10px;
+  left: calc(80px + env(safe-area-inset-left));
+  right: auto;
+  max-width: 50vw;
+  align-items: flex-start;
+}
+
+body.mobile.m-land.m-sheet-info #paneInfo,
+body.mobile.m-land .m-sheet {
+  top: 0;
+  left: auto;
+  width: min(540px, 72vw);
+  height: auto;
+  max-height: none;
+  padding-right: env(safe-area-inset-right);
+  border-radius: 14px 0 0 14px;
+}

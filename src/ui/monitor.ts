@@ -52,6 +52,10 @@ export class Monitor {
   private lastSvg = 0;
   /** fuerza el redibujado de la superposición en el siguiente fotograma (interacción del puntero) */
   private dirty = false;
+  /** interfaz móvil: márgenes mínimos y parámetros en una línea sobre la imagen */
+  compact = false;
+  /** altura (px) de la franja inferior que tapa otra vista (miniatura 3D) */
+  avoidBottom = 0;
 
   constructor(
     root: HTMLElement,
@@ -76,11 +80,18 @@ export class Monitor {
     const W = this.sim.pose.width;
     const D = this.sim.settings.depth;
     const narrow = vw < 560;
-    const ml = narrow ? 30 : 62;
-    const mr = narrow ? 104 : 150;
-    const mt = 12;
-    const mb = 10;
-    const s = Math.max(0.5, Math.min((vw - ml - mr) / W, (vh - mt - mb) / D));
+    // compacta: a la izquierda sólo la barra de color y a la derecha la escala de profundidad
+    const ml = this.compact ? 30 : narrow ? 30 : 62;
+    const mr = this.compact ? 30 : narrow ? 104 : 150;
+    const mt = this.compact ? 24 : 12;
+    const mb = this.compact ? 6 : 10;
+    let s = Math.max(0.5, Math.min((vw - ml - mr) / W, (vh - mt - mb) / D));
+    // si la imagen quedaría bajo la miniatura, se reduce algo (hasta un 20 %) para que quepa encima
+    const av = this.avoidBottom;
+    if (av > 0 && mt + D * s > vh - av) {
+      const s2 = (vh - av - mt - 4) / D;
+      if (s2 >= 0.8 * s) s = s2;
+    }
     this.pxPerMm = s;
     const w = W * s;
     const h = D * s;
@@ -154,16 +165,21 @@ export class Monitor {
       const p3 = this.toPx(b.u1 + (b.w1 - b.w0) * tn, b.w1);
       const p4 = this.toPx(b.u0 + (b.w1 - b.w0) * tn, b.w1);
       parts.push(`<path d="M${p1[0]} ${p1[1]} L${p2[0]} ${p2[1]} L${p3[0]} ${p3[1]} L${p4[0]} ${p4[1]} Z" class="cbox"/>`);
-      // barra de color
-      const bx = x - 52;
+      // barra de color (en la vista compacta, estrecha y con la escala encima y debajo)
+      const bx = this.compact ? x - 20 : x - 52;
       const by = y + 22;
       parts.push(`<defs><linearGradient id="cbar" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${s.invert ? '#66ffff' : '#fff266'}"/><stop offset="0.25" stop-color="${s.invert ? '#1a5aff' : '#ff1a0d'}"/>
         <stop offset="0.49" stop-color="${s.invert ? '#00084a' : '#4a0000'}"/><stop offset="0.51" stop-color="${s.invert ? '#4a0000' : '#00084a'}"/>
         <stop offset="0.75" stop-color="${s.invert ? '#ff1a0d' : '#1a5aff'}"/><stop offset="1" stop-color="${s.invert ? '#fff266' : '#66ffff'}"/></linearGradient></defs>`);
-      if (s.mode === 'color') {
+      if (s.mode === 'color' && this.compact) {
+        parts.push(`<rect x="${bx}" y="${by}" width="8" height="70" fill="url(#cbar)" stroke="#555"/>`);
+        parts.push(`<text x="${bx + 4}" y="${by - 4}" class="small" text-anchor="middle">+${s.scale.toFixed(0)}</text><text x="${bx + 4}" y="${by + 82}" class="small" text-anchor="middle">−${s.scale.toFixed(0)}</text>`);
+      } else if (s.mode === 'color') {
         parts.push(`<rect x="${bx}" y="${by}" width="10" height="90" fill="url(#cbar)" stroke="#555"/>`);
         parts.push(`<text x="${bx + 14}" y="${by + 9}" class="small">+${s.scale.toFixed(0)}</text><text x="${bx + 14}" y="${by + 94}" class="small">−${s.scale.toFixed(0)}</text><text x="${bx - 2}" y="${by + 108}" class="small">cm/s</text>`);
+      } else if (this.compact) {
+        parts.push(`<rect x="${bx}" y="${by}" width="8" height="70" fill="url(#pbar)" stroke="#555"/><defs><linearGradient id="pbar" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3a0400"/><stop offset="1" stop-color="#ffd95a"/></linearGradient></defs>`);
       } else {
         parts.push(`<rect x="${bx}" y="${by}" width="10" height="90" fill="url(#pbar)" stroke="#555"/><defs><linearGradient id="pbar" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3a0400"/><stop offset="1" stop-color="#ffd95a"/></linearGradient></defs>`);
       }
@@ -281,6 +297,17 @@ export class Monitor {
 
   private updateParams() {
     const s = this.sim.settings;
+    if (this.compact) {
+      // una línea: preajuste, frecuencia, ganancia, profundidad, Doppler y medidas
+      const items = [`<b>${s.preset}</b>`, `${s.freq.toFixed(0)} MHz`, `G ${(55 + s.gain).toFixed(0)}`, `${(s.depth / 10).toFixed(1)} cm`];
+      if (s.mode !== 'B') items.push(`<span class="pt">${s.mode === 'color' ? 'Color' : 'Power'}</span> ±${s.scale.toFixed(0)}`);
+      if (s.pw) items.push(`<span class="pt">PW</span> ${s.pwGate.size.toFixed(1)} mm · ${this.spectral.angleCorr.toFixed(0)}°`);
+      this.calipers.forEach((c, i) => {
+        if (c.b) items.push(`<span class="pt">${i + 1}</span> ${c.label}`);
+      });
+      this.params.innerHTML = items.map((t) => `<span>${t}</span>`).join('');
+      return;
+    }
     const fr = Math.round(Math.min(60, 1540000 / (2 * s.depth * 256) / (s.focusZones === 2 ? 2 : 1) / (s.mode === 'B' ? 1 : 3.2)));
     const mi = (0.62 + 0.25 * (s.focusZones - 1)) * Math.sqrt(12 / s.freq) * 1.1;
     const rows: string[] = [];

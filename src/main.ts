@@ -1,5 +1,9 @@
 import './styles.css';
+import './mobile.css';
 import { App } from './app/App';
+import { setupPwa } from './pwa';
+
+setupPwa();
 
 async function main() {
   const loading = document.getElementById('loading')!;

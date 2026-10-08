@@ -4,7 +4,16 @@
 import type { App } from '../app/App';
 import { placeDefaults } from '../scene/SceneManager';
 import { SKIN_TONES } from '../scene/room';
+import type { MachineSettings } from '../sim/UltrasoundSim';
 import { Bound, button, el, field, group, knob, selectBox, vslider } from './controls';
+
+/** Preajustes de examen (también en la interfaz móvil). */
+export const IMAGE_PRESETS: Record<string, Partial<MachineSettings>> = {
+  FAV: { freq: 12, depth: 25, focus: 8, dr: 60, gain: 0 },
+  'Vasc. profundo': { freq: 10, depth: 40, focus: 18, dr: 60, gain: 2 },
+  'Venoso periférico': { freq: 13, depth: 20, focus: 6, dr: 55, gain: 0 },
+  Nervio: { freq: 14, depth: 30, focus: 12, dr: 55, gain: 1 },
+};
 
 export function buildConsole(app: App, root: HTMLElement): () => void {
   const bounds: Bound[] = [];
@@ -68,12 +77,7 @@ export function buildConsole(app: App, root: HTMLElement): () => void {
   // ---------------- Imagen ----------------
   const gImg = group('Imagen 2D');
   gImg.root.dataset.grp = 'image';
-  const presets: Record<string, Partial<ReturnType<typeof s>>> = {
-    FAV: { freq: 12, depth: 25, focus: 8, dr: 60, gain: 0 },
-    'Vasc. profundo': { freq: 10, depth: 40, focus: 18, dr: 60, gain: 2 },
-    'Venoso periférico': { freq: 13, depth: 20, focus: 6, dr: 55, gain: 0 },
-    Nervio: { freq: 14, depth: 30, focus: 12, dr: 55, gain: 1 },
-  };
+  const presets = IMAGE_PRESETS;
   const prCol = el('div', { class: 'ccol' });
   prCol.style.cssText = 'display:flex;flex-direction:column;gap:4px';
   add(
