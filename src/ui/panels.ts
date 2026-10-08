@@ -340,7 +340,7 @@ export class Panels {
             <tr><td><kbd>Alt</kbd>+rueda</td><td>Tamaño de la caja de color</td></tr>
           </table>
           <h4>Vistas</h4>
-          <table class="tbl"><tr><td><kbd>V</kbd></td><td>Alternar vistas de cámara</td></tr><tr><td><kbd>H</kbd></td><td>Esta ayuda</td></tr></table>
+          <table class="tbl"><tr><td><kbd>V</kbd></td><td>Alternar vistas de cámara</td></tr><tr><td><kbd>O</kbd></td><td>Modo enfoque: monitor grande y 3D en una ventana flotante (⠿ la mueve de esquina, ◱ cambia su tamaño, ⇄ intercambia, – la oculta)</td></tr><tr><td><kbd>H</kbd></td><td>Esta ayuda</td></tr></table>
           <h4>Modos</h4>
           <ul>
             <li><b>Exploración</b>: libre, con ayudas visuales y etiquetas.</li>

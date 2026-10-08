@@ -18,6 +18,8 @@ import { elementRect, ImageView } from '../ui/imageView';
 import { Monitor } from '../ui/monitor';
 import { buildConsole } from '../ui/console';
 import { deviceText, isLowPower } from '../ui/device';
+import { FloatingView } from '../ui/floating';
+import { FocusMode } from '../ui/focus';
 import { MobileUI } from '../ui/mobile';
 import { Panels } from '../ui/panels';
 
@@ -91,6 +93,10 @@ export class App {
   /** interfaz móvil activa (la gestiona MobileUI) */
   touchUI = false;
   mobile: MobileUI | null = null;
+  /** modo enfoque de escritorio */
+  focus: FocusMode | null = null;
+  /** ventana flotante (móvil en vertical y modo enfoque) */
+  pip!: FloatingView;
   private lastDraw = 0;
 
   constructor() {
@@ -126,6 +132,8 @@ export class App {
     this.scene.setRoomConfig(defaultRoomConfig('left'), true);
     this.panels = new Panels(this);
     this.consoleUpdate = buildConsole(this, document.getElementById('console')!);
+    this.pip = new FloatingView(this);
+    this.focus = new FocusMode(this);
     this.mobile = new MobileUI(this);
     this.loadCase(cd.id);
     this.bindTopbar();
@@ -219,7 +227,28 @@ export class App {
     }
     document.getElementById('needleHud')!.classList.toggle('hidden', m !== 'cannulate' && !(m === 'learn' && this.lesson?.lesson.mode === 'cannulate'));
     this.consoleUpdate();
+    this.focus?.refresh();
     this.mobile?.update();
+  }
+
+  /** Línea de estado bajo la imagen cuando el 3D no está a la vista: la sonda al explorar y la aguja al puncionar. */
+  statusLine(): string {
+    if (this.cannulating) {
+      const n = this.needle;
+      if (!n.placed) return this.dt(`Aguja ${n.role} ${n.gauge}G sin colocar: {{pulsa N o «Colocar»|pulsa «Fuera de plano» o «En plano»}}`);
+      const where = n.inVessel ? ` (${n.inVessel.def.short ?? n.inVessel.def.name})` : '';
+      return `Aguja ${n.role} ${n.gauge}G · ${n.angle.toFixed(0)}° · ${Math.max(0, n.depth).toFixed(1)} mm · ${n.state}${where}${n.confirmed ? ' · evaluada' : ''}`;
+    }
+    const p = this.probe;
+    const rotN = ((p.rot % 180) + 180) % 180;
+    const view = rotN < 25 || rotN > 155 ? 'transversal' : rotN > 65 && rotN < 115 ? 'longitudinal' : 'oblicua';
+    return `Sonda ${view} · ${(p.x / 10).toFixed(1)} cm de la muñeca · presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · compresor' : ''}`;
+  }
+
+  /** Los avisos van en la vista grande (en el móvil, sobre toda la pantalla). */
+  placeToasts() {
+    const target = this.touchUI ? document.body : document.getElementById(this.focus?.on && this.focus.main === 'us' ? 'paneMonitor' : 'pane3d')!;
+    if (this.toastsEl.parentElement !== target) target.appendChild(this.toastsEl);
   }
 
   /** Modo punción, directo o dentro de una lección de punción. */
@@ -480,6 +509,7 @@ export class App {
     this.toast(inAccess ? `Punción ${n.role} evaluada: ${score}/100` : 'Punción no válida: la punta no está en la luz', inAccess ? 'ok' : 'error');
     this.panels.renderMetrics();
     this.panels.showTab('metrics');
+    this.focus?.onEvaluated();
     this.mobile?.onEvaluated();
   }
 
@@ -768,6 +798,9 @@ export class App {
           this.scene.setPreset(order[nx]);
           break;
         }
+        case 'o':
+          this.focus?.toggle();
+          break;
         case 'h':
         case 'f1':
           this.panels.showHelp();
@@ -920,6 +953,7 @@ export class App {
 
   private resize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.pip?.update();
   }
 
   // ------------------------------------------------------------------------------------------
@@ -1074,8 +1108,8 @@ export class App {
     r.setClearColor(CLEAR_COLOR, 1);
     r.clear();
     const v3 = elementRect(document.getElementById('view3d')!, this.canvas);
-    // la vista en miniatura (móvil, en vertical) se dibuja la última, encima de la grande
-    if (this.mobile?.pip() === '3d') {
+    // la vista flotante se dibuja la última, encima de la grande
+    if (this.pip.top() === '3d') {
       this.monitor.render(r, this.canvas);
       if (v3) this.scene.render(v3);
     } else {
@@ -1101,6 +1135,8 @@ export class App {
       this.updateHud();
       this.consoleUpdate();
       this.panels.tick();
+      this.pip.update();
+      this.focus?.update();
       this.mobile?.update();
     }
     this.lessonTimer += dt;

@@ -110,43 +110,9 @@ body.mobile .us-readout {
   font-size: 10.5px;
 }
 
-/* ---------- 3D en miniatura (vertical) ---------- */
+/* ---------- 3D en miniatura (vertical): la coloca src/ui/floating.ts ---------- */
 body.mobile #pane3d {
   grid-area: mon;
-}
-
-body.mobile:not(.m-land):not(.m-swap) #pane3d,
-body.mobile.m-swap:not(.m-land) #paneMonitor {
-  justify-self: end;
-  align-self: end;
-  width: 46%;
-  z-index: 4;
-  border: 1px solid rgba(160, 200, 220, 0.5);
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
-
-body.mobile:not(.m-land):not(.m-swap) #pane3d {
-  height: 36%;
-  margin: 0 8px 30px 0;
-}
-
-body.mobile.m-swap:not(.m-land) #paneMonitor {
-  height: 40%;
-  margin: 0 8px 8px 0;
-}
-
-/* la vista grande no se dibuja bajo la miniatura: sus textos y su espectrograma no se transparentan */
-body.mobile:not(.m-land):not(.m-swap):not(.m-pipoff) #paneMonitor {
-  clip-path: polygon(0 0, 100% 0, 100% calc(64% - 38px), calc(54% - 16px) calc(64% - 38px), calc(54% - 16px) calc(100% - 22px), 100% calc(100% - 22px), 100% 100%, 0 100%);
-}
-
-body.mobile.m-swap:not(.m-land) #pane3d {
-  clip-path: polygon(0 0, 100% 0, 100% calc(60% - 16px), calc(54% - 16px) calc(60% - 16px), calc(54% - 16px) 100%, 0 100%);
-}
-
-body.mobile.m-pipoff:not(.m-land):not(.m-swap) #pane3d {
-  display: none;
 }
 
 .m-panectl {

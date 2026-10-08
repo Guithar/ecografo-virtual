@@ -77,10 +77,8 @@ export class MobileUI {
   private lessonBar!: HTMLElement;
   private more!: HTMLElement;
   private installRow!: HTMLElement;
-  private toastsHome: HTMLElement;
 
   constructor(private app: App) {
-    this.toastsHome = app.toastsEl.parentElement!;
     this.targets = this.buildTargets();
     this.target = this.targets[0];
     this.build();
@@ -95,13 +93,6 @@ export class MobileUI {
     sync();
   }
 
-  /** Vista que se dibuja encima de la otra (miniatura en vertical) o null si no se solapan. */
-  pip(): '3d' | 'us' | null {
-    if (!this.active || this.landscape) return null;
-    if (this.swapped) return 'us';
-    return this.pipOff ? null : '3d';
-  }
-
   setActive(on: boolean) {
     const was = this.active;
     this.active = on;
@@ -109,14 +100,14 @@ export class MobileUI {
     app.touchUI = on;
     app.monitor.compact = on;
     if (on && app.mode === 'room') app.setMode('explore');
-    if (on) document.body.appendChild(app.toastsEl);
-    else this.toastsHome.appendChild(app.toastsEl);
     if (!on) {
       this.openSheet(null);
       app.monitor.flags.hint = '';
-      app.monitor.avoidBottom = 0;
     }
+    // en escritorio la ventana flotante pasa al modo enfoque; en el móvil, el enfoque se aparta
+    app.focus?.refresh();
     this.applyClasses();
+    app.placeToasts();
     if (on !== was) {
       // textos que dependen del dispositivo
       app.panels.renderLessons();
@@ -137,6 +128,11 @@ export class MobileUI {
     b.toggle('m-pipoff', a && this.pipOff);
     b.toggle('m-sheet-info', a && this.sheet === 'info');
     b.toggle('m-sheet-more', a && this.sheet === 'more');
+    // en vertical, la vista pequeña flota en la esquina inferior derecha de la grande
+    if (a)
+      this.app.pip.set(
+        this.landscape ? null : { main: this.swapped ? '3d' : 'us', hidden: this.pipOff && !this.swapped, corner: 'br', size: { w: 0.46, h: this.swapped ? 0.4 : 0.36 } },
+      );
   }
 
   // ------------------------------------------------------------------------------------------
@@ -580,20 +576,12 @@ export class MobileUI {
     if (this.sheet === 'more') for (const b of this.moreBounds) b.update();
     this.showJog();
     this.updateLesson();
-    app.monitor.flags.hint = this.statusText();
-    // la imagen se coloca, si cabe, por encima de la miniatura 3D
-    let avoid = 0;
-    if (this.pip() === '3d') {
-      const v = app.monitor.view.getBoundingClientRect();
-      const p = document.getElementById('pane3d')!.getBoundingClientRect();
-      avoid = Math.max(0, v.bottom - p.top + 6);
-    }
-    app.monitor.avoidBottom = avoid;
-    // el espectrograma PW ocupa la parte baja del monitor: la miniatura 3D se aparta mientras está activo
+    app.monitor.flags.hint = app.statusLine();
+    // con el espectrograma PW la imagen se encoge: en una pantalla tan pequeña la miniatura 3D se aparta
     const pw = app.sim.settings.pw;
     if (pw !== this.prevPw) {
       this.prevPw = pw;
-      if (pw && this.pip() === '3d') {
+      if (pw && app.pip.top() === '3d') {
         this.pipOff = true;
         this.pipAutoOff = true;
         this.applyClasses();
@@ -603,21 +591,6 @@ export class MobileUI {
         this.applyClasses();
       }
     }
-  }
-
-  /** Línea de estado bajo la imagen: la sonda al explorar y la aguja al puncionar. */
-  private statusText(): string {
-    const app = this.app;
-    if (app.cannulating) {
-      const n = app.needle;
-      if (!n.placed) return `Aguja ${n.role} ${n.gauge}G sin colocar: pulsa «Fuera de plano» o «En plano»`;
-      const where = n.inVessel ? ` (${n.inVessel.def.short ?? n.inVessel.def.name})` : '';
-      return `Aguja ${n.role} ${n.gauge}G · ${n.angle.toFixed(0)}° · ${Math.max(0, n.depth).toFixed(1)} mm · ${n.state}${where}${n.confirmed ? ' · evaluada' : ''}`;
-    }
-    const p = app.probe;
-    const rotN = ((p.rot % 180) + 180) % 180;
-    const view = rotN < 25 || rotN > 155 ? 'transversal' : rotN > 65 && rotN < 115 ? 'longitudinal' : 'oblicua';
-    return `Sonda ${view} · ${(p.x / 10).toFixed(1)} cm de la muñeca · presión ${p.press.toFixed(1)} mm${app.tourniquet ? ' · compresor' : ''}`;
   }
 
   private updateLesson() {

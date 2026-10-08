@@ -8,6 +8,7 @@ import { tissueName } from '../anatomy/tissues';
 import type { UltrasoundSim } from '../sim/UltrasoundSim';
 import { SPEC_BINS, SPEC_COLS, SpectralDoppler } from '../sim/spectral';
 import { elementRect, ImageView, Rect } from './imageView';
+import { Box, fitImage } from './layoutMath';
 
 export type MonitorTool = 'none' | 'caliper' | 'gate' | 'box';
 
@@ -54,8 +55,8 @@ export class Monitor {
   private dirty = false;
   /** interfaz móvil: márgenes mínimos y parámetros en una línea sobre la imagen */
   compact = false;
-  /** altura (px) de la franja inferior que tapa otra vista (miniatura 3D) */
-  avoidBottom = 0;
+  /** zona de la vista (px) tapada por la ventana flotante: la imagen se aparta de ella si cabe */
+  avoid: Box | null = null;
 
   constructor(
     root: HTMLElement,
@@ -85,18 +86,9 @@ export class Monitor {
     const mr = this.compact ? 30 : narrow ? 104 : 150;
     const mt = this.compact ? 24 : 12;
     const mb = this.compact ? 6 : 10;
-    let s = Math.max(0.5, Math.min((vw - ml - mr) / W, (vh - mt - mb) / D));
-    // si la imagen quedaría bajo la miniatura, se reduce algo (hasta un 20 %) para que quepa encima
-    const av = this.avoidBottom;
-    if (av > 0 && mt + D * s > vh - av) {
-      const s2 = (vh - av - mt - 4) / D;
-      if (s2 >= 0.8 * s) s = s2;
-    }
-    this.pxPerMm = s;
-    const w = W * s;
-    const h = D * s;
-    const x = ml + Math.max(0, (vw - ml - mr - w) / 2);
-    this.img = { x, y: mt, w, h };
+    const f = fitImage(vw, vh, W, D, { l: ml, r: mr, t: mt, b: mb }, this.avoid, this.compact ? 22 : 56, 34);
+    this.pxPerMm = f.s;
+    this.img = { x: f.x, y: f.y, w: W * f.s, h: D * f.s };
   }
 
   /** mm de imagen → px de la vista */
