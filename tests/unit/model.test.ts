@@ -288,8 +288,8 @@ describe('lista de pasos de la punción', () => {
   it('brazo a unos 45° del cuerpo y apoyado', () => {
     expect(armPositionOk(45, 10)).toBe(true);
     expect(armPositionOk(58, 17)).toBe(true); // disposición por defecto de la sala
-    expect(armPositionOk(80, 10)).toBe(false); // pegado al cuerpo
-    expect(armPositionOk(15, 10)).toBe(false); // abierto en cruz
+    expect(armPositionOk(80, 10)).toBe(false); // casi en cruz
+    expect(armPositionOk(15, 10)).toBe(false); // pegado al cuerpo
     expect(armPositionOk(45, 35)).toBe(false); // colgando
   });
 

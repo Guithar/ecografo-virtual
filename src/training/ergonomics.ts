@@ -172,13 +172,13 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
         )
       : armAngle > 60
         ? tr(
-            'Separa el brazo del cuerpo hasta unos 45°, apoyado en una superficie firme y plana.',
-            'Move the arm away from the body to about 45°, supported on a firm, flat surface.',
+            'Acerca el brazo al cuerpo hasta unos 45°: en cruz el hombro se cansa y la zona queda lejos.',
+            'Bring the arm closer to the body, to about 45°: fully abducted, the shoulder tires and the site is hard to reach.',
           )
         : armAngle < 30
           ? tr(
-              'Acerca el brazo al cuerpo hasta unos 45°: en cruz el hombro se cansa y la zona queda lejos.',
-              'Bring the arm closer to the body, to about 45°: fully abducted, the shoulder tires and the site is hard to reach.',
+              'Separa el brazo del cuerpo hasta unos 45°, apoyado en una superficie firme y plana.',
+              'Move the arm away from the body to about 45°, supported on a firm, flat surface.',
             )
           : tr('Apoya el brazo en una superficie firme y plana, sin que cuelgue.', 'Rest the arm on a firm, flat surface so that it does not hang.'),
   });
