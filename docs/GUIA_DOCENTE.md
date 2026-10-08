@@ -1,3 +1,5 @@
+🇬🇧 [English version](en/TEACHING_GUIDE.md)
+
 # Guía docente de Fistulab
 
 Propuesta de itinerario formativo para personal de enfermería y medicina de unidades de hemodiálisis.

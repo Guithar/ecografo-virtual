@@ -9,6 +9,7 @@ import type { CameraPreset } from '../scene/SceneManager';
 import type { ViewId } from './floating';
 import type { Corner } from './layoutMath';
 import { el } from './controls';
+import { tr } from '../i18n';
 
 type Size = 's' | 'm' | 'l';
 
@@ -25,14 +26,14 @@ export interface FocusPrefs {
 const KEY = 'ecofav-enfoque';
 /** anchura de la ventana flotante (fracción de la vista grande) */
 const SIZES: Record<Size, number> = { s: 0.24, m: 0.32, l: 0.42 };
-const SIZE_NAMES: Record<Size, string> = { s: 'pequeña', m: 'mediana', l: 'grande' };
+const SIZE_NAMES: Record<Size, string> = { s: tr('pequeña', 'small'), m: tr('mediana', 'medium'), l: tr('grande', 'large') };
 const CAMERAS: [CameraPreset, string][] = [
-  ['procedimiento', 'procedimiento'],
-  ['superior', 'superior'],
-  ['lateral', 'lateral'],
-  ['corte', 'perpendicular al corte'],
-  ['operador', 'del operador'],
-  ['sala', 'de la sala'],
+  ['procedimiento', tr('procedimiento', 'Procedure')],
+  ['superior', tr('superior', 'Top')],
+  ['lateral', tr('lateral', 'Side')],
+  ['corte', tr('perpendicular al corte', 'Plane')],
+  ['operador', tr('del operador', 'Operator')],
+  ['sala', tr('de la sala', 'Room')],
 ];
 
 export function defaultFocusPrefs(): FocusPrefs {
@@ -107,7 +108,7 @@ export class FocusMode {
     this.prefs.byMode[this.app.mode] = next;
     this.save();
     this.refresh();
-    this.app.toast(next ? 'Modo enfoque: vista grande y ventana flotante (O para volver a la cuadrícula)' : 'Vista en cuadrícula', 'info');
+    this.app.toast(next ? tr('Modo enfoque: vista grande y ventana flotante (O para volver a la cuadrícula)', 'Focus mode: large view and floating window (O to return to the grid)') : tr('Vista en cuadrícula', 'Grid view'), 'info');
   }
 
   /** Aplica la disposición del modo actual (también al cambiar de modo o entre móvil y escritorio). */
@@ -177,11 +178,11 @@ export class FocusMode {
         bar.appendChild(b);
         return b;
       };
-      const drag = btn('drag', '⠿', 'Arrastra para mover la ventana a otra esquina');
-      btn('swap', '⇄', 'Intercambiar: esta vista en grande');
-      if (id === '3d') btn('cam', 'Vista', 'Cambiar la cámara (V)');
-      btn('size', '◱', 'Tamaño de la ventana');
-      btn('hide', '–', 'Ocultar la ventana');
+      const drag = btn('drag', '⠿', tr('Arrastra para mover la ventana a otra esquina', 'Drag to move the window to another corner'));
+      btn('swap', '⇄', tr('Intercambiar: esta vista en grande', 'Swap: make this the large view'));
+      if (id === '3d') btn('cam', tr('Vista', 'View'), tr('Cambiar la cámara (V)', 'Change camera (V)'));
+      btn('size', '◱', tr('Tamaño de la ventana', 'Window size'));
+      btn('hide', '–', tr('Ocultar la ventana', 'Hide the window'));
       bar.addEventListener('click', (e) => {
         const f = (e.target as HTMLElement).closest<HTMLElement>('[data-f]')?.dataset.f;
         if (!f || f === 'drag') return;
@@ -191,15 +192,15 @@ export class FocusMode {
       this.bindDrag(drag, pane);
       pane.appendChild(bar);
       // botón para recuperar la ventana oculta, en la vista grande
-      const show = el('button', { class: 'f-show', title: 'Mostrar la ventana flotante' }, id === 'us' ? 'Ver 3D' : 'Ver monitor');
+      const show = el('button', { class: 'f-show', title: tr('Mostrar la ventana flotante', 'Show the floating window') }, id === 'us' ? tr('Ver 3D', 'Show 3D') : tr('Ver monitor', 'Show monitor'));
       show.addEventListener('click', () => this.setPref({ hidden: false }));
       pane.appendChild(show);
     }
     // columna lateral plegable
-    const open = el('button', { class: 'f-side-open', title: 'Mostrar la anatomía y las pestañas' }, '◂<span>Panel</span>');
+    const open = el('button', { class: 'f-side-open', title: tr('Mostrar la anatomía y las pestañas', 'Show anatomy and tabs') }, '◂<span>Panel</span>');
     open.addEventListener('click', () => this.setPref({ side: true }));
     document.getElementById('grid')!.appendChild(open);
-    const close = el('button', { class: 'f-side-close', title: 'Plegar el panel lateral', 'aria-label': 'Plegar el panel lateral' }, '▸');
+    const close = el('button', { class: 'f-side-close', title: tr('Plegar el panel lateral', 'Collapse the side panel'), 'aria-label': tr('Plegar el panel lateral', 'Collapse the side panel') }, '▸');
     close.addEventListener('click', () => this.setPref({ side: false }));
     document.getElementById('tabButtons')!.appendChild(close);
   }
@@ -216,12 +217,12 @@ export class FocusMode {
       const order: Size[] = ['s', 'm', 'l'];
       const size = order[(order.indexOf(p.size) + 1) % order.length];
       this.setPref({ size });
-      app.toast(`Ventana ${SIZE_NAMES[size]}`, 'info');
+      app.toast(tr(`Ventana ${SIZE_NAMES[size]}`, `Window size: ${SIZE_NAMES[size]}`), 'info');
     } else if (f === 'cam') {
       this.camIdx = (this.camIdx + 1) % CAMERAS.length;
       const [preset, name] = CAMERAS[this.camIdx];
       app.scene.setPreset(preset);
-      app.toast(`Vista ${name}`, 'info');
+      app.toast(tr(`Vista ${name}`, `View: ${name}`), 'info');
     }
   }
 

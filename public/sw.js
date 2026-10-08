@@ -1,15 +1,16 @@
 /*
  * Service worker: permite abrir el simulador sin conexión tras la primera visita.
- * - Página: primero la red (para recibir versiones nuevas) y, sin conexión, la copia guardada.
+ * - Páginas (/ en español y /en/ en inglés): primero la red (para recibir versiones nuevas) y, sin conexión, la copia guardada.
  * - Recursos con huella en el nombre (assets/…): primero la caché; nunca cambian.
- * - Resto (iconos, manifiesto): la copia guardada al momento y se actualiza en segundo plano.
+ * - Resto (iconos, manifiestos): la copia guardada al momento y se actualiza en segundo plano.
  * Las tipografías van dentro de assets/: todo es del propio sitio.
  */
-const CACHE = 'fistulab-v1';
+const CACHE = 'fistulab-v2';
+const PAGES = ['./', './en/'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest']).catch(() => {})));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll([...PAGES, './manifest.webmanifest', './en/manifest.webmanifest']).catch(() => {})));
 });
 
 self.addEventListener('activate', (e) => {
@@ -36,12 +37,14 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
-    // sólo la página del simulador (con cualquier parámetro: ?caso=, ?modo=…)
-    if (!/\/(index\.html)?$/.test(url.pathname)) return;
+    // sólo las páginas del simulador (con cualquier parámetro: ?caso=, ?modo=…), cada idioma con su copia
+    const m = url.pathname.match(/\/(en\/)?(index\.html)?$/);
+    if (!m) return;
+    const page = m[1] ? './en/' : './';
     e.respondWith(
       fetch(req)
-        .then((res) => put('./', res))
-        .catch(() => caches.match('./').then((r) => r || caches.match(req))),
+        .then((res) => put(page, res))
+        .catch(() => caches.match(page).then((r) => r || caches.match(req))),
     );
     return;
   }

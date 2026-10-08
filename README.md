@@ -1,3 +1,5 @@
+🇬🇧 [English version](README.en.md)
+
 # Fistulab · Simulador de punción ecoguiada de la FAV
 
 [![Publicación](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml/badge.svg)](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml)
@@ -164,7 +166,7 @@ Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y
 
 Empieza en **modo básico**, con los controles de la punción. El botón **Más controles**, a la derecha de la consola, muestra el Doppler, el PW y los ajustes finos de imagen.
 
-Para usarlo basta con abrir <https://fistulab.com>. Para trabajar con el código:
+Para usarlo basta con abrir <https://fistulab.com>; la versión en inglés está en <https://fistulab.com/en/> (botón **EN** de la barra superior; en el móvil, en «Más»). Para trabajar con el código:
 
 ```bash
 npm install
@@ -210,6 +212,8 @@ Con *Actions* como origen no hace falta archivo `CNAME`: el dominio se guarda en
 
 Si un despliegue falla con «Branch "main" is not allowed to deploy to github-pages», añade `main` en *Settings → Environments → github-pages → Deployment branches and tags*.
 
+**Buscadores.** Cada idioma es una página propia con su título, descripción, imagen para redes (`og.jpg`, `og-en.jpg`), datos estructurados (schema.org) y enlaces `hreflang` a la otra versión; `public/sitemap.xml` recoge las dos y `public/robots.txt` lo anuncia. Tras el primer despliegue conviene dar de alta `https://fistulab.com` en [Google Search Console](https://search.google.com/search-console) y en [Bing Webmaster Tools](https://www.bing.com/webmasters) (verificación por registro TXT en DonDominio) y enviar el sitemap.
+
 Parámetros de URL útiles:
 
 | Parámetro | Valores |
@@ -251,7 +255,10 @@ src/
                focus.ts y floating.ts: modo enfoque y ventana flotante
   app/App.ts   orquestación y bucle principal
   pwa.ts       aplicación instalable (public/: manifiesto, iconos y service worker)
+  i18n.ts      idioma de la página (español o inglés)
 ```
+
+**Idiomas.** `index.html` (español, `/`) y `en/index.html` (inglés, `/en/`) cargan el mismo código; el idioma sale de `<html lang>`. Los textos de la interfaz se escriben en los dos idiomas con `tr('español', 'English')` (`src/i18n.ts`), y los dos HTML tienen la misma estructura: un cambio en uno va también en el otro (`tests/unit/i18n.test.ts` lo comprueba). La documentación en inglés está en [`docs/en/`](docs/en/) y [`README.en.md`](README.en.md).
 
 La misma descripción anatómica alimenta:
 
@@ -267,7 +274,7 @@ Sin cookies, sin analítica y sin publicidad. Todo se calcula en el navegador y 
 
 ## Apoya el proyecto
 
-Fistulab es gratuito y lo seguirá siendo. Si te resulta útil para formar a tu unidad, puedes apoyarlo con un café en **[Ko-fi](https://ko-fi.com/fistulab)**: ayuda a mantenerlo y a añadir casos, lecciones y la versión en inglés.
+Fistulab es gratuito y lo seguirá siendo. Si te resulta útil para formar a tu unidad, puedes apoyarlo con un café en **[Ko-fi](https://ko-fi.com/fistulab)**: ayuda a mantenerlo y a añadir casos, lecciones e idiomas.
 
 ## Licencia
 

@@ -5,6 +5,7 @@
  */
 import { ArmShape } from './armShape';
 import type { CtrlPt, StructDef } from './model';
+import { tr } from '../i18n';
 
 export interface CaseDef {
   id: string;
@@ -57,7 +58,7 @@ function offsetTh(arm: ArmShape, pts: P[], mm: number, dd = 0.3, r = 0.7, revers
 export const BONES = (): StructDef[] => [
   {
     id: 'radio',
-    name: 'Radio',
+    name: tr('Radio', 'Radius'),
     kind: 'bone',
     group: 'hueso',
     pts: [
@@ -73,7 +74,7 @@ export const BONES = (): StructDef[] => [
   },
   {
     id: 'cubito',
-    name: 'Cúbito',
+    name: tr('Cúbito', 'Ulna'),
     kind: 'bone',
     group: 'hueso',
     pts: [
@@ -88,8 +89,8 @@ export const BONES = (): StructDef[] => [
   },
   {
     id: 'humero_epi',
-    name: 'Húmero (paleta)',
-    short: 'Húmero',
+    name: tr('Húmero (paleta)', 'Humerus (distal end)'),
+    short: tr('Húmero', 'Humerus'),
     kind: 'bone',
     group: 'hueso',
     pts: [
@@ -100,7 +101,7 @@ export const BONES = (): StructDef[] => [
   },
   {
     id: 'humero',
-    name: 'Húmero',
+    name: tr('Húmero', 'Humerus'),
     kind: 'bone',
     group: 'hueso',
     pts: [
@@ -116,8 +117,8 @@ export const BONES = (): StructDef[] => [
 export const TENDONS = (): StructDef[] => [
   {
     id: 'palmar',
-    name: 'Tendón del palmar largo',
-    short: 'T. palmar largo',
+    name: tr('Tendón del palmar largo', 'Palmaris longus tendon'),
+    short: tr('T. palmar largo', 'T. palmaris longus'),
     kind: 'tendon',
     group: 'tendon',
     pts: [
@@ -128,8 +129,8 @@ export const TENDONS = (): StructDef[] => [
   },
   {
     id: 'fcr',
-    name: 'Tendón del flexor radial del carpo',
-    short: 'T. FRC',
+    name: tr('Tendón del flexor radial del carpo', 'Flexor carpi radialis tendon'),
+    short: tr('T. FRC', 'T. FCR'),
     kind: 'tendon',
     group: 'tendon',
     pts: [
@@ -140,8 +141,8 @@ export const TENDONS = (): StructDef[] => [
   },
   {
     id: 'fds1',
-    name: 'Tendones flexores superficiales',
-    short: 'T. flexores',
+    name: tr('Tendones flexores superficiales', 'Superficial flexor tendons'),
+    short: tr('T. flexores', 'T. flexors'),
     kind: 'tendon',
     group: 'tendon',
     pts: [
@@ -152,7 +153,7 @@ export const TENDONS = (): StructDef[] => [
   },
   {
     id: 'fds2',
-    name: 'Tendones flexores superficiales',
+    name: tr('Tendones flexores superficiales', 'Superficial flexor tendons'),
     short: '',
     hideLabel: true,
     kind: 'tendon',
@@ -165,8 +166,8 @@ export const TENDONS = (): StructDef[] => [
   },
   {
     id: 'fcu',
-    name: 'Tendón del flexor cubital del carpo',
-    short: 'T. FCC',
+    name: tr('Tendón del flexor cubital del carpo', 'Flexor carpi ulnaris tendon'),
+    short: tr('T. FCC', 'T. FCU'),
     kind: 'tendon',
     group: 'tendon',
     pts: [
@@ -177,8 +178,8 @@ export const TENDONS = (): StructDef[] => [
   },
   {
     id: 'braquiorradial_t',
-    name: 'Tendón del braquiorradial',
-    short: 'T. BR',
+    name: tr('Tendón del braquiorradial', 'Brachioradialis tendon'),
+    short: tr('T. BR', 'T. BR'),
     kind: 'tendon',
     group: 'tendon',
     pts: [
@@ -189,8 +190,8 @@ export const TENDONS = (): StructDef[] => [
   },
   {
     id: 'biceps_t',
-    name: 'Tendón del bíceps',
-    short: 'T. bíceps',
+    name: tr('Tendón del bíceps', 'Biceps tendon'),
+    short: tr('T. bíceps', 'T. biceps'),
     kind: 'tendon',
     group: 'tendon',
     pts: [
@@ -205,8 +206,8 @@ export const TENDONS = (): StructDef[] => [
 export const NERVES = (): StructDef[] => [
   {
     id: 'n_mediano',
-    name: 'Nervio mediano',
-    short: 'N. mediano',
+    name: tr('Nervio mediano', 'Median nerve'),
+    short: tr('N. mediano', 'Median n.'),
     kind: 'nerve',
     group: 'nervio',
     pts: [
@@ -224,8 +225,8 @@ export const NERVES = (): StructDef[] => [
   },
   {
     id: 'n_cubital',
-    name: 'Nervio cubital',
-    short: 'N. cubital',
+    name: tr('Nervio cubital', 'Ulnar nerve'),
+    short: tr('N. cubital', 'Ulnar n.'),
     kind: 'nerve',
     group: 'nervio',
     pts: [
@@ -243,8 +244,8 @@ export const NERVES = (): StructDef[] => [
   },
   {
     id: 'n_radial_sup',
-    name: 'Rama superficial del nervio radial',
-    short: 'N. radial sup.',
+    name: tr('Rama superficial del nervio radial', 'Superficial branch of the radial nerve'),
+    short: tr('N. radial sup.', 'Sup. radial n.'),
     kind: 'nerve',
     group: 'nervio',
     pts: [
@@ -258,8 +259,8 @@ export const NERVES = (): StructDef[] => [
   },
   {
     id: 'n_radial',
-    name: 'Nervio radial',
-    short: 'N. radial',
+    name: tr('Nervio radial', 'Radial nerve'),
+    short: tr('N. radial', 'Radial n.'),
     kind: 'nerve',
     group: 'nervio',
     pts: [
@@ -341,8 +342,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
   const defs: StructDef[] = [
     {
       id: 'a_humeral',
-      name: 'Arteria humeral',
-      short: 'A. humeral',
+      name: tr('Arteria humeral', 'Brachial artery'),
+      short: tr('A. humeral', 'Brachial a.'),
       kind: 'artery',
       group: 'arteria',
       pts: BRACHIAL_PTS,
@@ -351,8 +352,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'a_radial',
-      name: 'Arteria radial',
-      short: 'A. radial',
+      name: tr('Arteria radial', 'Radial artery'),
+      short: tr('A. radial', 'Radial a.'),
       kind: 'artery',
       group: 'arteria',
       pts: RADIAL_PTS,
@@ -361,8 +362,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'a_cubital',
-      name: 'Arteria cubital',
-      short: 'A. cubital',
+      name: tr('Arteria cubital', 'Ulnar artery'),
+      short: tr('A. cubital', 'Ulnar a.'),
       kind: 'artery',
       group: 'arteria',
       pts: ULNAR_PTS,
@@ -372,8 +373,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     // venas satélites (comitantes)
     {
       id: 'v_radial_1',
-      name: 'Vena radial (satélite)',
-      short: 'V. satélite',
+      name: tr('Vena radial (satélite)', 'Radial vein (comitant)'),
+      short: tr('V. satélite', 'Comitant v.'),
       kind: 'vein',
       group: 'vena',
       pts: offsetTh(arm, RADIAL_PTS.slice(1), 2.4, 0.2, 0.65),
@@ -382,8 +383,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_radial_2',
-      name: 'Vena radial (satélite)',
-      short: 'V. satélite',
+      name: tr('Vena radial (satélite)', 'Radial vein (comitant)'),
+      short: tr('V. satélite', 'Comitant v.'),
       hideLabel: true,
       kind: 'vein',
       group: 'vena',
@@ -393,8 +394,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_cubital_1',
-      name: 'Vena cubital (satélite)',
-      short: 'V. satélite',
+      name: tr('Vena cubital (satélite)', 'Ulnar vein (comitant)'),
+      short: tr('V. satélite', 'Comitant v.'),
       hideLabel: true,
       kind: 'vein',
       group: 'vena',
@@ -404,8 +405,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_cubital_2',
-      name: 'Vena cubital (satélite)',
-      short: 'V. satélite',
+      name: tr('Vena cubital (satélite)', 'Ulnar vein (comitant)'),
+      short: tr('V. satélite', 'Comitant v.'),
       hideLabel: true,
       kind: 'vein',
       group: 'vena',
@@ -415,8 +416,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_humeral_1',
-      name: 'Vena humeral',
-      short: 'V. humeral',
+      name: tr('Vena humeral', 'Brachial vein'),
+      short: tr('V. humeral', 'Brachial v.'),
       kind: 'vein',
       group: 'vena',
       pts: offsetTh(arm, BRACHIAL_PTS, 4.6, 0.3, 1.45),
@@ -425,8 +426,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_humeral_2',
-      name: 'Vena humeral',
-      short: 'V. humeral',
+      name: tr('Vena humeral', 'Brachial vein'),
+      short: tr('V. humeral', 'Brachial v.'),
       hideLabel: true,
       kind: 'vein',
       group: 'vena',
@@ -436,8 +437,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_mediana_ab',
-      name: 'Vena mediana antebraquial',
-      short: 'V. mediana',
+      name: tr('Vena mediana antebraquial', 'Median antebrachial vein'),
+      short: tr('V. mediana', 'Median v.'),
       kind: 'vein',
       group: 'vena',
       pts: [
@@ -451,8 +452,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
     },
     {
       id: 'v_mediana_cubital',
-      name: 'Vena mediana cubital',
-      short: 'V. mediana cubital',
+      name: tr('Vena mediana cubital', 'Median cubital vein'),
+      short: tr('V. mediana cubital', 'Median cubital v.'),
       kind: 'vein',
       group: 'vena',
       pts: [
@@ -468,8 +469,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
   if (!opts.skipCephalic) {
     defs.push({
       id: 'v_cefalica',
-      name: 'Vena cefálica',
-      short: 'V. cefálica',
+      name: tr('Vena cefálica', 'Cephalic vein'),
+      short: tr('V. cefálica', 'Cephalic v.'),
       kind: 'vein',
       group: 'vena',
       pts: CEPHALIC_PTS,
@@ -480,8 +481,8 @@ export function nativeVessels(arm: ArmShape, opts: { skipCephalic?: boolean; ski
   if (!opts.skipBasilic) {
     defs.push({
       id: 'v_basilica',
-      name: 'Vena basílica',
-      short: 'V. basílica',
+      name: tr('Vena basílica', 'Basilic vein'),
+      short: tr('V. basílica', 'Basilic v.'),
       kind: 'vein',
       group: 'vena',
       pts: BASILIC_PTS,
@@ -543,13 +544,13 @@ function radiocephalic(arm: ArmShape, o: RcOpts = {}): StructDef[] {
     ...nativeVessels(arm, {
       skipCephalic: true,
       brachial: { flow: { q: radialQ + ulnarQ, wave: 'feed', profile: 2.4 }, pts: BRACHIAL_PTS.map((p) => ({ ...p, r: p.r * 1.12 })), calc: o.calc ? o.calc * 0.4 : 0 },
-      radial: { name: 'Arteria radial (nutricia)', short: 'A. radial', pts: radialFeed, flow: { q: radialQ, wave: 'feed', profile: 2.2 }, calc: o.calc ?? 0 },
+      radial: { name: tr('Arteria radial (nutricia)', 'Feeding radial artery'), short: tr('A. radial', 'Radial a.'), pts: radialFeed, flow: { q: radialQ, wave: 'feed', profile: 2.2 }, calc: o.calc ?? 0 },
       ulnar: { flow: { q: ulnarQ, wave: 'mixed', profile: 2 }, calc: o.calc ? o.calc * 0.7 : 0 },
     }),
     {
       id: 'a_radial_distal',
-      name: 'Arteria radial distal (flujo retrógrado)',
-      short: 'A. radial distal',
+      name: tr('Arteria radial distal (flujo retrógrado)', 'Distal radial artery (retrograde flow)'),
+      short: tr('A. radial distal', 'Distal radial a.'),
       kind: 'artery',
       group: 'arteria',
       pts: [
@@ -563,8 +564,8 @@ function radiocephalic(arm: ArmShape, o: RcOpts = {}): StructDef[] {
     },
     {
       id: 'fav',
-      name: 'Vena cefálica arterializada (FAV)',
-      short: 'FAV (v. cefálica)',
+      name: tr('Vena cefálica arterializada (FAV)', 'Arterialized cephalic vein (AVF)'),
+      short: tr('FAV (v. cefálica)', 'AVF (cephalic v.)'),
       kind: 'avf',
       group: 'fav',
       isAccess: true,
@@ -578,7 +579,7 @@ function radiocephalic(arm: ArmShape, o: RcOpts = {}): StructDef[] {
     // cefálica nativa distal residual (ligada) — pequeño muñón
     {
       id: 'v_cefalica_distal',
-      name: 'Vena cefálica distal (ligada)',
+      name: tr('Vena cefálica distal (ligada)', 'Distal cephalic vein (ligated)'),
       short: '',
       hideLabel: true,
       kind: 'vein',
@@ -602,62 +603,118 @@ function radiocephalic(arm: ArmShape, o: RcOpts = {}): StructDef[] {
 export const CASES: CaseDef[] = [
   {
     id: 'normal',
-    title: 'Brazo sin FAV · anatomía normal y mapeo prequirúrgico',
-    short: 'Anatomía normal',
+    title: tr('Brazo sin FAV · anatomía normal y mapeo prequirúrgico', 'Arm without AVF · normal anatomy and preoperative mapping'),
+    short: tr('Anatomía normal', 'Normal anatomy'),
     difficulty: 1,
-    accessType: 'Sin acceso',
-    indication:
+    accessType: tr('Sin acceso', 'No access'),
+    indication: tr(
       'No hay acceso que puncionar: la ecografía sirve para el mapeo vascular antes de crear la FAV (calibre y trayecto de arterias y venas).',
-    description:
+      'No access to cannulate: ultrasound is used for vascular mapping before AVF creation (diameter and course of arteries and veins).',
+    ),
+    description: tr(
       'Brazo izquierdo sin fístula. Úsalo para reconocer la anatomía ecográfica normal: arterias radial, cubital y humeral con sus venas satélites, venas superficiales (cefálica, basílica, mediana), nervios mediano, cubital y radial, tendones y huesos. Sirve también para el mapeo prequirúrgico (diámetros mínimos: arteria ≥ 2 mm, vena ≥ 2,5 mm con compresor) y para practicar la canalización venosa periférica ecoguiada.',
+      'Left arm without a fistula. Use it to learn normal ultrasound anatomy: radial, ulnar and brachial arteries with their comitant veins, superficial veins (cephalic, basilic, median), median, ulnar and radial nerves, tendons and bones. Also useful for preoperative mapping (minimum diameters: artery ≥ 2 mm, vein ≥ 2.5 mm with a tourniquet) and for practicing ultrasound-guided peripheral IV cannulation.',
+    ),
     objectives: [
-      'Diferenciar arteria (pulsátil, no colapsable, onda trifásica) de vena (colapsable, flujo fásico).',
-      'Localizar la vena cefálica en la muñeca y en el antebrazo y medir su diámetro con y sin compresor.',
-      'Medir el diámetro de la arteria radial en la muñeca.',
-      'Identificar el nervio mediano (patrón en panal) y los tendones flexores (anisotropía).',
+      tr(
+        'Diferenciar arteria (pulsátil, no colapsable, onda trifásica) de vena (colapsable, flujo fásico).',
+        'Differentiate artery (pulsatile, non-compressible, triphasic waveform) from vein (compressible, phasic flow).',
+      ),
+      tr(
+        'Localizar la vena cefálica en la muñeca y en el antebrazo y medir su diámetro con y sin compresor.',
+        'Locate the cephalic vein at the wrist and in the forearm and measure its diameter with and without a tourniquet.',
+      ),
+      tr('Medir el diámetro de la arteria radial en la muñeca.', 'Measure the radial artery diameter at the wrist.'),
+      tr(
+        'Identificar el nervio mediano (patrón en panal) y los tendones flexores (anisotropía).',
+        'Identify the median nerve (honeycomb pattern) and the flexor tendons (anisotropy).',
+      ),
     ],
     findings: [
-      'Arteria radial distal ≈ 2,3 mm, onda trifásica de alta resistencia (IR ≈ 1).',
-      'Vena cefálica en antebrazo ≈ 2,4–2,8 mm; se distiende ~20 % con compresor.',
-      'Venas satélites a ambos lados de la arteria radial: colapsan con presión suave.',
+      tr(
+        'Arteria radial distal ≈ 2,3 mm, onda trifásica de alta resistencia (IR ≈ 1).',
+        'Distal radial artery ≈ 2.3 mm, high-resistance triphasic waveform (RI ≈ 1).',
+      ),
+      tr(
+        'Vena cefálica en antebrazo ≈ 2,4–2,8 mm; se distiende ~20 % con compresor.',
+        'Forearm cephalic vein ≈ 2.4–2.8 mm; distends ~20% with a tourniquet.',
+      ),
+      tr(
+        'Venas satélites a ambos lados de la arteria radial: colapsan con presión suave.',
+        'Comitant veins on both sides of the radial artery: they collapse with light pressure.',
+      ),
     ],
     tips: [
-      'Presión mínima: las venas superficiales se colapsan con muy poca presión.',
-      'Usa el compresor para valorar la distensibilidad venosa.',
-      'Inclina la sonda (basculación) para evitar la anisotropía de los tendones.',
+      tr(
+        'Presión mínima: las venas superficiales se colapsan con muy poca presión.',
+        'Minimal pressure: superficial veins collapse with very little pressure.',
+      ),
+      tr('Usa el compresor para valorar la distensibilidad venosa.', 'Use the tourniquet to assess venous distensibility.'),
+      tr(
+        'Inclina la sonda (basculación) para evitar la anisotropía de los tendones.',
+        'Tilt the probe to avoid tendon anisotropy.',
+      ),
     ],
     armOpts: {},
     hr: 72,
     build: (arm) => base(arm),
     probeStart: { x: 40, theta: 42, rot: 0 },
-    expected: { note: 'Sin acceso vascular' },
+    expected: { note: tr('Sin acceso vascular', 'No vascular access') },
   },
   {
     id: 'rc_madura',
-    title: 'FAV radiocefálica madura · punción estándar',
-    short: 'FAV RC madura',
+    title: tr('FAV radiocefálica madura · punción estándar', 'Mature radiocephalic AVF · standard cannulation'),
+    short: tr('FAV RC madura', 'Mature RC AVF'),
     difficulty: 1,
-    accessType: 'FAV radiocefálica (Brescia-Cimino)',
-    indication:
+    accessType: tr('FAV radiocefálica (Brescia-Cimino)', 'Radiocephalic AVF (Brescia-Cimino)'),
+    indication: tr(
       'Primeras punciones de una FAV nueva: es cuando más ayuda la ecografía, porque la vena aún es frágil y un fallo produce hematomas que retrasan su uso.',
-    description:
+      'First cannulations of a new AVF: this is when ultrasound helps most, because the vein is still fragile and a missed cannulation causes hematomas that delay its use.',
+    ),
+    description: tr(
       'Fístula radiocefálica latero-terminal en la muñeca izquierda, de 8 meses, bien desarrollada. Vena rectilínea, superficial y de buen calibre. Caso de referencia para aprender la punción ecoguiada con abordaje longitudinal (en plano), el preferido, y transversal (fuera de plano).',
+      'Well-developed, 8-month-old end-to-side radiocephalic fistula at the left wrist. Straight, superficial vein of good diameter. Reference case for learning ultrasound-guided cannulation with the long-axis (in-plane) approach, the preferred one, and the short-axis (out-of-plane) approach.',
+    ),
     objectives: [
-      'Localizar la anastomosis y recorrer la vena arterializada hacia proximal.',
-      'Medir diámetro y profundidad de la vena en la zona de punción (regla de los 6).',
-      'Calcular el flujo del acceso (Qa) en la arteria humeral.',
-      'Puncionar la vena a ≥ 3 cm de la anastomosis con la punta visible en todo momento.',
+      tr(
+        'Localizar la anastomosis y recorrer la vena arterializada hacia proximal.',
+        'Locate the anastomosis and follow the arterialized vein proximally.',
+      ),
+      tr(
+        'Medir diámetro y profundidad de la vena en la zona de punción (regla de los 6).',
+        'Measure vein diameter and depth at the cannulation site (rule of 6s).',
+      ),
+      tr('Calcular el flujo del acceso (Qa) en la arteria humeral.', 'Calculate access flow (Qa) in the brachial artery.'),
+      tr(
+        'Puncionar la vena a ≥ 3 cm de la anastomosis con la punta visible en todo momento.',
+        'Cannulate the vein ≥ 3 cm from the anastomosis, keeping the tip visible at all times.',
+      ),
     ],
     findings: [
-      'Diámetro de la vena en antebrazo medio ≈ 6,3–6,6 mm; profundidad de la pared anterior ≈ 3 mm.',
-      'Arteria radial nutricia dilatada (≈ 3,8 mm), onda de baja resistencia (IR ≈ 0,5).',
-      'Flujo retrógrado fisiológico en la arteria radial distal a la anastomosis.',
-      'Qa humeral ≈ 800 mL/min.',
+      tr(
+        'Diámetro de la vena en antebrazo medio ≈ 6,3–6,6 mm; profundidad de la pared anterior ≈ 3 mm.',
+        'Vein diameter at mid-forearm ≈ 6.3–6.6 mm; anterior wall depth ≈ 3 mm.',
+      ),
+      tr(
+        'Arteria radial nutricia dilatada (≈ 3,8 mm), onda de baja resistencia (IR ≈ 0,5).',
+        'Dilated feeding radial artery (≈ 3.8 mm), low-resistance waveform (RI ≈ 0.5).',
+      ),
+      tr(
+        'Flujo retrógrado fisiológico en la arteria radial distal a la anastomosis.',
+        'Physiological retrograde flow in the radial artery distal to the anastomosis.',
+      ),
+      tr('Qa humeral ≈ 800 mL/min.', 'Brachial Qa ≈ 800 mL/min.'),
     ],
     tips: [
-      'Coloca la pantalla frente a ti, al otro lado del brazo, en línea con la zona de punción.',
-      'Con el marcador de la sonda a tu izquierda, izquierda de la pantalla = tu izquierda.',
-      'Ángulo 20–35°; al ver el reflujo, baja el ángulo y avanza.',
+      tr(
+        'Coloca la pantalla frente a ti, al otro lado del brazo, en línea con la zona de punción.',
+        'Place the screen in front of you, across the arm, in line with the cannulation site.',
+      ),
+      tr(
+        'Con el marcador de la sonda a tu izquierda, izquierda de la pantalla = tu izquierda.',
+        'With the probe marker to your left, screen left = your left.',
+      ),
+      tr('Ángulo 20–35°; al ver el reflujo, baja el ángulo y avanza.', 'Angle 20–35°; on flashback, lower the angle and advance.'),
     ],
     armOpts: {},
     hr: 72,
@@ -673,28 +730,47 @@ export const CASES: CaseDef[] = [
   },
   {
     id: 'bc_obeso',
-    title: 'FAV humerocefálica profunda · paciente obeso',
-    short: 'FAV profunda (obesidad)',
+    title: tr('FAV humerocefálica profunda · paciente obeso', 'Deep brachiocephalic AVF · obese patient'),
+    short: tr('FAV profunda (obesidad)', 'Deep AVF (obesity)'),
     difficulty: 2,
-    accessType: 'FAV humerocefálica',
-    indication:
+    accessType: tr('FAV humerocefálica', 'Brachiocephalic AVF'),
+    indication: tr(
       'Paciente obeso con la vena muy profunda: no se palpa bien y la punción a ciegas falla con frecuencia.',
-    description:
+      'Obese patient with a very deep vein: it is hard to palpate and blind cannulation often fails.',
+    ),
+    description: tr(
       'Fístula humerocefálica en el codo izquierdo de un paciente con obesidad. La vena cefálica del brazo tiene buen calibre y alto flujo, pero discurre a más de 1 cm de profundidad bajo un tejido celular subcutáneo grueso. La palpación es difícil y la ecografía es de gran ayuda.',
+      'Brachiocephalic fistula at the left elbow in a patient with obesity. The upper-arm cephalic vein has a good diameter and high flow, but runs more than 1 cm deep under thick subcutaneous tissue. Palpation is difficult and ultrasound is a great help.',
+    ),
     objectives: [
-      'Ajustar profundidad, foco y ganancia para un vaso profundo.',
-      'Medir la profundidad de la pared anterior (> 6 mm: FAV profunda).',
-      'Planificar el ángulo y la longitud de aguja adecuados (mayor ángulo, aguja de 32 mm).',
-      'Evitar la arteria humeral y el nervio mediano, mediales.',
+      tr('Ajustar profundidad, foco y ganancia para un vaso profundo.', 'Adjust depth, focus and gain for a deep vessel.'),
+      tr('Medir la profundidad de la pared anterior (> 6 mm: FAV profunda).', 'Measure anterior wall depth (> 6 mm: deep AVF).'),
+      tr(
+        'Planificar el ángulo y la longitud de aguja adecuados (mayor ángulo, aguja de 32 mm).',
+        'Plan the right angle and needle length (steeper angle, 32 mm needle).',
+      ),
+      tr(
+        'Evitar la arteria humeral y el nervio mediano, mediales.',
+        'Avoid the brachial artery and the median nerve, which lie medially.',
+      ),
     ],
     findings: [
-      'Pared anterior de la vena a ≈ 10–12 mm de la piel (profunda).',
-      'Diámetro ≈ 7 mm; Qa humeral ≈ 1300 mL/min.',
+      tr('Pared anterior de la vena a ≈ 10–12 mm de la piel (profunda).', 'Vein anterior wall ≈ 10–12 mm from the skin (deep).'),
+      tr('Diámetro ≈ 7 mm; Qa humeral ≈ 1300 mL/min.', 'Diameter ≈ 7 mm; brachial Qa ≈ 1300 mL/min.'),
     ],
     tips: [
-      'Aumenta la profundidad a 3–4 cm y baja el foco al nivel del vaso.',
-      'Con más profundidad, el punto de entrada en eje corto debe estar más lejos de la sonda.',
-      'Una aguja de 25 mm puede no alcanzar la luz con suficiente recorrido intraluminal.',
+      tr(
+        'Aumenta la profundidad a 3–4 cm y baja el foco al nivel del vaso.',
+        'Increase depth to 3–4 cm and move the focus down to the vessel.',
+      ),
+      tr(
+        'Con más profundidad, el punto de entrada en eje corto debe estar más lejos de la sonda.',
+        'The deeper the vessel, the farther from the probe the short-axis entry point must be.',
+      ),
+      tr(
+        'Una aguja de 25 mm puede no alcanzar la luz con suficiente recorrido intraluminal.',
+        'A 25 mm needle may not reach the lumen with enough intraluminal length.',
+      ),
     ],
     armOpts: { fatAdd: 8.5, sizeScale: 1.04 },
     hr: 78,
@@ -708,8 +784,8 @@ export const CASES: CaseDef[] = [
       defs.push(
         {
           id: 'a_humeral_distal',
-          name: 'Arteria humeral distal',
-          short: 'A. humeral',
+          name: tr('Arteria humeral distal', 'Distal brachial artery'),
+          short: tr('A. humeral', 'Brachial a.'),
           kind: 'artery',
           group: 'arteria',
           pts: BRACHIAL_PTS.filter((p) => p.x <= 270).map((p, i) => (i === 0 ? { ...p, x: 262 } : p)),
@@ -717,8 +793,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'fav',
-          name: 'Vena cefálica arterializada (FAV)',
-          short: 'FAV (v. cefálica)',
+          name: tr('Vena cefálica arterializada (FAV)', 'Arterialized cephalic vein (AVF)'),
+          short: tr('FAV (v. cefálica)', 'AVF (cephalic v.)'),
           kind: 'avf',
           group: 'fav',
           isAccess: true,
@@ -739,8 +815,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'v_cefalica_ab',
-          name: 'Vena cefálica del antebrazo',
-          short: 'V. cefálica',
+          name: tr('Vena cefálica del antebrazo', 'Forearm cephalic vein'),
+          short: tr('V. cefálica', 'Cephalic v.'),
           kind: 'vein',
           group: 'vena',
           pts: CEPHALIC_PTS.filter((p) => p.x <= 230).concat([{ x: 262, th: 30, d: 12, ref: 'skin', r: 1.6 }]),
@@ -752,25 +828,44 @@ export const CASES: CaseDef[] = [
     },
     access: { veinId: 'fav', anastomosisX: 262, zone: [300, 520], angle: 35 },
     probeStart: { x: 380, theta: 52, rot: 0 },
-    expected: { diameter: 7.1, depth: 11, qa: 1300, mature: true, note: 'FAV madura pero profunda (> 6 mm)' },
+    expected: { diameter: 7.1, depth: 11, qa: 1300, mature: true, note: tr('FAV madura pero profunda (> 6 mm)', 'Mature but deep AVF (> 6 mm)') },
   },
   {
     id: 'rc_tortuosa',
-    title: 'FAV radiocefálica tortuosa',
-    short: 'FAV tortuosa',
+    title: tr('FAV radiocefálica tortuosa', 'Tortuous radiocephalic AVF'),
+    short: tr('FAV tortuosa', 'Tortuous AVF'),
     difficulty: 2,
-    accessType: 'FAV radiocefálica',
-    indication:
+    accessType: tr('FAV radiocefálica', 'Radiocephalic AVF'),
+    indication: tr(
       'FAV tortuosa, difícil de puncionar a ciegas: la ecografía muestra un segmento recto donde alinear la aguja con la vena.',
-    description:
+      'Tortuous AVF, hard to cannulate blind: ultrasound shows a straight segment where the needle can be aligned with the vein.',
+    ),
+    description: tr(
       'Vena arterializada con trayecto serpenteante y cambios de profundidad. En eje largo es imposible mantener todo el vaso en el plano; hay que elegir un segmento rectilíneo de al menos 2–3 cm para la punción y orientar la aguja según el eje local del vaso.',
+      'Arterialized vein with a winding course and changes in depth. In long axis the whole vessel cannot be kept in plane; choose a straight segment of at least 2–3 cm for cannulation and orient the needle along the local vessel axis.',
+    ),
     objectives: [
-      'Cartografiar el trayecto de la vena en eje corto (seguir el vaso deslizando la sonda).',
-      'Identificar segmentos rectos adecuados para la punción.',
-      'Alinear la aguja con el eje local del vaso para no atravesar la pared lateral.',
+      tr(
+        'Cartografiar el trayecto de la vena en eje corto (seguir el vaso deslizando la sonda).',
+        'Map the vein course in short axis (follow the vessel by sliding the probe).',
+      ),
+      tr('Identificar segmentos rectos adecuados para la punción.', 'Identify straight segments suitable for cannulation.'),
+      tr(
+        'Alinear la aguja con el eje local del vaso para no atravesar la pared lateral.',
+        'Align the needle with the local vessel axis to avoid exiting through the side wall.',
+      ),
     ],
-    findings: ['Curvas con desplazamientos laterales de ≈ 10–12 mm cada 4–5 cm.', 'Diámetro ≈ 6 mm; profundidad 3–5 mm.'],
-    tips: ['En eje corto, desliza la sonda y observa cómo "baila" la vena lateralmente.', 'Rota la sonda para seguir el eje local en plano.'],
+    findings: [
+      tr('Curvas con desplazamientos laterales de ≈ 10–12 mm cada 4–5 cm.', 'Curves with lateral shifts of ≈ 10–12 mm every 4–5 cm.'),
+      tr('Diámetro ≈ 6 mm; profundidad 3–5 mm.', 'Diameter ≈ 6 mm; depth 3–5 mm.'),
+    ],
+    tips: [
+      tr(
+        'En eje corto, desliza la sonda y observa cómo "baila" la vena lateralmente.',
+        'In short axis, slide the probe and watch the vein "dance" from side to side.',
+      ),
+      tr('Rota la sonda para seguir el eje local en plano.', 'Rotate the probe to follow the local axis in plane.'),
+    ],
     armOpts: {},
     hr: 70,
     build: (arm) => {
@@ -791,26 +886,42 @@ export const CASES: CaseDef[] = [
   },
   {
     id: 'rc_estenosis',
-    title: 'Estenosis yuxtaanastomótica',
-    short: 'Estenosis yuxtaanast.',
+    title: tr('Estenosis yuxtaanastomótica', 'Juxta-anastomotic stenosis'),
+    short: tr('Estenosis yuxtaanast.', 'Juxta-anast. stenosis'),
     difficulty: 2,
-    accessType: 'FAV radiocefálica disfuncionante',
-    indication:
+    accessType: tr('FAV radiocefálica disfuncionante', 'Dysfunctional radiocephalic AVF'),
+    indication: tr(
       'Estenosis en la vena yuxtaanastomótica: hay que localizarla y puncionar lejos de ella, en vena sana.',
-    description:
+      'Stenosis in the juxta-anastomotic vein: locate it and cannulate away from it, in healthy vein.',
+    ),
+    description: tr(
       'FAV radiocefálica con estenosis en el segmento de salida (swing segment), a unos 2 cm de la anastomosis, por hiperplasia intimal. La vena distal a la estenosis tiene menor calibre y el flujo del acceso está reducido. En la estenosis hay aliasing en Doppler color y velocidades muy elevadas.',
+      'Radiocephalic AVF with a stenosis in the swing segment, about 2 cm from the anastomosis, due to intimal hyperplasia. The vein distal to the stenosis is narrower and access flow is reduced. The stenosis shows color Doppler aliasing and very high velocities.',
+    ),
     objectives: [
-      'Localizar la estenosis con Doppler color (aliasing, mosaico).',
-      'Medir la VPS en la estenosis y 2 cm antes (cociente ≥ 3 en zona anastomótica).',
-      'Medir la luz residual (< 2 mm) y el Qa humeral (< 500 mL/min → disfunción).',
-      'Evitar puncionar sobre la estenosis o inmediatamente después.',
+      tr('Localizar la estenosis con Doppler color (aliasing, mosaico).', 'Locate the stenosis with color Doppler (aliasing, mosaic pattern).'),
+      tr(
+        'Medir la VPS en la estenosis y 2 cm antes (cociente ≥ 3 en zona anastomótica).',
+        'Measure PSV at the stenosis and 2 cm upstream (ratio ≥ 3 in the anastomotic region).',
+      ),
+      tr(
+        'Medir la luz residual (< 2 mm) y el Qa humeral (< 500 mL/min → disfunción).',
+        'Measure the residual lumen (< 2 mm) and brachial Qa (< 500 mL/min → dysfunction).',
+      ),
+      tr('Evitar puncionar sobre la estenosis o inmediatamente después.', 'Avoid cannulating over the stenosis or just downstream of it.'),
     ],
     findings: [
-      'Luz residual ≈ 1,9 mm con engrosamiento intimal ecogénico.',
-      'VPS en la estenosis > 400 cm/s; turbulencia postestenótica.',
-      'Qa humeral ≈ 540 mL/min (≈ 470 corregido): disfunción según GEMAV.',
+      tr('Luz residual ≈ 1,9 mm con engrosamiento intimal ecogénico.', 'Residual lumen ≈ 1.9 mm with echogenic intimal thickening.'),
+      tr('VPS en la estenosis > 400 cm/s; turbulencia postestenótica.', 'PSV at the stenosis > 400 cm/s; post-stenotic turbulence.'),
+      tr(
+        'Qa humeral ≈ 540 mL/min (≈ 470 corregido): disfunción según GEMAV.',
+        'Brachial Qa ≈ 540 mL/min (≈ 470 corrected): dysfunction per GEMAV.',
+      ),
     ],
-    tips: ['Sube la escala de velocidad (PRF) para cuantificar el chorro.', 'Corrige el ángulo alineando el cursor con el chorro.'],
+    tips: [
+      tr('Sube la escala de velocidad (PRF) para cuantificar el chorro.', 'Raise the velocity scale (PRF) to quantify the jet.'),
+      tr('Corrige el ángulo alineando el cursor con el chorro.', 'Correct the angle by aligning the cursor with the jet.'),
+    ],
     armOpts: {},
     hr: 74,
     build: (arm) =>
@@ -833,28 +944,60 @@ export const CASES: CaseDef[] = [
       anastomosisX: 27,
       zone: [80, 230],
       angle: 25,
-      avoid: [{ x0: 30, x1: 70, reason: 'Estenosis yuxtaanastomótica y turbulencia postestenótica' }],
+      avoid: [
+        {
+          x0: 30,
+          x1: 70,
+          reason: tr('Estenosis yuxtaanastomótica y turbulencia postestenótica', 'Juxta-anastomotic stenosis and post-stenotic turbulence'),
+        },
+      ],
     },
     probeStart: { x: 45, theta: 52, rot: 90 },
-    expected: { diameter: 5.2, depth: 3.2, qa: 540, mature: false, note: 'Disfunción por estenosis: remitir para fistulografía/ATP' },
+    expected: {
+      diameter: 5.2,
+      depth: 3.2,
+      qa: 540,
+      mature: false,
+      note: tr('Disfunción por estenosis: remitir para fistulografía/ATP', 'Stenosis-related dysfunction: refer for fistulography/PTA'),
+    },
   },
   {
     id: 'rc_aneurisma',
-    title: 'Aneurisma con trombo mural',
-    short: 'Aneurisma + trombo',
+    title: tr('Aneurisma con trombo mural', 'Aneurysm with mural thrombus'),
+    short: tr('Aneurisma + trombo', 'Aneurysm + thrombus'),
     difficulty: 3,
-    accessType: 'FAV radiocefálica evolucionada',
-    indication:
+    accessType: tr('FAV radiocefálica evolucionada', 'Long-standing radiocephalic AVF'),
+    indication: tr(
       'Aneurisma con trombo mural: la ecografía delimita los segmentos sanos y evita puncionar el trombo o la piel adelgazada.',
-    description:
+      'Aneurysm with mural thrombus: ultrasound maps the healthy segments and avoids cannulating the thrombus or the thinned skin.',
+    ),
+    description: tr(
       'FAV radiocefálica de 6 años con una dilatación aneurismática en el tercio medio del antebrazo (≈ 15 mm), trombo mural en la pared profunda y piel adelgazada sobre la cúpula. El flujo es turbulento, en remolino ("yin-yang"). Resultado típico de la punción repetida en área.',
+      '6-year-old radiocephalic AVF with an aneurysmal dilatation in the mid-forearm (≈ 15 mm), mural thrombus on the deep wall and thinned skin over the dome. Flow is turbulent and swirling ("yin-yang"). Typical result of repeated area puncture.',
+    ),
     objectives: [
-      'Medir el diámetro máximo del aneurisma y el grosor del tejido que lo cubre.',
-      'Identificar el trombo mural y el flujo en remolino.',
-      'Planificar la punción en segmentos sanos, fuera del aneurisma (escalera de cuerda).',
+      tr(
+        'Medir el diámetro máximo del aneurisma y el grosor del tejido que lo cubre.',
+        'Measure the maximum aneurysm diameter and the thickness of the overlying tissue.',
+      ),
+      tr('Identificar el trombo mural y el flujo en remolino.', 'Identify the mural thrombus and the swirling flow.'),
+      tr(
+        'Planificar la punción en segmentos sanos, fuera del aneurisma (escalera de cuerda).',
+        'Plan cannulation in healthy segments, away from the aneurysm (rope ladder).',
+      ),
     ],
-    findings: ['Diámetro máximo ≈ 15 mm; tejido sobre la cúpula ≈ 1,5 mm.', 'Trombo mural ecogénico en la pared profunda (≈ 3,5 mm).', 'Flujo bidireccional en remolino.'],
-    tips: ['No puncionar la cúpula ni la piel brillante y adelgazada (riesgo de rotura).', 'Elegir segmentos proximales o distales de calibre normal.'],
+    findings: [
+      tr('Diámetro máximo ≈ 15 mm; tejido sobre la cúpula ≈ 1,5 mm.', 'Maximum diameter ≈ 15 mm; tissue over the dome ≈ 1.5 mm.'),
+      tr('Trombo mural ecogénico en la pared profunda (≈ 3,5 mm).', 'Echogenic mural thrombus on the deep wall (≈ 3.5 mm).'),
+      tr('Flujo bidireccional en remolino.', 'Bidirectional swirling flow.'),
+    ],
+    tips: [
+      tr(
+        'No puncionar la cúpula ni la piel brillante y adelgazada (riesgo de rotura).',
+        'Do not cannulate the dome or shiny, thinned skin (risk of rupture).',
+      ),
+      tr('Elegir segmentos proximales o distales de calibre normal.', 'Choose proximal or distal segments of normal diameter.'),
+    ],
     armOpts: {},
     hr: 72,
     build: (arm) => {
@@ -878,24 +1021,49 @@ export const CASES: CaseDef[] = [
       anastomosisX: 27,
       zone: [60, 230],
       angle: 25,
-      avoid: [{ x0: 108, x1: 150, reason: 'Aneurisma: piel adelgazada y trombo mural' }],
+      avoid: [{ x0: 108, x1: 150, reason: tr('Aneurisma: piel adelgazada y trombo mural', 'Aneurysm: thinned skin and mural thrombus') }],
     },
     probeStart: { x: 128, theta: 51, rot: 0 },
-    expected: { diameter: 15, depth: 1.5, qa: 1000, mature: true, note: 'Evitar el aneurisma' },
+    expected: { diameter: 15, depth: 1.5, qa: 1000, mature: true, note: tr('Evitar el aneurisma', 'Avoid the aneurysm') },
   },
   {
     id: 'rc_inmadura',
-    title: 'FAV inmadura (5 semanas)',
-    short: 'FAV inmadura',
+    title: tr('FAV inmadura (5 semanas)', 'Immature AVF (5 weeks)'),
+    short: tr('FAV inmadura', 'Immature AVF'),
     difficulty: 2,
-    accessType: 'FAV radiocefálica reciente',
-    indication:
+    accessType: tr('FAV radiocefálica reciente', 'Recent radiocephalic AVF'),
+    indication: tr(
       'Escasa maduración y una vena accesoria que roba flujo: la ecografía decide si la FAV se puede puncionar ya, y dónde.',
-    description:
+      'Poor maturation and an accessory vein stealing flow: ultrasound decides whether the AVF can be cannulated yet, and where.',
+    ),
+    description: tr(
       'Fístula radiocefálica de 5 semanas que no ha madurado: vena de pequeño calibre y pared fina, flujo bajo y una vena accesoria que "roba" parte del flujo. El objetivo es decidir si es apta para la punción.',
-    objectives: ['Medir diámetro, profundidad y Qa.', 'Aplicar los criterios de maduración (regla de los 6 / GEMAV).', 'Identificar la vena accesoria competidora.'],
-    findings: ['Diámetro ≈ 3,2 mm (< 4 mm).', 'Qa humeral ≈ 420 mL/min (< 500).', 'Vena accesoria de ≈ 2,4 mm hacia dorsal a 4 cm de la anastomosis.', 'Conclusión: FAV no apta para punción; valorar causa (accesoria, estenosis).'],
-    tips: ['Si hubiera que puncionar, aguja 17G y flujo de bomba bajo.', 'Usa el compresor: la vena se distiende pero sigue siendo pequeña.'],
+      '5-week-old radiocephalic fistula that has not matured: small-diameter, thin-walled vein, low flow and an accessory vein that "steals" part of the flow. The goal is to decide whether it is ready for cannulation.',
+    ),
+    objectives: [
+      tr('Medir diámetro, profundidad y Qa.', 'Measure diameter, depth and Qa.'),
+      tr('Aplicar los criterios de maduración (regla de los 6 / GEMAV).', 'Apply the maturation criteria (rule of 6s / GEMAV).'),
+      tr('Identificar la vena accesoria competidora.', 'Identify the competing accessory vein.'),
+    ],
+    findings: [
+      tr('Diámetro ≈ 3,2 mm (< 4 mm).', 'Diameter ≈ 3.2 mm (< 4 mm).'),
+      tr('Qa humeral ≈ 420 mL/min (< 500).', 'Brachial Qa ≈ 420 mL/min (< 500).'),
+      tr(
+        'Vena accesoria de ≈ 2,4 mm hacia dorsal a 4 cm de la anastomosis.',
+        'Accessory vein of ≈ 2.4 mm running dorsally, 4 cm from the anastomosis.',
+      ),
+      tr(
+        'Conclusión: FAV no apta para punción; valorar causa (accesoria, estenosis).',
+        'Conclusion: AVF not ready for cannulation; investigate the cause (accessory vein, stenosis).',
+      ),
+    ],
+    tips: [
+      tr('Si hubiera que puncionar, aguja 17G y flujo de bomba bajo.', 'If it must be cannulated, use a 17G needle and a low blood pump speed.'),
+      tr(
+        'Usa el compresor: la vena se distiende pero sigue siendo pequeña.',
+        'Use the tourniquet: the vein distends but remains small.',
+      ),
+    ],
     armOpts: {},
     hr: 76,
     build: (arm) => {
@@ -909,8 +1077,8 @@ export const CASES: CaseDef[] = [
       });
       defs.push({
         id: 'v_accesoria',
-        name: 'Vena accesoria',
-        short: 'V. accesoria',
+        name: tr('Vena accesoria', 'Accessory vein'),
+        short: tr('V. accesoria', 'Accessory v.'),
         kind: 'vein',
         group: 'fav',
         pts: [
@@ -928,21 +1096,38 @@ export const CASES: CaseDef[] = [
     },
     access: { veinId: 'fav', anastomosisX: 27, zone: [60, 230], angle: 25 },
     probeStart: { x: 90, theta: 55, rot: 0 },
-    expected: { diameter: 3.2, depth: 3.1, qa: 420, mature: false, note: 'No cumple criterios de maduración' },
+    expected: { diameter: 3.2, depth: 3.1, qa: 420, mature: false, note: tr('No cumple criterios de maduración', 'Does not meet maturation criteria') },
   },
   {
     id: 'rc_colaterales',
-    title: 'Venas colaterales y bifurcación',
-    short: 'Colaterales',
+    title: tr('Venas colaterales y bifurcación', 'Collateral veins and bifurcation'),
+    short: tr('Colaterales', 'Collaterals'),
     difficulty: 2,
-    accessType: 'FAV radiocefálica',
-    indication:
+    accessType: tr('FAV radiocefálica', 'Radiocephalic AVF'),
+    indication: tr(
       'Venas colaterales no puncionables y un desdoblamiento: la ecografía distingue la vena principal de sus ramas.',
-    description:
+      'Non-cannulable collateral veins and a duplication: ultrasound tells the main vein apart from its branches.',
+    ),
+    description: tr(
       'FAV radiocefálica madura con una gran rama colateral dorsal y un desdoblamiento de la vena en el tercio proximal del antebrazo. Riesgo de puncionar una rama de menor calibre o de atravesar una bifurcación.',
-    objectives: ['Seguir el canal principal en eje corto.', 'Localizar los puntos de bifurcación y evitarlos.', 'Elegir un segmento único y rectilíneo para cada aguja.'],
-    findings: ['Rama colateral dorsal de ≈ 4,4 mm a ≈ 8 cm de la anastomosis.', 'Desdoblamiento de la vena entre 17 y 22 cm.'],
-    tips: ['En la bifurcación la imagen transversal muestra dos luces que se separan.', 'Puncionar 1–2 cm antes o después de una confluencia.'],
+      'Mature radiocephalic AVF with a large dorsal collateral branch and a vein duplication in the proximal forearm. Risk of cannulating a smaller branch or passing through a bifurcation.',
+    ),
+    objectives: [
+      tr('Seguir el canal principal en eje corto.', 'Follow the main channel in short axis.'),
+      tr('Localizar los puntos de bifurcación y evitarlos.', 'Locate the bifurcation points and avoid them.'),
+      tr('Elegir un segmento único y rectilíneo para cada aguja.', 'Choose a single, straight segment for each needle.'),
+    ],
+    findings: [
+      tr('Rama colateral dorsal de ≈ 4,4 mm a ≈ 8 cm de la anastomosis.', 'Dorsal collateral branch of ≈ 4.4 mm at ≈ 8 cm from the anastomosis.'),
+      tr('Desdoblamiento de la vena entre 17 y 22 cm.', 'Vein duplication between 17 and 22 cm.'),
+    ],
+    tips: [
+      tr(
+        'En la bifurcación la imagen transversal muestra dos luces que se separan.',
+        'At the bifurcation, the transverse image shows two lumens drifting apart.',
+      ),
+      tr('Puncionar 1–2 cm antes o después de una confluencia.', 'Cannulate 1–2 cm before or after a confluence.'),
+    ],
     armOpts: {},
     hr: 70,
     build: (arm) => {
@@ -950,8 +1135,8 @@ export const CASES: CaseDef[] = [
       defs.push(
         {
           id: 'v_colateral',
-          name: 'Vena colateral dorsal',
-          short: 'Colateral',
+          name: tr('Vena colateral dorsal', 'Dorsal collateral vein'),
+          short: tr('Colateral', 'Collateral'),
           kind: 'avf',
           group: 'fav',
           pts: [
@@ -967,8 +1152,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'v_desdoble',
-          name: 'Desdoblamiento de la vena',
-          short: 'Desdoblamiento',
+          name: tr('Desdoblamiento de la vena', 'Vein duplication'),
+          short: tr('Desdoblamiento', 'Duplication'),
           kind: 'avf',
           group: 'fav',
           pts: [
@@ -991,8 +1176,8 @@ export const CASES: CaseDef[] = [
       zone: [60, 230],
       angle: 25,
       avoid: [
-        { x0: 96, x1: 118, reason: 'Confluencia de la colateral dorsal' },
-        { x0: 164, x1: 240, reason: 'Desdoblamiento venoso' },
+        { x0: 96, x1: 118, reason: tr('Confluencia de la colateral dorsal', 'Dorsal collateral confluence') },
+        { x0: 164, x1: 240, reason: tr('Desdoblamiento venoso', 'Vein duplication') },
       ],
     },
     probeStart: { x: 108, theta: 58, rot: 0 },
@@ -1000,17 +1185,41 @@ export const CASES: CaseDef[] = [
   },
   {
     id: 'bb_transpuesta',
-    title: 'FAV humerobasílica transpuesta',
-    short: 'Humerobasílica',
+    title: tr('FAV humerobasílica transpuesta', 'Transposed brachiobasilic AVF'),
+    short: tr('Humerobasílica', 'Brachiobasilic'),
     difficulty: 3,
-    accessType: 'FAV humerobasílica transpuesta',
-    indication:
+    accessType: tr('FAV humerobasílica transpuesta', 'Transposed brachiobasilic AVF'),
+    indication: tr(
       'Vena transpuesta sobre la arteria humeral y el nervio mediano: una punción demasiado profunda puede alcanzarlos, y la ecografía controla la profundidad.',
-    description:
+      'Vein transposed over the brachial artery and median nerve: too deep a cannulation can reach them, and ultrasound keeps depth under control.',
+    ),
+    description: tr(
       'Vena basílica transpuesta a un túnel subcutáneo anteromedial del brazo. Es un acceso de alto flujo cuya vena discurre por encima de la arteria humeral y del nervio mediano. Una punción demasiado profunda o con demasiado ángulo puede atravesar la vena y alcanzar la arteria o el nervio.',
-    objectives: ['Identificar la arteria humeral y el nervio mediano profundos a la vena.', 'Mantener la punta visible y controlar la profundidad.', 'Evitar la transfixión de la pared posterior.'],
-    findings: ['Vena ≈ 6,8 mm a ≈ 3,5 mm de la piel.', 'Arteria humeral ≈ 8 mm más profunda y algo medial; nervio mediano adyacente.', 'Qa ≈ 1100 mL/min.'],
-    tips: ['Usa ángulos bajos (20–25°) y avance controlado.', 'En eje corto, localiza la arteria antes de puncionar: pulsátil y no compresible.'],
+      'Basilic vein transposed into an anteromedial subcutaneous tunnel in the upper arm. A high-flow access whose vein runs over the brachial artery and median nerve. Cannulating too deep or too steep can go through the vein and reach the artery or the nerve.',
+    ),
+    objectives: [
+      tr(
+        'Identificar la arteria humeral y el nervio mediano profundos a la vena.',
+        'Identify the brachial artery and median nerve deep to the vein.',
+      ),
+      tr('Mantener la punta visible y controlar la profundidad.', 'Keep the tip visible and control depth.'),
+      tr('Evitar la transfixión de la pared posterior.', 'Avoid back-wall transfixion.'),
+    ],
+    findings: [
+      tr('Vena ≈ 6,8 mm a ≈ 3,5 mm de la piel.', 'Vein ≈ 6.8 mm, ≈ 3.5 mm below the skin.'),
+      tr(
+        'Arteria humeral ≈ 8 mm más profunda y algo medial; nervio mediano adyacente.',
+        'Brachial artery ≈ 8 mm deeper and slightly medial; median nerve adjacent.',
+      ),
+      tr('Qa ≈ 1100 mL/min.', 'Qa ≈ 1100 mL/min.'),
+    ],
+    tips: [
+      tr('Usa ángulos bajos (20–25°) y avance controlado.', 'Use shallow angles (20–25°) and advance in a controlled way.'),
+      tr(
+        'En eje corto, localiza la arteria antes de puncionar: pulsátil y no compresible.',
+        'In short axis, locate the artery before cannulating: pulsatile and non-compressible.',
+      ),
+    ],
     armOpts: { fatAdd: 1.5 },
     hr: 74,
     build: (arm) => {
@@ -1023,8 +1232,8 @@ export const CASES: CaseDef[] = [
       defs.push(
         {
           id: 'a_humeral_distal',
-          name: 'Arteria humeral distal',
-          short: 'A. humeral',
+          name: tr('Arteria humeral distal', 'Distal brachial artery'),
+          short: tr('A. humeral', 'Brachial a.'),
           hideLabel: true,
           kind: 'artery',
           group: 'arteria',
@@ -1033,8 +1242,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'fav',
-          name: 'Vena basílica transpuesta (FAV)',
-          short: 'FAV (v. basílica)',
+          name: tr('Vena basílica transpuesta (FAV)', 'Transposed basilic vein (AVF)'),
+          short: tr('FAV (v. basílica)', 'AVF (basilic v.)'),
           kind: 'avf',
           group: 'fav',
           isAccess: true,
@@ -1054,8 +1263,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'v_basilica_ab',
-          name: 'Vena basílica del antebrazo',
-          short: 'V. basílica',
+          name: tr('Vena basílica del antebrazo', 'Forearm basilic vein'),
+          short: tr('V. basílica', 'Basilic v.'),
           kind: 'vein',
           group: 'vena',
           pts: BASILIC_PTS.filter((p) => p.x <= 285),
@@ -1070,17 +1279,41 @@ export const CASES: CaseDef[] = [
   },
   {
     id: 'ptfe_asa',
-    title: 'Prótesis de PTFE en asa (antebrazo)',
-    short: 'Prótesis PTFE',
+    title: tr('Prótesis de PTFE en asa (antebrazo)', 'PTFE loop graft (forearm)'),
+    short: tr('Prótesis PTFE', 'PTFE graft'),
     difficulty: 2,
-    accessType: 'Injerto protésico húmero-basílico en asa',
-    indication:
+    accessType: tr('Injerto protésico húmero-basílico en asa', 'Brachiobasilic loop AV graft'),
+    indication: tr(
       'Prótesis en asa: la ecografía distingue la rama arterial de la venosa y el sentido del flujo, y guía la punción a 45° sin compresor.',
-    description:
+      'Loop graft: ultrasound distinguishes the arterial limb from the venous limb and the flow direction, and guides cannulation at 45° without a tourniquet.',
+    ),
+    description: tr(
       'Prótesis de PTFE de 6 mm en asa en el antebrazo: rama arterial (desde la arteria humeral) y rama venosa (hacia la vena del codo). La pared protésica produce un doble contorno ecogénico. Se punciona a 45°, sin compresor, siguiendo la dirección del flujo en cada rama.',
-    objectives: ['Identificar la rama arterial y la venosa por la dirección del flujo en Doppler color.', 'Reconocer la pared protésica (doble línea).', 'Puncionar a ≈ 45° con rotación de sitios.'],
-    findings: ['Luz uniforme de ≈ 6 mm con doble pared ecogénica.', 'Estenosis leve en la anastomosis venosa (lugar típico de hiperplasia intimal).', 'Qa ≈ 1000 mL/min.'],
-    tips: ['La rama arterial (flujo hacia la mano) se punciona con la aguja arterial; la venosa, con la venosa hacia el corazón.', 'No usar compresor en prótesis.'],
+      '6 mm PTFE loop graft in the forearm: arterial limb (from the brachial artery) and venous limb (to the elbow vein). The graft wall produces an echogenic double contour. It is cannulated at 45°, without a tourniquet, following the flow direction in each limb.',
+    ),
+    objectives: [
+      tr(
+        'Identificar la rama arterial y la venosa por la dirección del flujo en Doppler color.',
+        'Identify the arterial and venous limbs by flow direction on color Doppler.',
+      ),
+      tr('Reconocer la pared protésica (doble línea).', 'Recognize the graft wall (double line).'),
+      tr('Puncionar a ≈ 45° con rotación de sitios.', 'Cannulate at ≈ 45° with site rotation.'),
+    ],
+    findings: [
+      tr('Luz uniforme de ≈ 6 mm con doble pared ecogénica.', 'Uniform ≈ 6 mm lumen with an echogenic double wall.'),
+      tr(
+        'Estenosis leve en la anastomosis venosa (lugar típico de hiperplasia intimal).',
+        'Mild stenosis at the venous anastomosis (typical site of intimal hyperplasia).',
+      ),
+      tr('Qa ≈ 1000 mL/min.', 'Qa ≈ 1000 mL/min.'),
+    ],
+    tips: [
+      tr(
+        'La rama arterial (flujo hacia la mano) se punciona con la aguja arterial; la venosa, con la venosa hacia el corazón.',
+        'Cannulate the arterial limb (flow toward the hand) with the arterial needle, and the venous limb with the venous needle pointing toward the heart.',
+      ),
+      tr('No usar compresor en prótesis.', 'Do not use a tourniquet on a graft.'),
+    ],
     armOpts: {},
     hr: 72,
     build: (arm) => {
@@ -1093,8 +1326,8 @@ export const CASES: CaseDef[] = [
       defs.push(
         {
           id: 'a_humeral_distal',
-          name: 'Arteria humeral distal',
-          short: 'A. humeral',
+          name: tr('Arteria humeral distal', 'Distal brachial artery'),
+          short: tr('A. humeral', 'Brachial a.'),
           hideLabel: true,
           kind: 'artery',
           group: 'arteria',
@@ -1103,8 +1336,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'fav',
-          name: 'Prótesis de PTFE',
-          short: 'Prótesis',
+          name: tr('Prótesis de PTFE', 'PTFE graft'),
+          short: tr('Prótesis', 'Graft'),
           kind: 'graft',
           group: 'fav',
           isAccess: true,
@@ -1128,8 +1361,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'v_salida',
-          name: 'Vena cefálica de salida',
-          short: 'V. de salida',
+          name: tr('Vena cefálica de salida', 'Cephalic outflow vein'),
+          short: tr('V. de salida', 'Outflow v.'),
           kind: 'avf',
           group: 'fav',
           pts: [
@@ -1147,8 +1380,8 @@ export const CASES: CaseDef[] = [
         },
         {
           id: 'v_cefalica_ab',
-          name: 'Vena cefálica del antebrazo',
-          short: 'V. cefálica',
+          name: tr('Vena cefálica del antebrazo', 'Forearm cephalic vein'),
+          short: tr('V. cefálica', 'Cephalic v.'),
           kind: 'vein',
           group: 'vena',
           pts: CEPHALIC_PTS.filter((p) => p.x <= 180),
@@ -1159,21 +1392,47 @@ export const CASES: CaseDef[] = [
     },
     access: { veinId: 'fav', anastomosisX: 251, zone: [110, 235], angle: 45, graft: true },
     probeStart: { x: 170, theta: 0, rot: 0 },
-    expected: { diameter: 6.0, depth: 3.2, qa: 1070, mature: true, note: 'Prótesis: 45°, sin compresor' },
+    expected: { diameter: 6.0, depth: 3.2, qa: 1070, mature: true, note: tr('Prótesis: 45°, sin compresor', 'Graft: 45°, no tourniquet') },
   },
   {
     id: 'rc_hematoma',
-    title: 'Hematoma tras punción fallida',
-    short: 'Hematoma',
+    title: tr('Hematoma tras punción fallida', 'Hematoma after failed cannulation'),
+    short: tr('Hematoma', 'Hematoma'),
     difficulty: 3,
-    accessType: 'FAV radiocefálica',
-    indication:
+    accessType: tr('FAV radiocefálica', 'Radiocephalic AVF'),
+    indication: tr(
       'Hematoma de una punción previa: la ecografía lo delimita y busca un segmento sano lejos de él.',
-    description:
+      'Hematoma from a previous cannulation: ultrasound maps its extent and finds a healthy segment away from it.',
+    ),
+    description: tr(
       'FAV radiocefálica madura con un hematoma perivascular de la sesión anterior (extravasación por punción transfixiante). El hematoma comprime parcialmente la vena y distorsiona la anatomía. Hay que reconocerlo y elegir un sitio de punción alejado.',
-    objectives: ['Identificar el hematoma (colección heterogénea, sin flujo Doppler).', 'Medir su extensión.', 'Elegir un sitio de punción sano, ≥ 2–3 cm alejado.'],
-    findings: ['Colección heterogénea de ≈ 20 × 10 mm en la pared lateral y profunda de la vena.', 'Compresión extrínseca de la vena (luz reducida ~20 %).'],
-    tips: ['El hematoma no tiene señal Doppler: diferéncialo de la luz venosa.', 'Evita puncionar a través del hematoma (riesgo de infección y nueva extravasación).'],
+      'Mature radiocephalic AVF with a perivascular hematoma from the previous session (extravasation after a back-wall puncture). The hematoma partly compresses the vein and distorts the anatomy. Recognize it and choose a cannulation site away from it.',
+    ),
+    objectives: [
+      tr(
+        'Identificar el hematoma (colección heterogénea, sin flujo Doppler).',
+        'Identify the hematoma (heterogeneous collection, no Doppler flow).',
+      ),
+      tr('Medir su extensión.', 'Measure its extent.'),
+      tr('Elegir un sitio de punción sano, ≥ 2–3 cm alejado.', 'Choose a healthy cannulation site ≥ 2–3 cm away.'),
+    ],
+    findings: [
+      tr(
+        'Colección heterogénea de ≈ 20 × 10 mm en la pared lateral y profunda de la vena.',
+        'Heterogeneous ≈ 20 × 10 mm collection along the lateral and deep wall of the vein.',
+      ),
+      tr('Compresión extrínseca de la vena (luz reducida ~20 %).', 'Extrinsic compression of the vein (lumen reduced by ~20%).'),
+    ],
+    tips: [
+      tr(
+        'El hematoma no tiene señal Doppler: diferéncialo de la luz venosa.',
+        'The hematoma has no Doppler signal: tell it apart from the venous lumen.',
+      ),
+      tr(
+        'Evita puncionar a través del hematoma (riesgo de infección y nueva extravasación).',
+        'Avoid cannulating through the hematoma (risk of infection and further extravasation).',
+      ),
+    ],
     armOpts: {},
     hr: 76,
     build: (arm) => {
@@ -1187,8 +1446,8 @@ export const CASES: CaseDef[] = [
       });
       defs.push({
         id: 'hematoma',
-        name: 'Hematoma perivascular',
-        short: 'Hematoma',
+        name: tr('Hematoma perivascular', 'Perivascular hematoma'),
+        short: tr('Hematoma', 'Hematoma'),
         kind: 'hematoma',
         group: 'hematoma',
         pts: [
@@ -1204,24 +1463,44 @@ export const CASES: CaseDef[] = [
       anastomosisX: 27,
       zone: [60, 230],
       angle: 25,
-      avoid: [{ x0: 108, x1: 145, reason: 'Hematoma perivascular' }],
+      avoid: [{ x0: 108, x1: 145, reason: tr('Hematoma perivascular', 'Perivascular hematoma') }],
     },
     probeStart: { x: 126, theta: 55, rot: 0 },
-    expected: { diameter: 6.4, depth: 3.0, qa: 830, mature: true, note: 'Evitar la zona del hematoma' },
+    expected: { diameter: 6.4, depth: 3.0, qa: 830, mature: true, note: tr('Evitar la zona del hematoma', 'Avoid the hematoma area') },
   },
   {
     id: 'rc_calcificada',
-    title: 'Paciente diabético · arterias calcificadas',
-    short: 'Arterias calcificadas',
+    title: tr('Paciente diabético · arterias calcificadas', 'Diabetic patient · calcified arteries'),
+    short: tr('Arterias calcificadas', 'Calcified arteries'),
     difficulty: 2,
-    accessType: 'FAV radiocefálica',
-    indication:
+    accessType: tr('FAV radiocefálica', 'Radiocephalic AVF'),
+    indication: tr(
       'Paciente diabético con arterias calcificadas y la vena algo más profunda: las sombras acústicas confunden, y la ecografía localiza la vena lejos de la arteria.',
-    description:
+      'Diabetic patient with calcified arteries and a slightly deeper vein: acoustic shadows are confusing, and ultrasound locates the vein away from the artery.',
+    ),
+    description: tr(
       'Paciente diabético con calcificación de la media (Mönckeberg) en las arterias del antebrazo y algo más de tejido subcutáneo. Las arterias muestran paredes muy ecogénicas con sombra acústica, que puede ocultar estructuras profundas. La vena de la FAV es algo más profunda.',
-    objectives: ['Reconocer la calcificación arterial y la sombra acústica.', 'Diferenciar la arteria de la vena de la FAV.', 'Puncionar una vena algo más profunda (≈ 5 mm).'],
-    findings: ['Paredes arteriales hiperecogénicas en "raíl" con sombra posterior.', 'Vena de ≈ 6 mm a ≈ 5 mm de profundidad.'],
-    tips: ['Cambia el ángulo de insonación para "mirar" detrás de la sombra.', 'El Doppler color ayuda a identificar la luz arterial calcificada.'],
+      'Diabetic patient with medial calcification (Mönckeberg) of the forearm arteries and somewhat more subcutaneous tissue. The arteries show highly echogenic walls with acoustic shadowing that can hide deeper structures. The AVF vein is slightly deeper.',
+    ),
+    objectives: [
+      tr('Reconocer la calcificación arterial y la sombra acústica.', 'Recognize arterial calcification and acoustic shadowing.'),
+      tr('Diferenciar la arteria de la vena de la FAV.', 'Tell the artery apart from the AVF vein.'),
+      tr('Puncionar una vena algo más profunda (≈ 5 mm).', 'Cannulate a slightly deeper vein (≈ 5 mm).'),
+    ],
+    findings: [
+      tr(
+        'Paredes arteriales hiperecogénicas en "raíl" con sombra posterior.',
+        'Hyperechoic "rail-track" arterial walls with posterior shadowing.',
+      ),
+      tr('Vena de ≈ 6 mm a ≈ 5 mm de profundidad.', 'Vein of ≈ 6 mm at ≈ 5 mm depth.'),
+    ],
+    tips: [
+      tr(
+        'Cambia el ángulo de insonación para "mirar" detrás de la sombra.',
+        'Change the angle of insonation to "look" behind the shadow.',
+      ),
+      tr('El Doppler color ayuda a identificar la luz arterial calcificada.', 'Color Doppler helps identify the calcified arterial lumen.'),
+    ],
     armOpts: { fatScale: 1.6, fatAdd: 1 },
     hr: 80,
     build: (arm) => radiocephalic(arm, { calc: 0.85, veinPts: rcAvfPts({ depth: 8.4, r: 3.0 }), qa: 700, radialQ: 620 }),

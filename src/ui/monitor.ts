@@ -5,8 +5,10 @@
 import type { WebGLRenderer } from 'three';
 import type { AnatomyModel } from '../anatomy/model';
 import { tissueName } from '../anatomy/tissues';
+import { tr } from '../i18n';
 import type { UltrasoundSim } from '../sim/UltrasoundSim';
 import { SPEC_BINS, SPEC_COLS, SpectralDoppler } from '../sim/spectral';
+import { presetLabel } from './console';
 import { elementRect, ImageView, Rect } from './imageView';
 import { Box, fitImage } from './layoutMath';
 
@@ -244,7 +246,7 @@ export class Monitor {
               const [px, py] = this.toPx(cu, cw);
               // sin texto si la etiqueta de la punta está al lado (evita solapes)
               const near = tmk && Math.hypot(tmk[0] - px, tmk[1] - py) < 40;
-              const txt = near ? '' : `<text x="${px + 12}" y="${py - 8}" class="guidetxt">cruce de la aguja con el plano</text>`;
+              const txt = near ? '' : `<text x="${px + 12}" y="${py - 8}" class="guidetxt">${tr('cruce de la aguja con el plano', 'needle crosses scan plane')}</text>`;
               parts.push(`<g><circle cx="${px}" cy="${py}" r="6" class="guidept"/><path d="M${px - 10} ${py} h6 M${px + 4} ${py} h6 M${px} ${py - 10} v6 M${px} ${py + 4} v6" class="guidept"/>${txt}</g>`);
             }
           }
@@ -257,7 +259,7 @@ export class Monitor {
     if (this.flags.aids && tm) {
       const [px, py] = this.toPx(tm.u, tm.w);
       if (px > x - 20 && px < x + w + 20 && py > y - 20 && py < y + h + 20) {
-        parts.push(`<g class="tipaid ${tm.visible ? 'vis' : 'hid'}"><circle cx="${px}" cy="${py}" r="7"/><text x="${px + 10}" y="${py + 14}">${tm.visible ? 'punta' : tm.inPlane ? 'punta fuera del haz' : 'punta (fuera del corte)'}</text></g>`);
+        parts.push(`<g class="tipaid ${tm.visible ? 'vis' : 'hid'}"><circle cx="${px}" cy="${py}" r="7"/><text x="${px + 10}" y="${py + 14}">${tm.visible ? tr('punta', 'tip') : tm.inPlane ? tr('punta fuera del haz', 'tip outside beam') : tr('punta (fuera del corte)', 'tip (off scan plane)')}</text></g>`);
       }
     }
     // calibradores
@@ -280,7 +282,7 @@ export class Monitor {
       const d = Math.hypot(this.hover.u - c.a.u, this.hover.w - c.a.w);
       parts.push(`<g class="cal"><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" class="dash"/><text x="${b[0] + 8}" y="${b[1] - 6}">${d.toFixed(1)} mm</text></g>`);
     }
-    if (s.frozen) parts.push(`<text x="${x + w / 2}" y="${y + 18}" class="frozen" text-anchor="middle">❄ CONGELADO</text>`);
+    if (s.frozen) parts.push(`<text x="${x + w / 2}" y="${y + 18}" class="frozen" text-anchor="middle">${tr('❄ CONGELADO', '❄ FROZEN')}</text>`);
     this.svg.innerHTML = parts.join('');
     // resultados de calibradores en la esquina
     this.updateParams();
@@ -291,7 +293,7 @@ export class Monitor {
     const s = this.sim.settings;
     if (this.compact) {
       // una línea: preajuste, frecuencia, ganancia, profundidad, Doppler y medidas
-      const items = [`<b>${s.preset}</b>`, `${s.freq.toFixed(0)} MHz`, `G ${(55 + s.gain).toFixed(0)}`, `${(s.depth / 10).toFixed(1)} cm`];
+      const items = [`<b>${presetLabel(s.preset)}</b>`, `${s.freq.toFixed(0)} MHz`, `G ${(55 + s.gain).toFixed(0)}`, `${(s.depth / 10).toFixed(1)} cm`];
       if (s.mode !== 'B') items.push(`<span class="pt">${s.mode === 'color' ? 'Color' : 'Power'}</span> ±${s.scale.toFixed(0)}`);
       if (s.pw) items.push(`<span class="pt">PW</span> ${s.pwGate.size.toFixed(1)} mm · ${this.spectral.angleCorr.toFixed(0)}°`);
       this.calipers.forEach((c, i) => {
@@ -303,24 +305,24 @@ export class Monitor {
     const fr = Math.round(Math.min(60, 1540000 / (2 * s.depth * 256) / (s.focusZones === 2 ? 2 : 1) / (s.mode === 'B' ? 1 : 3.2)));
     const mi = (0.62 + 0.25 * (s.focusZones - 1)) * Math.sqrt(12 / s.freq) * 1.1;
     const rows: string[] = [];
-    rows.push(`<div class="pgrp"><b>${s.preset}</b></div>`);
+    rows.push(`<div class="pgrp"><b>${presetLabel(s.preset)}</b></div>`);
     rows.push(`<div>MI ${mi.toFixed(1)}</div><div>TIS 0.${s.mode === 'B' ? 1 : 3}</div>`);
     rows.push(`<div class="sep"></div><div class="pt">2D</div>`);
-    rows.push(`<div>Frec ${s.freq.toFixed(0)} MHz</div><div>Gan ${(55 + s.gain).toFixed(0)}</div><div>RD ${s.dr}</div><div>Prof ${(s.depth / 10).toFixed(1)} cm</div><div>FR ${fr} Hz</div>`);
+    rows.push(`<div>${tr('Frec', 'Freq')} ${s.freq.toFixed(0)} MHz</div><div>${tr('Gan', 'Gain')} ${(55 + s.gain).toFixed(0)}</div><div>${tr('RD', 'DR')} ${s.dr}</div><div>${tr('Prof', 'Depth')} ${(s.depth / 10).toFixed(1)} cm</div><div>FR ${fr} Hz</div>`);
     if (s.persistence > 0) rows.push(`<div>Pers ${Math.round(s.persistence * 10)}</div>`);
     if (s.mode !== 'B') {
       const prf = (4 * s.dopplerFreq * 1e6 * (s.scale / 100)) / 1540 / 1000;
       rows.push(`<div class="sep"></div><div class="pt">${s.mode === 'color' ? 'Color' : 'Power'}</div>`);
-      rows.push(`<div>Frec ${s.dopplerFreq.toFixed(1)} MHz</div><div>PRF ${prf.toFixed(1)} kHz</div><div>FP ${s.wallFilter} cm/s</div><div>Gan ${Math.round(s.colorGain * 100)}</div><div>Áng ${s.steer > 0 ? '+' : ''}${s.steer}°</div>`);
+      rows.push(`<div>${tr('Frec', 'Freq')} ${s.dopplerFreq.toFixed(1)} MHz</div><div>PRF ${prf.toFixed(1)} kHz</div><div>${tr('FP', 'WF')} ${s.wallFilter} cm/s</div><div>${tr('Gan', 'Gain')} ${Math.round(s.colorGain * 100)}</div><div>${tr('Áng', 'Steer')} ${s.steer > 0 ? '+' : ''}${s.steer}°</div>`);
     }
     if (s.pw) {
-      rows.push(`<div class="sep"></div><div class="pt">PW</div><div>VM ${s.pwGate.size.toFixed(1)} mm</div><div>Corr ${this.spectral.angleCorr.toFixed(0)}°</div><div>Prof ${(s.pwGate.w / 10).toFixed(1)} cm</div>`);
+      rows.push(`<div class="sep"></div><div class="pt">PW</div><div>${tr('VM', 'SV')} ${s.pwGate.size.toFixed(1)} mm</div><div>Corr ${this.spectral.angleCorr.toFixed(0)}°</div><div>${tr('Prof', 'Depth')} ${(s.pwGate.w / 10).toFixed(1)} cm</div>`);
     }
     const res: string[] = [];
     this.calipers.forEach((c, i) => {
       if (c.b) res.push(`<div>${i + 1}  ${c.label}</div>`);
     });
-    if (res.length) rows.push(`<div class="sep"></div><div class="pt">Medidas</div>${res.join('')}`);
+    if (res.length) rows.push(`<div class="sep"></div><div class="pt">${tr('Medidas', 'Calipers')}</div>${res.join('')}`);
     this.params.innerHTML = rows.join('');
   }
 
@@ -330,11 +332,12 @@ export class Monitor {
       this.readout.textContent = this.flags.hint;
       return;
     }
-    let txt = `Profundidad ${hv.w.toFixed(1)} mm · lateral ${hv.u.toFixed(1)} mm`;
+    let txt = `${tr('Profundidad', 'Depth')} ${hv.w.toFixed(1)} mm · lateral ${hv.u.toFixed(1)} mm`;
     if (this.flags.aids) {
       const p = this.sim.imageToTissue(hv.u, hv.w);
       const q = this.getModel().query(p);
-      const name = q.struct ? (q.inLumen ? `luz de ${q.struct.def.name}` : q.inWall ? `pared de ${q.struct.def.name}` : q.inThrombus ? `trombo en ${q.struct.def.name}` : q.struct.def.name) : tissueName(layerTissue(q.layer));
+      const sn = q.struct?.def.name ?? '';
+      const name = q.struct ? (q.inLumen ? tr(`luz de ${sn}`, `${sn} lumen`) : q.inWall ? tr(`pared de ${sn}`, `${sn} wall`) : q.inThrombus ? tr(`trombo en ${sn}`, `thrombus in ${sn}`) : q.struct.def.name) : tissueName(layerTissue(q.layer));
       txt += ` · ${name}`;
       this.sim.highlight = q.struct ? q.struct.index : -1;
     } else this.sim.highlight = -1;

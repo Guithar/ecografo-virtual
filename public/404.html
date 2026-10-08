@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Página no encontrada · Fistulab</title>
+    <title>Página no encontrada · Page not found · Fistulab</title>
     <meta name="robots" content="noindex" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
@@ -52,6 +52,18 @@
       svg {
         justify-self: center;
       }
+      /* versión inglesa, debajo de la española */
+      .en {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+        padding-top: 22px;
+        border-top: 1px solid #243240;
+      }
+      h2 {
+        margin: 0;
+        font-size: 21px;
+      }
     </style>
   </head>
   <body>
@@ -72,6 +84,11 @@
       <h1>Esta página no existe</h1>
       <p>La punta no está en la luz: la dirección que has abierto no corresponde a ninguna página de Fistulab.</p>
       <a class="btn" href="https://fistulab.com/">Abrir el simulador</a>
+      <div lang="en" class="en">
+        <h2>This page doesn’t exist</h2>
+        <p>The tip is not in the lumen: the address you opened doesn’t match any Fistulab page.</p>
+        <a class="btn" href="https://fistulab.com/en/" hreflang="en">Open the simulator</a>
+      </div>
     </main>
   </body>
 </html>

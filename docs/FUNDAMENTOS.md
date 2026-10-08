@@ -1,3 +1,5 @@
+🇬🇧 [English version](en/FUNDAMENTALS.md)
+
 # Fundamentos médicos y físicos de Fistulab
 
 Este documento recoge los parámetros clínicos y físicos que usa el simulador y de dónde salen.

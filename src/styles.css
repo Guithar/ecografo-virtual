@@ -154,6 +154,17 @@ select {
   gap: 10px;
 }
 
+/* el nombre y el lema forman el encabezado principal de la página (h1) */
+.brand h1 {
+  margin: 0;
+  font: inherit;
+}
+
+.brand .title,
+.brand .subtitle {
+  display: block;
+}
+
 .brand .title {
   font-weight: 700;
   font-size: 16px;
@@ -1269,6 +1280,48 @@ a.kofi:focus-visible {
   outline-offset: 1px;
 }
 
+/* enlace a la otra versión del sitio (ES/EN): con el aspecto de los botones de la barra */
+a.lang-link {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel2);
+  color: var(--text);
+  font: 600 12px var(--mono);
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+a.lang-link:hover {
+  border-color: var(--accent);
+}
+
+a.lang-link:focus-visible {
+  outline: 2px solid var(--accent2);
+  outline-offset: 1px;
+}
+
+/* sugerencia de la otra versión (primera visita con el navegador en otro idioma) */
+.toast.lang-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.toast.lang-hint a {
+  color: var(--accent2);
+  font-weight: 600;
+}
+
+.toast.lang-hint button {
+  padding: 0 6px;
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+
 .noscript {
   position: fixed;
   inset: auto 16px 16px;
@@ -1315,6 +1368,20 @@ kbd {
 #loading.done {
   opacity: 0;
   pointer-events: none;
+}
+
+/* presentación del simulador: se lee mientras carga y queda a la vista si el navegador no tiene WebGL2 */
+#loading .intro {
+  max-width: 36em;
+  margin: 0;
+  padding-inline: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+#loading .intro a {
+  color: var(--accent2);
 }
 
 .spinner {

@@ -16,6 +16,7 @@ import { Quaternion, Vector3 } from 'three';
 import type { SceneManager } from '../scene/SceneManager';
 import { armPositionOk } from './checklist';
 import type { UltrasoundSim } from '../sim/UltrasoundSim';
+import { tr } from '../i18n';
 
 export type Level = 'good' | 'fair' | 'bad' | 'info';
 
@@ -47,31 +48,56 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
   const hm = new Vector3(gm.x, 0, gm.z).normalize();
   const az = deg(Math.acos(Math.max(-1, Math.min(1, hs.dot(hm)))));
   items.push({
-    label: 'Alineación mirada: punción ↔ pantalla (horizontal)',
+    label: tr('Alineación mirada: punción ↔ pantalla (horizontal)', 'Gaze alignment: site ↔ screen (horizontal)'),
     level: az < 20 ? 'good' : az < 40 ? 'fair' : 'bad',
     value: `${az.toFixed(0)}°`,
-    advice: az < 20 ? 'La pantalla está en línea con el sitio de punción.' : 'Coloca el ecógrafo al otro lado del brazo, detrás del sitio de punción, para no girar la cabeza.',
+    advice:
+      az < 20
+        ? tr('La pantalla está en línea con el sitio de punción.', 'The screen is in line with the cannulation site.')
+        : tr(
+            'Coloca el ecógrafo al otro lado del brazo, detrás del sitio de punción, para no girar la cabeza.',
+            'Place the scanner on the far side of the arm, behind the cannulation site, so you do not have to turn your head.',
+          ),
   });
   const tot = deg(gs.angleTo(gm));
   items.push({
-    label: 'Desplazamiento total de la mirada',
+    label: tr('Desplazamiento total de la mirada', 'Total gaze shift'),
     level: tot < 45 ? 'good' : tot < 70 ? 'fair' : 'bad',
     value: `${tot.toFixed(0)}°`,
-    advice: tot < 45 ? 'Basta con mover los ojos (sin girar la cabeza).' : 'Acerca la pantalla a la línea visual y bájala hacia el campo de trabajo (menos giro de cuello).',
+    advice:
+      tot < 45
+        ? tr('Basta con mover los ojos (sin girar la cabeza).', 'Moving your eyes is enough (no head turning).')
+        : tr(
+            'Acerca la pantalla a la línea visual y bájala hacia el campo de trabajo (menos giro de cuello).',
+            'Bring the screen closer to your line of sight and lower it toward the work field (less neck rotation).',
+          ),
   });
   const dist = gm.length();
   items.push({
-    label: 'Distancia a la pantalla',
+    label: tr('Distancia a la pantalla', 'Distance to the screen'),
     level: dist >= 0.5 && dist <= 1.05 ? 'good' : dist >= 0.35 && dist <= 1.5 ? 'fair' : 'bad',
     value: `${(dist * 100).toFixed(0)} cm`,
-    advice: dist > 1.05 ? 'Acerca el ecógrafo: a más de 1 m se pierden detalles finos.' : dist < 0.5 ? 'Aleja algo la pantalla.' : 'Distancia de lectura adecuada.',
+    advice:
+      dist > 1.05
+        ? tr('Acerca el ecógrafo: a más de 1 m se pierden detalles finos.', 'Move the scanner closer: beyond 1 m, fine detail is lost.')
+        : dist < 0.5
+          ? tr('Aleja algo la pantalla.', 'Move the screen a little farther away.')
+          : tr('Distancia de lectura adecuada.', 'Appropriate reading distance.'),
   });
   const vert = deg(Math.atan2(gm.y, Math.hypot(gm.x, gm.z)));
   items.push({
-    label: 'Altura de la pantalla (ángulo respecto a los ojos)',
+    label: tr('Altura de la pantalla (ángulo respecto a los ojos)', 'Screen height (angle relative to the eyes)'),
     level: vert <= 5 && vert >= -35 ? 'good' : vert <= 15 && vert >= -50 ? 'fair' : 'bad',
     value: `${vert > 0 ? '+' : ''}${vert.toFixed(0)}°`,
-    advice: vert > 5 ? 'La pantalla está por encima de los ojos: baja el monitor.' : vert < -35 ? 'La pantalla está demasiado baja: súbela.' : 'Altura cómoda (a la altura de los ojos o algo por debajo, hacia el campo de trabajo).',
+    advice:
+      vert > 5
+        ? tr('La pantalla está por encima de los ojos: baja el monitor.', 'The screen is above eye level: lower the monitor.')
+        : vert < -35
+          ? tr('La pantalla está demasiado baja: súbela.', 'The screen is too low: raise it.')
+          : tr(
+              'Altura cómoda (a la altura de los ojos o algo por debajo, hacia el campo de trabajo).',
+              'Comfortable height (at or slightly below eye level, toward the work field).',
+            ),
   });
   // orientación del monitor hacia el operador
   const head = sm.room.cart.monitor;
@@ -79,19 +105,25 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
   const toEye = eye.clone().sub(screen).normalize();
   const face = deg(Math.acos(Math.max(-1, Math.min(1, n.dot(toEye)))));
   items.push({
-    label: 'Orientación del monitor hacia el operador',
+    label: tr('Orientación del monitor hacia el operador', 'Monitor facing the operator'),
     level: face < 25 ? 'good' : face < 45 ? 'fair' : 'bad',
     value: `${face.toFixed(0)}°`,
-    advice: face < 25 ? 'La pantalla mira al operador.' : 'Gira el monitor hacia ti para evitar reflejos y distorsión.',
+    advice:
+      face < 25
+        ? tr('La pantalla mira al operador.', 'The screen faces the operator.')
+        : tr('Gira el monitor hacia ti para evitar reflejos y distorsión.', 'Turn the monitor toward you to avoid glare and distortion.'),
   });
   // alcance
   const shoulder = eye.clone().add(new Vector3(0, -0.2, 0));
   const reach = new Vector3(site.x - shoulder.x, 0, site.z - shoulder.z).length();
   items.push({
-    label: 'Alcance al sitio de punción',
+    label: tr('Alcance al sitio de punción', 'Reach to the cannulation site'),
     level: reach < 0.5 ? 'good' : reach < 0.65 ? 'fair' : 'bad',
     value: `${(reach * 100).toFixed(0)} cm`,
-    advice: reach < 0.5 ? 'Brazos cerca del cuerpo, codos apoyables.' : 'Acércate: evita la abducción y extensión mantenidas del hombro.',
+    advice:
+      reach < 0.5
+        ? tr('Brazos cerca del cuerpo, codos apoyables.', 'Arms close to the body, elbows can be supported.')
+        : tr('Acércate: evita la abducción y extensión mantenidas del hombro.', 'Move closer: avoid sustained shoulder abduction and extension.'),
   });
   // congruencia de la orientación de la sonda
   const Lw = sm.dirArmToWorld(sim.pose.L);
@@ -101,14 +133,24 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
   if (sim.settings.flipLR) c = -c;
   const trans = Math.abs(Lw.dot(right)) > 0.5;
   items.push({
-    label: 'Orientación sonda ↔ pantalla',
+    label: tr('Orientación sonda ↔ pantalla', 'Probe ↔ screen orientation'),
     level: !trans ? 'info' : c > 0.5 ? 'good' : 'bad',
-    value: !trans ? 'sonda alineada con la mirada' : c > 0.5 ? 'marcador a tu izquierda' : 'imagen invertida',
-    advice: !trans
-      ? 'En eje largo, orienta el marcador hacia el lado por el que entra la aguja para verla aparecer por ese lado de la pantalla.'
+    value: !trans
+      ? tr('sonda alineada con la mirada', 'probe aligned with your gaze')
       : c > 0.5
-        ? 'Lo que está a tu izquierda aparece a la izquierda de la pantalla.'
-        : 'El marcador está a tu derecha: los movimientos se verán invertidos. Gira la sonda 180° o usa "Invertir I/D".',
+        ? tr('marcador a tu izquierda', 'marker on your left')
+        : tr('imagen invertida', 'image reversed'),
+    advice: !trans
+      ? tr(
+          'En eje largo, orienta el marcador hacia el lado por el que entra la aguja para verla aparecer por ese lado de la pantalla.',
+          'In long axis, point the marker toward the side the needle enters from, so the needle appears on that side of the screen.',
+        )
+      : c > 0.5
+        ? tr('Lo que está a tu izquierda aparece a la izquierda de la pantalla.', 'What is on your left appears on the left of the screen.')
+        : tr(
+            'El marcador está a tu derecha: los movimientos se verán invertidos. Gira la sonda 180° o usa "Invertir I/D".',
+            'The marker is on your right: movements will appear reversed. Rotate the probe 180° or use “Flip L/R”.',
+          ),
   });
   // brazo apoyado en una superficie dura y plana, a unos 45° del cuerpo (Nefrología al día)
   const roll = sm.cfg.armRoll;
@@ -117,22 +159,36 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
   const armOk = armPositionOk(armAngle, pitch);
   const armNear = armAngle >= 20 && armAngle <= 70 && pitch <= 35;
   items.push({
-    label: 'Brazo del paciente (≈ 45° del cuerpo, apoyado)',
+    label: tr('Brazo del paciente (≈ 45° del cuerpo, apoyado)', "Patient's arm (≈ 45° from the body, supported)"),
     level: armOk && Math.abs(roll) < 25 ? 'good' : armNear ? 'fair' : 'bad',
-    value: `${armAngle.toFixed(0)}° con el cuerpo, ${pitch.toFixed(0)}° desc., ${roll.toFixed(0)}° rot.`,
+    value: tr(
+      `${armAngle.toFixed(0)}° con el cuerpo, ${pitch.toFixed(0)}° desc., ${roll.toFixed(0)}° rot.`,
+      `${armAngle.toFixed(0)}° from the body, ${pitch.toFixed(0)}° down, ${roll.toFixed(0)}° rot.`,
+    ),
     advice: armOk
-      ? 'Brazo apoyado en una superficie firme y plana, a unos 45° del cuerpo, extendido y relajado.'
+      ? tr(
+          'Brazo apoyado en una superficie firme y plana, a unos 45° del cuerpo, extendido y relajado.',
+          'Arm supported on a firm, flat surface, about 45° from the body, extended and relaxed.',
+        )
       : armAngle > 60
-        ? 'Separa el brazo del cuerpo hasta unos 45°, apoyado en una superficie firme y plana.'
+        ? tr(
+            'Separa el brazo del cuerpo hasta unos 45°, apoyado en una superficie firme y plana.',
+            'Move the arm away from the body to about 45°, supported on a firm, flat surface.',
+          )
         : armAngle < 30
-          ? 'Acerca el brazo al cuerpo hasta unos 45°: en cruz el hombro se cansa y la zona queda lejos.'
-          : 'Apoya el brazo en una superficie firme y plana, sin que cuelgue.',
+          ? tr(
+              'Acerca el brazo al cuerpo hasta unos 45°: en cruz el hombro se cansa y la zona queda lejos.',
+              'Bring the arm closer to the body, to about 45°: fully abducted, the shoulder tires and the site is hard to reach.',
+            )
+          : tr('Apoya el brazo en una superficie firme y plana, sin que cuelgue.', 'Rest the arm on a firm, flat surface so that it does not hang.'),
   });
   items.push({
-    label: 'Postura del operador',
+    label: tr('Postura del operador', 'Operator posture'),
     level: sm.cfg.operator.seated ? 'good' : 'fair',
-    value: sm.cfg.operator.seated ? 'sentado' : 'de pie',
-    advice: sm.cfg.operator.seated ? 'Sentado con la espalda recta y los pies apoyados.' : 'Para procedimientos prolongados es preferible sentarse a la altura adecuada.',
+    value: sm.cfg.operator.seated ? tr('sentado', 'seated') : tr('de pie', 'standing'),
+    advice: sm.cfg.operator.seated
+      ? tr('Sentado con la espalda recta y los pies apoyados.', 'Seated with a straight back and feet supported.')
+      : tr('Para procedimientos prolongados es preferible sentarse a la altura adecuada.', 'For long procedures, sitting at the right height is preferable.'),
   });
   const scored = items.filter((i) => i.level !== 'info');
   const score = Math.round((100 * scored.reduce((a, i) => a + (i.level === 'good' ? 1 : i.level === 'fair' ? 0.5 : 0), 0)) / Math.max(1, scored.length));

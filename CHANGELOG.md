@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Versión en inglés** en <https://fistulab.com/en/>: interfaz, casos, lecciones, ayuda, informe y versión móvil, con el botón *EN*/*ES* en la barra superior (en el móvil, en «Más») que conserva el caso y el modo. La primera vez se sugiere la otra versión si el navegador está en otro idioma. Documentación en inglés: `README.en.md` y `docs/en/`.
+- **Buscadores**: título y descripción por idioma, enlaces `hreflang`, encabezado principal, presentación legible mientras carga (o sin WebGL2), datos estructurados ampliados, imagen para redes en inglés, sitemap con las dos versiones y página 404 bilingüe.
 - **Versión móvil**: interfaz táctil automática en móviles, tabletas en vertical y ventanas pequeñas (`?movil=1` / `?movil=0`).
   - En vertical, el monitor ocupa casi toda la pantalla y el brazo 3D va en una miniatura; en horizontal, el monitor en el centro y el 3D con los controles a la derecha.
   - Un dedo sobre el brazo lleva la sonda a ese punto y dos dedos mueven la cámara; una sola **rueda de ajuste** controla las maniobras, la imagen y la aguja.

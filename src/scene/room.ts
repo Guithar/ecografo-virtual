@@ -30,6 +30,7 @@ import {
 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { sdCapsule, sdEllipsoid, smin, surfaceNets } from './surfaceNets';
+import { tr } from '../i18n';
 
 export const SKIN_TONES: Record<string, string> = {
   I: '#f3d6c4',
@@ -631,10 +632,10 @@ function dialysisMachine() {
         c.fillRect(0, 0, 340, 260);
         c.fillStyle = '#7fe0ff';
         c.font = 'bold 22px sans-serif';
-        c.fillText('HD  en espera', 18, 36);
+        c.fillText(tr('HD  en espera', 'HD  standby'), 18, 36);
         c.font = '16px sans-serif';
         c.fillStyle = '#c5e8f5';
-        const rows = ['Qb      0 mL/min', 'PA        --- mmHg', 'PV        --- mmHg', 'PTM     --- mmHg', 'UF        0.00 L'];
+        const rows = ['Qb      0 mL/min', tr('PA        --- mmHg', 'AP        --- mmHg'), tr('PV        --- mmHg', 'VP        --- mmHg'), tr('PTM     --- mmHg', 'TMP     --- mmHg'), 'UF        0.00 L'];
         rows.forEach((r, i) => c.fillText(r, 18, 74 + i * 30));
       }),
       toneMapped: false,

@@ -13,9 +13,31 @@ import { Vector3 } from 'three';
 import type { AnatomyModel, QueryResult, Structure } from '../anatomy/model';
 import type { ArmShape } from '../anatomy/armShape';
 import { GAUGES } from '../scene/instruments';
+import { LANG, tr } from '../i18n';
 
 export type NeedleRole = 'arterial' | 'venosa';
 export type NeedleStateName = 'fuera' | 'piel' | 'tejido' | 'tienda' | 'luz' | 'pared-post' | 'transfixión' | 'hueso';
+
+/** Nombre de la aguja para mostrar («arterial», «venosa» / «arterial», «venous»). */
+export function roleLabel(role: NeedleRole): string {
+  return LANG === 'en' ? (role === 'arterial' ? 'arterial' : 'venous') : role;
+}
+
+const STATE_EN: Record<NeedleStateName, string> = {
+  fuera: 'outside',
+  piel: 'skin',
+  tejido: 'tissue',
+  tienda: 'tenting',
+  luz: 'lumen',
+  'pared-post': 'back wall',
+  transfixión: 'transfixion',
+  hueso: 'bone',
+};
+
+/** Estado de la punta para mostrar (los valores de `NeedleStateName` son identificadores internos). */
+export function stateLabel(state: NeedleStateName): string {
+  return LANG === 'en' ? STATE_EN[state] : state;
+}
 
 export interface NeedleEvent {
   t: number;
@@ -189,7 +211,7 @@ export class Needle {
       if (this.redirAcc > 4) {
         this.redirections++;
         this.redirAcc = 0;
-        this.emit(t, 'redirect', 'Redirección de la aguja dentro del tejido', 'warn');
+        this.emit(t, 'redirect', tr('Redirección de la aguja dentro del tejido', 'Needle redirected within the tissue'), 'warn');
       }
     }
     const withdrawing = d1 < d0 - 1e-6;
@@ -237,7 +259,7 @@ export class Needle {
     this.lastQ = q;
     const prevState = this.state;
     if (d <= 0) {
-      if (prevState !== 'fuera') this.emit(t, 'withdraw', 'Aguja retirada de la piel', 'info');
+      if (prevState !== 'fuera') this.emit(t, 'withdraw', tr('Aguja retirada de la piel', 'Needle withdrawn from the skin'), 'info');
       this.state = 'fuera';
       this.inVessel = null;
       this.tentAmount = 0;
@@ -248,14 +270,21 @@ export class Needle {
     if (prevState === 'fuera') {
       this.state = 'piel';
       this.skinTime = t;
-      this.emit(t, 'skin', 'Punción cutánea', 'info');
+      this.emit(t, 'skin', tr('Punción cutánea', 'Skin puncture'), 'info');
     }
     const sid = q.struct?.def.id ?? null;
     const changed = sid !== this.lastStructId;
     this.lastStructId = sid;
     // hueso: tope
     if (q.struct && q.struct.code === 12) {
-      if (!this.boneHit) this.emit(t, 'bone', `Contacto óseo (${q.struct.def.name}): la aguja no avanza`, 'error', q.struct.def.id);
+      if (!this.boneHit)
+        this.emit(
+          t,
+          'bone',
+          tr(`Contacto óseo (${q.struct.def.name}): la aguja no avanza`, `Bone contact (${q.struct.def.name}): the needle cannot advance`),
+          'error',
+          q.struct.def.id,
+        );
       this.boneHit = true;
       this.state = 'hueso';
       this.tentAmount = 0;
@@ -266,11 +295,23 @@ export class Needle {
     if (prevState === 'hueso') this.state = 'tejido';
     // nervio
     if (q.struct && q.struct.code === 10 && !this.nerveHit) {
-      this.emit(t, 'nerve', `¡Contacto con ${q.struct.def.name}! El paciente refiere parestesia/dolor`, 'error', q.struct.def.id);
+      this.emit(
+        t,
+        'nerve',
+        tr(`¡Contacto con ${q.struct.def.name}! El paciente refiere parestesia/dolor`, `Contact with ${q.struct.def.name}! The patient reports paresthesia/pain`),
+        'error',
+        q.struct.def.id,
+      );
       this.nerveHit = true;
     }
     if (q.struct && q.struct.code === 11 && advancing && changed) {
-      this.emit(t, 'tendon', `La aguja atraviesa el ${q.struct.def.name.toLowerCase()}`, 'warn', q.struct.def.id);
+      this.emit(
+        t,
+        'tendon',
+        tr(`La aguja atraviesa el ${q.struct.def.name.toLowerCase()}`, `The needle passes through the ${q.struct.def.name.toLowerCase()}`),
+        'warn',
+        q.struct.def.id,
+      );
     }
 
     // interacción con vasos
@@ -296,26 +337,32 @@ export class Needle {
       this.tentStruct = null;
       this.punctures.push({ st: s, p: this.contact.clone(), back: this.tentBack, t });
       if (!this.tentBack) {
-        this.emit(t, 'pop', `Pérdida de resistencia: pared anterior de ${s.def.name} atravesada`, 'info', s.def.id);
+        this.emit(t, 'pop', tr(`Pérdida de resistencia: pared anterior de ${s.def.name} atravesada`, `Loss of resistance: anterior wall of ${s.def.name} punctured`), 'info', s.def.id);
         const q2 = model.query(this.tip);
         if (q2.struct === s && q2.inLumen) {
           this.enterLumen(t, s, access);
         } else if (q2.struct === s && q2.inThrombus) {
           this.state = 'tejido';
-          this.emit(t, 'thrombus', 'La punta está dentro de un trombo: no hay reflujo', 'warn', s.def.id);
+          this.emit(t, 'thrombus', tr('La punta está dentro de un trombo: no hay reflujo', 'The tip is inside a thrombus: no flashback'), 'warn', s.def.id);
         } else if (this.crossedLumen(model, s)) {
           this.state = 'transfixión';
           this.transfixed = true;
-          this.emit(t, 'transfix', `Vaso atravesado de lado a lado (${s.def.name}): riesgo de hematoma`, 'error', s.def.id);
+          this.emit(t, 'transfix', tr(`Vaso atravesado de lado a lado (${s.def.name}): riesgo de hematoma`, `Vessel transfixed (${s.def.name}): risk of hematoma`), 'error', s.def.id);
         } else {
           this.state = 'tejido';
-          this.emit(t, 'exit', `Punción tangencial: la aguja ha resbalado por la pared de ${s.def.name}`, 'warn', s.def.id);
+          this.emit(
+            t,
+            'exit',
+            tr(`Punción tangencial: la aguja ha resbalado por la pared de ${s.def.name}`, `Tangential puncture: the needle slid along the wall of ${s.def.name}`),
+            'warn',
+            s.def.id,
+          );
         }
       } else {
         this.state = 'transfixión';
         this.transfixed = true;
         this.inVessel = null;
-        this.emit(t, 'transfix', `Perforación de la pared posterior (${s.def.name}): extravasación`, 'error', s.def.id);
+        this.emit(t, 'transfix', tr(`Perforación de la pared posterior (${s.def.name}): extravasación`, `Back wall perforated (${s.def.name}): extravasation`), 'error', s.def.id);
       }
       return null;
     }
@@ -336,12 +383,18 @@ export class Needle {
         this.tentAmount = 0;
         this.contact.copy(this.tip);
         this.backContacts++;
-        this.emit(t, 'backwall', 'La punta contacta con la pared del vaso: detener, bajar el ángulo y alinear', 'warn', v.def.id);
+        this.emit(
+          t,
+          'backwall',
+          tr('La punta contacta con la pared del vaso: detener, bajar el ángulo y alinear', 'The tip is touching the vessel wall: stop, lower the angle and align'),
+          'warn',
+          v.def.id,
+        );
         return null;
       }
       this.state = 'tejido';
       this.inVessel = null;
-      this.emit(t, 'exit', 'La punta ha salido de la luz del vaso', 'warn', v.def.id);
+      this.emit(t, 'exit', tr('La punta ha salido de la luz del vaso', 'The tip has left the vessel lumen'), 'warn', v.def.id);
       return null;
     }
     if (this.state === 'transfixión') {
@@ -393,7 +446,7 @@ export class Needle {
     this.tentStruct = st;
     this.tentStart = d;
     this.tentAmount = 0;
-    this.emit(t, 'tent', `La punta indenta la pared de ${st.def.name} (signo de la tienda)`, 'info', st.def.id);
+    this.emit(t, 'tent', tr(`La punta indenta la pared de ${st.def.name} (signo de la tienda)`, `The tip is indenting the wall of ${st.def.name} (tenting)`), 'info', st.def.id);
   }
 
   private enterLumen(t: number, st: Structure, access: Set<string>, silent = false) {
@@ -402,11 +455,18 @@ export class Needle {
     // el giro acumulado en el tejido no se suma a los que se hagan tras salir de la luz
     this.redirAcc = 0;
     if (st.def.kind === 'artery' && !access.has(st.def.id)) {
-      if (!this.arteryHit) this.emit(t, 'artery', `¡Punción arterial! (${st.def.name}) — reflujo rojo brillante y pulsátil`, 'error', st.def.id);
+      if (!this.arteryHit)
+        this.emit(
+          t,
+          'artery',
+          tr(`¡Punción arterial! (${st.def.name}) — reflujo rojo brillante y pulsátil`, `Arterial puncture! (${st.def.name}) — bright red, pulsatile flashback`),
+          'error',
+          st.def.id,
+        );
       this.arteryHit = true;
     } else if (!silent) {
       if (this.firstFlashTime < 0) this.firstFlashTime = t;
-      this.emit(t, 'flash', `Reflujo de sangre: punta en la luz de ${st.def.name}`, 'ok', st.def.id);
+      this.emit(t, 'flash', tr(`Reflujo de sangre: punta en la luz de ${st.def.name}`, `Blood flashback: tip in the lumen of ${st.def.name}`), 'ok', st.def.id);
     }
   }
 

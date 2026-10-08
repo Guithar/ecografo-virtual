@@ -3,9 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
-    <title>Fistulab · Simulador de punción ecoguiada de la FAV</title>
-    <meta name="description" content="Simulador gratuito, en el navegador, para aprender la punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis: ecografía en tiempo real, abordaje longitudinal y transversal, Doppler y evaluación según las guías." />
+    <!-- Versión en inglés: en/index.html. Los dos archivos tienen la misma estructura (mismos id): un cambio aquí va también allí. -->
+    <title>Simulador de punción ecoguiada de la FAV · Fistulab</title>
+    <meta name="description" content="Simulador gratuito, en el navegador, de punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis: ecografía en tiempo real, Doppler, casos clínicos y evaluación." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="https://fistulab.com/" />
+    <link rel="alternate" hreflang="es" href="https://fistulab.com/" />
+    <link rel="alternate" hreflang="en" href="https://fistulab.com/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://fistulab.com/" />
+    <meta name="application-name" content="Fistulab" />
     <meta name="theme-color" content="#0b1117" />
     <meta name="color-scheme" content="dark" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
@@ -19,6 +25,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Fistulab" />
     <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:url" content="https://fistulab.com/" />
     <meta property="og:title" content="Fistulab · Simulador de punción ecoguiada de la FAV" />
     <meta property="og:description" content="Aprende a puncionar la fístula arteriovenosa con ecografía, sin equipo: imagen en tiempo real, abordaje longitudinal y transversal, Doppler y evaluación. Gratis y en el navegador." />
@@ -31,19 +38,55 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Fistulab",
-        "alternateName": "Fistulab · Simulador de punción ecoguiada de la FAV",
-        "url": "https://fistulab.com/",
-        "description": "Simulador gratuito, en el navegador, para aprender la punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis.",
-        "applicationCategory": "EducationalApplication",
-        "operatingSystem": "Cualquiera (navegador con WebGL2)",
-        "inLanguage": "es",
-        "isAccessibleForFree": true,
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-        "audience": { "@type": "Audience", "audienceType": "Enfermería y medicina de unidades de hemodiálisis" },
-        "license": "https://opensource.org/licenses/MIT",
-        "sameAs": ["https://github.com/Guithar/ecografo-virtual", "https://ko-fi.com/fistulab"]
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://fistulab.com/#org",
+            "name": "Fistulab",
+            "url": "https://fistulab.com/",
+            "logo": "https://fistulab.com/icon-512.png",
+            "email": "hola@fistulab.com",
+            "sameAs": ["https://github.com/Guithar/ecografo-virtual", "https://ko-fi.com/fistulab"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://fistulab.com/#website",
+            "url": "https://fistulab.com/",
+            "name": "Fistulab",
+            "inLanguage": "es",
+            "publisher": { "@id": "https://fistulab.com/#org" }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://fistulab.com/#app",
+            "name": "Fistulab",
+            "alternateName": "Simulador de punción ecoguiada de la FAV",
+            "url": "https://fistulab.com/",
+            "description": "Simulador gratuito, en el navegador, para aprender la punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis, nativa y protésica.",
+            "inLanguage": "es",
+            "applicationCategory": "EducationalApplication",
+            "applicationSubCategory": "Simulador de ecografía",
+            "operatingSystem": "Cualquiera (navegador con WebGL2)",
+            "browserRequirements": "WebGL2",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "audience": { "@type": "Audience", "audienceType": "Enfermería y medicina de unidades de hemodiálisis" },
+            "featureList": [
+              "Ecografía simulada en tiempo real (modo B, Doppler color, power y pulsado)",
+              "Punción en eje largo (en plano) y en eje corto (fuera de plano) con posicionamiento dinámico de la punta",
+              "Anatomía 3D del brazo con el plano de corte y la sección anatómica real",
+              "Doce casos clínicos: FAV madura, profunda, tortuosa, estenosis, aneurisma, prótesis de PTFE, hematoma",
+              "Pasos de la punción, lavado con suero, métricas y evaluación según las guías",
+              "Ocho lecciones guiadas y sala de hemodiálisis con ergonomía"
+            ],
+            "screenshot": "https://fistulab.com/og.jpg",
+            "image": "https://fistulab.com/og.jpg",
+            "license": "https://opensource.org/licenses/MIT",
+            "publisher": { "@id": "https://fistulab.com/#org" },
+            "isPartOf": { "@id": "https://fistulab.com/#website" },
+            "workTranslation": { "@id": "https://fistulab.com/en/#app" }
+          }
+        ]
       }
     </script>
   </head>
@@ -51,8 +94,9 @@
     <noscript><p class="noscript">Fistulab necesita JavaScript y un navegador con WebGL2 (Chrome, Edge, Firefox o Safari recientes).</p></noscript>
     <canvas id="gl"></canvas>
     <div id="loading">
-      <div class="spinner"></div>
-      <div id="loadingText">Preparando el simulador…</div>
+      <div class="spinner" aria-hidden="true"></div>
+      <div id="loadingText" role="status">Preparando el simulador…</div>
+      <p class="intro">Simulador gratuito de <b>punción ecoguiada de la fístula arteriovenosa (FAV)</b> para hemodiálisis, nativa y protésica: ecografía en tiempo real calculada a partir de la anatomía 3D del brazo, abordaje longitudinal (en plano) y transversal (fuera de plano), Doppler, casos clínicos, lecciones guiadas y evaluación según las guías. <a href="en/" hreflang="en" lang="en">English version</a></p>
     </div>
     <div id="app">
       <header id="topbar">
@@ -71,8 +115,7 @@
             <path d="M6 22 33.5 36.2" stroke="#fff" stroke-width="3" stroke-linecap="round" />
           </svg>
           <div>
-            <div class="title">Fistu<span>lab</span></div>
-            <div class="subtitle">Punción ecoguiada de la FAV</div>
+            <h1><span class="title">Fistu<span>lab</span></span> <span class="subtitle">Punción ecoguiada de la FAV</span></h1>
           </div>
         </div>
         <div class="case-sel">
@@ -100,6 +143,7 @@
           <button id="btnFocus" title="Modo enfoque: vista grande y la otra en una ventana flotante (O)" aria-pressed="false">Enfoque</button>
           <button id="btnReport" title="Informe de la sesión">Informe</button>
           <button id="btnHelp" title="Ayuda, atajos de teclado y acerca de Fistulab">Ayuda</button>
+          <a id="btnLang" class="lang-link" href="en/" hreflang="en" lang="en" data-lang-switch title="English version">EN</a>
           <a id="btnKofi" class="kofi" href="https://ko-fi.com/fistulab" target="_blank" rel="noopener" title="Fistulab es gratuito y sin publicidad. Si te resulta útil, apóyalo en Ko-fi (se abre en otra pestaña)">
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 9h12v4.5a5.5 5.5 0 0 1-5.5 5.5h-1A5.5 5.5 0 0 1 4 13.5z" />

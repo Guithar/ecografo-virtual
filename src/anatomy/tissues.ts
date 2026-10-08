@@ -10,6 +10,8 @@
  *  - Ecogenicidad: amplitud relativa de retrodispersión (escala arbitraria calibrada visualmente, en la
  *    que el músculo ≈ 0.33). La sangre retrodispersa ~30–40 dB menos que el tejido blando.
  */
+import { tr } from '../i18n';
+
 export enum T {
   Gel = 0,
   Air = 1,
@@ -46,26 +48,26 @@ export interface TissueProps {
 }
 
 export const TISSUES: TissueProps[] = [
-  { id: T.Gel, name: 'Gel acústico', Z: 1.52, att: 0.05, echo: 0.0, color: '#9ec9e6' },
-  { id: T.Air, name: 'Aire', Z: 0.0004, att: 12.0, echo: 0.0, color: '#f4f7fa' },
-  { id: T.Skin, name: 'Piel', Z: 1.65, att: 1.4, echo: 0.72, color: '#e6b89c' },
-  { id: T.Fat, name: 'Tejido celular subcutáneo', Z: 1.38, att: 0.55, echo: 0.2, color: '#f2d680' },
-  { id: T.Fascia, name: 'Fascia', Z: 1.85, att: 1.5, echo: 1.05, color: '#f5f0e6' },
-  { id: T.Muscle, name: 'Músculo', Z: 1.7, att: 0.9, echo: 0.3, color: '#b4453c' },
-  { id: T.Tendon, name: 'Tendón', Z: 1.8, att: 1.4, echo: 0.9, color: '#ece6da' },
-  { id: T.Nerve, name: 'Nervio', Z: 1.62, att: 0.9, echo: 0.42, color: '#f2c33a' },
-  { id: T.Bone, name: 'Hueso cortical', Z: 7.6, att: 18.0, echo: 1.2, color: '#efe4c8' },
-  { id: T.Wall, name: 'Pared vascular', Z: 1.72, att: 1.2, echo: 0.8, color: '#d9a0a8' },
-  { id: T.BloodArt, name: 'Sangre (arteria)', Z: 1.61, att: 0.17, echo: 0.012, color: '#c8202a' },
-  { id: T.BloodVen, name: 'Sangre (vena)', Z: 1.61, att: 0.17, echo: 0.014, color: '#2f4fa8' },
-  { id: T.BloodAvf, name: 'Sangre (FAV)', Z: 1.61, att: 0.17, echo: 0.013, color: '#7a3fa8' },
-  { id: T.Thrombus, name: 'Trombo', Z: 1.64, att: 0.5, echo: 0.28, color: '#6b2a2a' },
-  { id: T.Hematoma, name: 'Hematoma', Z: 1.6, att: 0.35, echo: 0.25, color: '#5a1f35' },
-  { id: T.Needle, name: 'Aguja (acero)', Z: 45, att: 0, echo: 3.0, color: '#d9dde3' },
-  { id: T.Graft, name: 'Prótesis PTFE', Z: 1.9, att: 2.0, echo: 1.1, color: '#e8eef2' },
-  { id: T.Calcium, name: 'Calcificación', Z: 5.0, att: 14.0, echo: 1.6, color: '#ffffff' },
+  { id: T.Gel, name: tr('Gel acústico', 'Acoustic gel'), Z: 1.52, att: 0.05, echo: 0.0, color: '#9ec9e6' },
+  { id: T.Air, name: tr('Aire', 'Air'), Z: 0.0004, att: 12.0, echo: 0.0, color: '#f4f7fa' },
+  { id: T.Skin, name: tr('Piel', 'Skin'), Z: 1.65, att: 1.4, echo: 0.72, color: '#e6b89c' },
+  { id: T.Fat, name: tr('Tejido celular subcutáneo', 'Subcutaneous tissue'), Z: 1.38, att: 0.55, echo: 0.2, color: '#f2d680' },
+  { id: T.Fascia, name: tr('Fascia', 'Fascia'), Z: 1.85, att: 1.5, echo: 1.05, color: '#f5f0e6' },
+  { id: T.Muscle, name: tr('Músculo', 'Muscle'), Z: 1.7, att: 0.9, echo: 0.3, color: '#b4453c' },
+  { id: T.Tendon, name: tr('Tendón', 'Tendon'), Z: 1.8, att: 1.4, echo: 0.9, color: '#ece6da' },
+  { id: T.Nerve, name: tr('Nervio', 'Nerve'), Z: 1.62, att: 0.9, echo: 0.42, color: '#f2c33a' },
+  { id: T.Bone, name: tr('Hueso cortical', 'Cortical bone'), Z: 7.6, att: 18.0, echo: 1.2, color: '#efe4c8' },
+  { id: T.Wall, name: tr('Pared vascular', 'Vessel wall'), Z: 1.72, att: 1.2, echo: 0.8, color: '#d9a0a8' },
+  { id: T.BloodArt, name: tr('Sangre (arteria)', 'Blood (artery)'), Z: 1.61, att: 0.17, echo: 0.012, color: '#c8202a' },
+  { id: T.BloodVen, name: tr('Sangre (vena)', 'Blood (vein)'), Z: 1.61, att: 0.17, echo: 0.014, color: '#2f4fa8' },
+  { id: T.BloodAvf, name: tr('Sangre (FAV)', 'Blood (AVF)'), Z: 1.61, att: 0.17, echo: 0.013, color: '#7a3fa8' },
+  { id: T.Thrombus, name: tr('Trombo', 'Thrombus'), Z: 1.64, att: 0.5, echo: 0.28, color: '#6b2a2a' },
+  { id: T.Hematoma, name: tr('Hematoma', 'Hematoma'), Z: 1.6, att: 0.35, echo: 0.25, color: '#5a1f35' },
+  { id: T.Needle, name: tr('Aguja (acero)', 'Needle (steel)'), Z: 45, att: 0, echo: 3.0, color: '#d9dde3' },
+  { id: T.Graft, name: tr('Prótesis PTFE', 'PTFE graft'), Z: 1.9, att: 2.0, echo: 1.1, color: '#e8eef2' },
+  { id: T.Calcium, name: tr('Calcificación', 'Calcification'), Z: 5.0, att: 14.0, echo: 1.6, color: '#ffffff' },
   // suero salino extravasado: líquido anecoico (con algunas microburbujas al principio)
-  { id: T.Saline, name: 'Suero infiltrado', Z: 1.53, att: 0.05, echo: 0.01, color: '#86cfe6' },
+  { id: T.Saline, name: tr('Suero infiltrado', 'Infiltrated saline'), Z: 1.53, att: 0.05, echo: 0.01, color: '#86cfe6' },
 ];
 
 export function tissueName(id: number): string {

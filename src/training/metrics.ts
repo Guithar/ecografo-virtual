@@ -11,6 +11,7 @@
  *    agujas, dirección de la aguja venosa, zonas a evitar.
  */
 import type { NeedleEvent } from '../interaction/needle';
+import { tr } from '../i18n';
 
 export interface FinalCheck {
   label: string;
@@ -190,8 +191,8 @@ export class Metrics {
 }
 
 export function grade(score: number): { label: string; color: string } {
-  if (score >= 90) return { label: 'Excelente', color: '#3ddc97' };
-  if (score >= 75) return { label: 'Competente', color: '#8bd450' };
-  if (score >= 55) return { label: 'Mejorable', color: '#f2c14e' };
-  return { label: 'Insuficiente', color: '#ef5b5b' };
+  if (score >= 90) return { label: tr('Excelente', 'Excellent'), color: '#3ddc97' };
+  if (score >= 75) return { label: tr('Competente', 'Competent'), color: '#8bd450' };
+  if (score >= 55) return { label: tr('Mejorable', 'Needs work'), color: '#f2c14e' };
+  return { label: tr('Insuficiente', 'Insufficient'), color: '#ef5b5b' };
 }

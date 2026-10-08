@@ -6,10 +6,12 @@
  */
 import { CASES } from '../anatomy/cases';
 import type { App, AppMode } from '../app/App';
+import { OTHER_LANG, otherLangUrl, tr } from '../i18n';
+import { roleLabel } from '../interaction/needle';
 import { canInstall, installApp, isStandalone } from '../pwa';
 import type { CameraPreset } from '../scene/SceneManager';
 import { SITE } from '../site';
-import { IMAGE_PRESETS } from './console';
+import { IMAGE_PRESETS, presetLabel } from './console';
 import { Bound, button, el, field, selectBox } from './controls';
 import { COMPACT_QUERY, forcedCompact } from './device';
 
@@ -33,10 +35,10 @@ interface JogTarget {
 type Sheet = 'info' | 'more' | null;
 
 const CAMERAS: [CameraPreset, string][] = [
-  ['procedimiento', 'procedimiento'],
-  ['superior', 'superior'],
-  ['lateral', 'lateral'],
-  ['corte', 'perpendicular al corte'],
+  ['procedimiento', tr('procedimiento', 'procedure')],
+  ['superior', tr('superior', 'top')],
+  ['lateral', tr('lateral', 'side')],
+  ['corte', tr('perpendicular al corte', 'perpendicular to the scan plane')],
 ];
 
 const ICONS: Record<string, string> = {
@@ -149,7 +151,7 @@ export class MobileUI {
 
     // panel inferior: chips de maniobra, rueda y botones
     this.dock = el('div', { id: 'mDock', class: 'm-only' });
-    this.chips = el('div', { class: 'm-chips', role: 'tablist', 'aria-label': 'Ajuste de la rueda' });
+    this.chips = el('div', { class: 'm-chips', role: 'tablist', 'aria-label': tr('Ajuste de la rueda', 'Wheel setting') });
     this.dock.appendChild(this.chips);
     this.dock.appendChild(this.buildJog());
     const row = (cls = '') => {
@@ -170,32 +172,33 @@ export class MobileUI {
       this.rowNeedle,
       button('Arterial', () => {
         app.activeNeedle = 1 - app.activeNeedle;
-        app.toast(`Aguja ${app.needle.role} activa`, 'info');
-      }, { title: 'Cambiar entre la aguja arterial y la venosa' }),
+        const r = roleLabel(app.needle.role);
+        app.toast(tr(`Aguja ${r} activa`, `${r[0].toUpperCase()}${r.slice(1)} needle active`), 'info');
+      }, { title: tr('Cambiar entre la aguja arterial y la venosa', 'Switch between the arterial and venous needle') }),
     );
     const roleUpd = role.update;
     role.update = () => {
       roleUpd();
       const art = app.activeNeedle === 0;
-      role.el.textContent = art ? 'Arterial' : 'Venosa';
+      role.el.textContent = art ? 'Arterial' : tr('Venosa', 'Venous');
       role.el.classList.toggle('m-art', art);
       role.el.classList.toggle('m-ven', !art);
     };
-    add(this.rowNeedle, button('Fuera de plano', () => app.placeNeedleAuto('oop'), { title: 'Colocar la aguja fuera de plano (eje corto)' }));
-    add(this.rowNeedle, button('En plano', () => app.placeNeedleAuto('ip'), { title: 'Colocar la aguja en plano (eje largo)' }));
-    add(this.rowNeedle, button('Suero', () => app.flushNeedle(), { title: 'Lavar con suero para comprobar la posición de la punta' }));
-    add(this.rowNeedle, button('Retirar', () => app.withdrawNeedle(), { cls: 'danger' }));
-    add(this.rowNeedle, button('Confirmar', () => app.confirmPuncture(), { cls: 'primary', title: 'Evaluar la posición final de la aguja' }));
+    add(this.rowNeedle, button(tr('Fuera de plano', 'Out-of-plane'), () => app.placeNeedleAuto('oop'), { title: tr('Colocar la aguja fuera de plano (eje corto)', 'Place the needle out-of-plane (short axis)') }));
+    add(this.rowNeedle, button(tr('En plano', 'In-plane'), () => app.placeNeedleAuto('ip'), { title: tr('Colocar la aguja en plano (eje largo)', 'Place the needle in-plane (long axis)') }));
+    add(this.rowNeedle, button(tr('Suero', 'Saline'), () => app.flushNeedle(), { title: tr('Lavar con suero para comprobar la posición de la punta', 'Saline flush to check the tip position') }));
+    add(this.rowNeedle, button(tr('Retirar', 'Remove'), () => app.withdrawNeedle(), { cls: 'danger' }));
+    add(this.rowNeedle, button(tr('Confirmar', 'Confirm'), () => app.confirmPuncture(), { cls: 'primary', title: tr('Evaluar la posición final de la aguja', 'Assess the final needle position') }));
 
     // sonda
     const rowProbe = row();
-    add(rowProbe, button('Transv.', () => app.setProbeView('trans'), { title: 'Eje corto respecto al vaso' }));
-    add(rowProbe, button('Long.', () => app.setProbeView('long'), { title: 'Eje largo respecto al vaso' }));
-    add(rowProbe, button('Centrar', () => app.centerOnVessel(), { title: 'Centrar la sonda sobre el vaso de acceso' }));
-    add(rowProbe, button('Compresor', () => app.setTourniquet(!app.tourniquet), { active: () => app.tourniquet }));
+    add(rowProbe, button(tr('Transv.', 'Short'), () => app.setProbeView('trans'), { title: tr('Eje corto respecto al vaso', 'Short axis of the vessel') }));
+    add(rowProbe, button(tr('Long.', 'Long'), () => app.setProbeView('long'), { title: tr('Eje largo respecto al vaso', 'Long axis of the vessel') }));
+    add(rowProbe, button(tr('Centrar', 'Center'), () => app.centerOnVessel(), { title: tr('Centrar la sonda sobre el vaso de acceso', 'Center the probe over the access vessel') }));
+    add(rowProbe, button(tr('Compresor', 'Tourniquet'), () => app.setTourniquet(!app.tourniquet), { active: () => app.tourniquet }));
     const extra = add(
       rowProbe,
-      button('Etiquetas', () => {
+      button(tr('Etiquetas', 'Labels'), () => {
         if (app.needleMode()) app.setAsepsis(!app.asepsis);
         else app.labels = !app.labels;
       }),
@@ -204,42 +207,44 @@ export class MobileUI {
     extra.update = () => {
       extraUpd();
       const c = app.needleMode();
-      extra.el.textContent = c ? 'Asepsia' : 'Etiquetas';
-      extra.el.title = c ? 'Piel desinfectada, funda estéril en la sonda y gel estéril' : 'Nombres de las estructuras sobre la imagen';
+      extra.el.textContent = c ? tr('Asepsia', 'Asepsis') : tr('Etiquetas', 'Labels');
+      extra.el.title = c
+        ? tr('Piel desinfectada, funda estéril en la sonda y gel estéril', 'Disinfected skin, sterile probe cover and sterile gel')
+        : tr('Nombres de las estructuras sobre la imagen', 'Structure names on the image');
       extra.el.classList.toggle('on', c ? app.asepsis : app.labels);
     };
 
     // imagen (exploración)
     this.rowImage = row();
-    add(this.rowImage, button('Color', () => (s().mode = s().mode === 'color' ? 'B' : 'color'), { active: () => s().mode === 'color', title: 'Doppler color' }));
+    add(this.rowImage, button('Color', () => (s().mode = s().mode === 'color' ? 'B' : 'color'), { active: () => s().mode === 'color', title: tr('Doppler color', 'Color Doppler') }));
     add(
       this.rowImage,
       button('PW', () => {
         s().pw = !s().pw;
         app.spectral.enabled = s().pw;
         if (s().pw && s().mode === 'B') s().mode = 'color';
-        if (s().pw) app.toast('Toca la imagen para situar el volumen de muestra', 'info');
-      }, { active: () => s().pw, title: 'Doppler pulsado' }),
+        if (s().pw) app.toast(tr('Toca la imagen para situar el volumen de muestra', 'Tap the image to place the sample volume'), 'info');
+      }, { active: () => s().pw, title: tr('Doppler pulsado', 'PW Doppler') }),
     );
-    add(this.rowImage, button('Congelar', () => (s().frozen = !s().frozen), { active: () => s().frozen }));
+    add(this.rowImage, button(tr('Congelar', 'Freeze'), () => (s().frozen = !s().frozen), { active: () => s().frozen }));
     add(
       this.rowImage,
-      button('Medir', () => {
+      button(tr('Medir', 'Measure'), () => {
         app.monitor.tool = app.monitor.tool === 'caliper' ? 'none' : 'caliper';
-        if (app.monitor.tool === 'caliper') app.toast('Toca dos puntos de la imagen para medir', 'info');
-      }, { active: () => app.monitor.tool === 'caliper', title: 'Calibre' }),
+        if (app.monitor.tool === 'caliper') app.toast(tr('Toca dos puntos de la imagen para medir', 'Tap two points on the image to measure'), 'info');
+      }, { active: () => app.monitor.tool === 'caliper', title: tr('Calibre', 'Caliper') }),
     );
     add(
       this.rowImage,
-      button('Borrar', () => {
+      button(tr('Borrar', 'Clear'), () => {
         app.monitor.clearCalipers();
         app.panels.renderMeasures();
-      }, { title: 'Borrar las medidas' }),
+      }, { title: tr('Borrar las medidas', 'Clear the measurements') }),
     );
     root.appendChild(this.dock);
 
     // navegación inferior
-    this.nav = el('nav', { id: 'mNav', class: 'm-only', 'aria-label': 'Secciones' });
+    this.nav = el('nav', { id: 'mNav', class: 'm-only', 'aria-label': tr('Secciones', 'Sections') });
     const navBtn = (id: string, label: string, onClick: () => void) => {
       const b = el('button', { 'data-nav': id }, `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[id]}</svg><span>${label}</span>`);
       b.addEventListener('click', onClick);
@@ -249,14 +254,14 @@ export class MobileUI {
       this.openSheet(null);
       app.setMode(m);
     };
-    navBtn('explore', 'Explorar', () => go('explore'));
-    navBtn('cannulate', 'Punción', () => go('cannulate'));
-    navBtn('learn', 'Lecciones', () => {
+    navBtn('explore', tr('Explorar', 'Explore'), () => go('explore'));
+    navBtn('cannulate', tr('Punción', 'Cannulate'), () => go('cannulate'));
+    navBtn('learn', tr('Lecciones', 'Lessons'), () => {
       go('learn');
       if (!app.lesson) this.openInfo('lessons');
     });
     navBtn('info', 'Info', () => (this.sheet === 'info' ? this.openSheet(null) : this.openInfo()));
-    navBtn('more', 'Más', () => this.openSheet(this.sheet === 'more' ? null : 'more'));
+    navBtn('more', tr('Más', 'More'), () => this.openSheet(this.sheet === 'more' ? null : 'more'));
     root.appendChild(this.nav);
 
     // controles de las vistas (intercambiar, cámara, ocultar la miniatura)
@@ -273,18 +278,18 @@ export class MobileUI {
       pane.appendChild(d);
     };
     ctl(document.getElementById('pane3d')!, [
-      ['swap', '⇄', 'Intercambiar el 3D y el monitor'],
-      ['cam', 'Vista', 'Cambiar la cámara'],
-      ['hide', '–', 'Ocultar el 3D'],
+      ['swap', '⇄', tr('Intercambiar el 3D y el monitor', 'Swap the 3D view and the monitor')],
+      ['cam', tr('Vista', 'View'), tr('Cambiar la cámara', 'Change the camera')],
+      ['hide', '–', tr('Ocultar el 3D', 'Hide the 3D view')],
     ]);
     const mon = document.getElementById('paneMonitor')!;
-    ctl(mon, [['swap', '⇄', 'Intercambiar el monitor y el 3D']]);
-    const show = el('button', { id: 'mPipShow', class: 'm-only' }, 'Ver 3D');
+    ctl(mon, [['swap', '⇄', tr('Intercambiar el monitor y el 3D', 'Swap the monitor and the 3D view')]]);
+    const show = el('button', { id: 'mPipShow', class: 'm-only' }, tr('Ver 3D', 'Show 3D'));
     show.addEventListener('click', () => this.paneAction('show'));
     mon.appendChild(show);
 
     // hoja de información: el panel de pestañas de escritorio, con botón de cierre
-    const close = el('button', { class: 'm-only m-close', 'aria-label': 'Cerrar' }, '✕');
+    const close = el('button', { class: 'm-only m-close', 'aria-label': tr('Cerrar', 'Close') }, '✕');
     close.addEventListener('click', () => this.openSheet(null));
     document.getElementById('tabButtons')!.appendChild(close);
     // al elegir una lección se cierra la hoja para ver la imagen
@@ -293,9 +298,9 @@ export class MobileUI {
     });
 
     // hoja «Más»
-    this.more = el('div', { id: 'mMore', class: 'm-sheet m-only', role: 'dialog', 'aria-label': 'Más ajustes' });
-    const head = el('div', { class: 'm-sheet-head' }, '<span>Más ajustes</span>');
-    const x = el('button', { 'aria-label': 'Cerrar' }, '✕');
+    this.more = el('div', { id: 'mMore', class: 'm-sheet m-only', role: 'dialog', 'aria-label': tr('Más ajustes', 'More settings') });
+    const head = el('div', { class: 'm-sheet-head' }, `<span>${tr('Más ajustes', 'More settings')}</span>`);
+    const x = el('button', { 'aria-label': tr('Cerrar', 'Close') }, '✕');
     x.addEventListener('click', () => this.openSheet(null));
     head.appendChild(x);
     this.more.appendChild(head);
@@ -325,22 +330,22 @@ export class MobileUI {
     const deg = (v: number) => `${v.toFixed(0)}°`;
     const needleFree = () => n().placed && !n().confirmed;
     return [
-      { id: 'largo', label: 'A lo largo', group: 'probe', show: () => `${(p().x / 10).toFixed(1)} cm`, drag: (px) => (p().x += px * 0.12), keys: ['s', 'w'] },
+      { id: 'largo', label: tr('A lo largo', 'Along'), group: 'probe', show: () => `${(p().x / 10).toFixed(1)} cm`, drag: (px) => (p().x += px * 0.12), keys: ['s', 'w'] },
       {
         id: 'alrededor',
-        label: 'Alrededor',
+        label: tr('Alrededor', 'Around'),
         group: 'probe',
         show: () => deg(p().theta),
         drag: (px) => (p().theta += arcDeg(px * 0.12) * (app.scene.cfg.side === 'left' ? 1 : -1)),
         keys: ['a', 'd'],
       },
-      { id: 'girar', label: 'Girar', group: 'probe', show: () => deg(p().rot), drag: (px) => (p().rot += px * 0.3), keys: ['q', 'e'] },
-      { id: 'inclinar', label: 'Inclinar', group: 'probe', show: () => deg(p().tilt), drag: (px) => (p().tilt += px * 0.1), keys: ['f', 'r'] },
-      { id: 'balanceo', label: 'Balanceo', group: 'probe', show: () => deg(p().rock), drag: (px) => (p().rock += px * 0.1), keys: ['g', 't'] },
-      { id: 'presion', label: 'Presión', group: 'probe', show: () => `${p().press.toFixed(1)} mm`, drag: (px) => (p().press += px * 0.02), keys: ['z', 'x'] },
+      { id: 'girar', label: tr('Girar', 'Rotate'), group: 'probe', show: () => deg(p().rot), drag: (px) => (p().rot += px * 0.3), keys: ['q', 'e'] },
+      { id: 'inclinar', label: tr('Inclinar', 'Tilt'), group: 'probe', show: () => deg(p().tilt), drag: (px) => (p().tilt += px * 0.1), keys: ['f', 'r'] },
+      { id: 'balanceo', label: tr('Balanceo', 'Rock'), group: 'probe', show: () => deg(p().rock), drag: (px) => (p().rock += px * 0.1), keys: ['g', 't'] },
+      { id: 'presion', label: tr('Presión', 'Pressure'), group: 'probe', show: () => `${p().press.toFixed(1)} mm`, drag: (px) => (p().press += px * 0.02), keys: ['z', 'x'] },
       {
         id: 'prof',
-        label: 'Prof.',
+        label: tr('Prof.', 'Depth'),
         group: 'image',
         show: () => `${(s().depth / 10).toFixed(1)} cm`,
         stepPx: 24,
@@ -349,19 +354,19 @@ export class MobileUI {
           s().focus = Math.min(s().focus, s().depth - 1);
         },
       },
-      { id: 'gan', label: 'Ganancia', group: 'image', show: () => String(55 + s().gain), stepPx: 9, step: (d) => (s().gain = clamp(s().gain + d, -25, 25)) },
-      { id: 'foco', label: 'Foco', group: 'image', show: () => `${s().focus} mm`, stepPx: 8, step: (d) => (s().focus = clamp(s().focus + d, 2, Math.min(50, s().depth - 1))) },
+      { id: 'gan', label: tr('Ganancia', 'Gain'), group: 'image', show: () => String(55 + s().gain), stepPx: 9, step: (d) => (s().gain = clamp(s().gain + d, -25, 25)) },
+      { id: 'foco', label: tr('Foco', 'Focus'), group: 'image', show: () => `${s().focus} mm`, stepPx: 8, step: (d) => (s().focus = clamp(s().focus + d, 2, Math.min(50, s().depth - 1))) },
       {
         id: 'avance',
-        label: 'Avance',
+        label: tr('Avance', 'Advance'),
         group: 'needle',
-        show: () => (n().placed ? `${Math.max(0, n().depth).toFixed(1)} mm` : 'sin colocar'),
+        show: () => (n().placed ? `${Math.max(0, n().depth).toFixed(1)} mm` : tr('sin colocar', 'not placed')),
         drag: (px) => n().placed && app.advanceNeedle(px * 0.04),
         keys: ['arrowdown', 'arrowup'],
       },
       {
         id: 'angulo',
-        label: 'Ángulo',
+        label: tr('Ángulo', 'Angle'),
         group: 'needle',
         show: () => deg(n().angle),
         drag: (px) => needleFree() && (n().angle = clamp(n().angle + px * 0.1, 5, 70)),
@@ -369,7 +374,7 @@ export class MobileUI {
       },
       {
         id: 'rumbo',
-        label: 'Rumbo',
+        label: tr('Rumbo', 'Heading'),
         group: 'needle',
         show: () => deg(n().heading),
         drag: (px) => {
@@ -385,9 +390,9 @@ export class MobileUI {
   private buildJog(): HTMLElement {
     const app = this.app;
     const wrap = el('div', { class: 'm-jog' });
-    const minus = el('button', { 'aria-label': 'Menos' }, '−');
-    const plus = el('button', { 'aria-label': 'Más' }, '+');
-    this.jogStrip = el('div', { class: 'm-jog-strip', role: 'slider', 'aria-label': 'Rueda de ajuste' });
+    const minus = el('button', { 'aria-label': tr('Menos', 'Decrease') }, '−');
+    const plus = el('button', { 'aria-label': tr('Más', 'Increase') }, '+');
+    this.jogStrip = el('div', { class: 'm-jog-strip', role: 'slider', 'aria-label': tr('Rueda de ajuste', 'Adjustment wheel') });
     this.jogVal = el('span', { class: 'm-jog-val' });
     this.jogStrip.appendChild(this.jogVal);
     wrap.append(minus, this.jogStrip, plus);
@@ -396,7 +401,7 @@ export class MobileUI {
     let drag: { x: number; acc: number } | null = null;
     this.jogStrip.addEventListener('pointerdown', (e) => {
       if (needsNeedle()) {
-        app.toast('Primero coloca la aguja («Fuera de plano» o «En plano»)', 'warn');
+        app.toast(tr('Primero coloca la aguja («Fuera de plano» o «En plano»)', 'Place the needle first (“Out-of-plane” or “In-plane”)'), 'warn');
         return;
       }
       drag = { x: e.clientX, acc: 0 };
@@ -442,7 +447,7 @@ export class MobileUI {
       b.addEventListener('pointerdown', (e) => {
         const t = this.target;
         if (needsNeedle()) {
-          app.toast('Primero coloca la aguja («Fuera de plano» o «En plano»)', 'warn');
+          app.toast(tr('Primero coloca la aguja («Fuera de plano» o «En plano»)', 'Place the needle first (“Out-of-plane” or “In-plane”)'), 'warn');
           return;
         }
         b.setPointerCapture(e.pointerId);
@@ -522,7 +527,7 @@ export class MobileUI {
       this.camIdx = (this.camIdx + 1) % CAMERAS.length;
       const [preset, name] = CAMERAS[this.camIdx];
       app.scene.setPreset(preset);
-      app.toast(`Vista ${name}`, 'info');
+      app.toast(tr(`Vista ${name}`, `View: ${name}`), 'info');
     }
     this.applyClasses();
   }
@@ -607,20 +612,25 @@ export class MobileUI {
       return;
     }
     if (!L) {
-      bar.innerHTML = '<div class="m-lhead"><span class="t">Lecciones guiadas</span><button data-l="pick" class="primary">Elegir lección</button></div>';
+      bar.innerHTML = `<div class="m-lhead"><span class="t">${tr('Lecciones guiadas', 'Guided lessons')}</span><button data-l="pick" class="primary">${tr('Elegir lección', 'Choose lesson')}</button></div>`;
     } else {
       const step = L.lesson.steps[L.step];
       const last = L.step === L.lesson.steps.length - 1;
       const done = L.done[L.step];
-      const status = step.check ? (done ? '<span class="m-lstatus ok">✔ completado</span>' : '<span class="m-lstatus">⏳ se comprueba solo</span>') : '';
+      const status = step.check
+        ? done
+          ? `<span class="m-lstatus ok">${tr('✔ completado', '✔ done')}</span>`
+          : `<span class="m-lstatus">${tr('⏳ se comprueba solo', '⏳ auto-checked')}</span>`
+        : '';
+      const fold = this.lessonCollapsed ? tr('Mostrar el texto', 'Show the text') : tr('Plegar el texto', 'Collapse the text');
       bar.innerHTML = `
         <div class="m-lhead">
-          <span class="t">${L.lesson.title} · paso ${L.step + 1}/${L.lesson.steps.length}</span>
-          <button data-l="fold" aria-label="${this.lessonCollapsed ? 'Mostrar' : 'Plegar'} el texto">${this.lessonCollapsed ? '▴' : '▾'}</button>
-          <button data-l="exit" aria-label="Salir de la lección">✕</button>
+          <span class="t">${L.lesson.title} · ${tr('paso', 'step')} ${L.step + 1}/${L.lesson.steps.length}</span>
+          <button data-l="fold" aria-label="${fold}">${this.lessonCollapsed ? '▴' : '▾'}</button>
+          <button data-l="exit" aria-label="${tr('Salir de la lección', 'Exit the lesson')}">✕</button>
         </div>
         <div class="m-ltext ${this.lessonCollapsed ? 'collapsed' : ''}">${app.dt(step.text)}${step.hint && !this.lessonCollapsed ? `<div class="muted m-lhint">${app.dt(step.hint)}</div>` : ''}</div>
-        <div class="m-lnav">${status}<span class="grow"></span><button data-l="prev" ${L.step === 0 ? 'disabled' : ''}>◀</button><button data-l="next" class="primary">${last ? 'Finalizar' : 'Siguiente ▶'}</button></div>`;
+        <div class="m-lnav">${status}<span class="grow"></span><button data-l="prev" ${L.step === 0 ? 'disabled' : ''}>◀</button><button data-l="next" class="primary">${last ? tr('Finalizar', 'Finish') : tr('Siguiente ▶', 'Next ▶')}</button></div>`;
     }
     bar.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) =>
       b.addEventListener('click', () => {
@@ -632,7 +642,7 @@ export class MobileUI {
         else if (cur && a === 'prev') cur.step = Math.max(0, cur.step - 1);
         else if (cur && a === 'next') {
           if (cur.step >= cur.lesson.steps.length - 1) {
-            app.toast('Lección finalizada', 'ok');
+            app.toast(tr('Lección finalizada', 'Lesson completed'), 'ok');
             app.lesson = null;
           } else cur.step++;
         }
@@ -692,44 +702,44 @@ export class MobileUI {
     };
 
     // caso y paciente
-    const cCase = sec('Caso y paciente', true);
-    labeled(cCase, 'Caso', mirrorSelect('caseSelect', CASES.map((c) => [c.id, `${'●'.repeat(c.difficulty)}${'○'.repeat(3 - c.difficulty)} ${c.title}`] as [string, string])));
-    labeled(cCase, 'Brazo', mirrorSelect('armSide', [['left', 'Izquierdo'], ['right', 'Derecho']]));
-    labeled(cCase, 'Calidad', mirrorSelect('quality', [['alta', 'Alta (60 fps)'], ['media', 'Media'], ['baja', 'Baja']]));
+    const cCase = sec(tr('Caso y paciente', 'Case & patient'), true);
+    labeled(cCase, tr('Caso', 'Case'), mirrorSelect('caseSelect', CASES.map((c) => [c.id, `${'●'.repeat(c.difficulty)}${'○'.repeat(3 - c.difficulty)} ${c.title}`] as [string, string])));
+    labeled(cCase, tr('Brazo', 'Arm'), mirrorSelect('armSide', [['left', tr('Izquierdo', 'Left')], ['right', tr('Derecho', 'Right')]]));
+    labeled(cCase, tr('Calidad', 'Quality'), mirrorSelect('quality', [['alta', tr('Alta (60 fps)', 'High (60 fps)')], ['media', tr('Media', 'Medium')], ['baja', tr('Baja', 'Low')]]));
 
     // imagen
-    const cImg = sec('Imagen');
+    const cImg = sec(tr('Imagen', 'Image'));
     labeled(
       cImg,
-      'Preajuste',
+      tr('Preajuste', 'Preset'),
       selectBox(
-        Object.keys(IMAGE_PRESETS).map((k) => [k, k] as [string, string]),
+        Object.keys(IMAGE_PRESETS).map((k) => [k, presetLabel(k)] as [string, string]),
         () => s().preset,
         (v) => Object.assign(s(), IMAGE_PRESETS[v], { preset: v }),
       ),
     );
-    add(cImg, field('Frecuencia', () => s().freq, (v) => {
+    add(cImg, field(tr('Frecuencia', 'Frequency'), () => s().freq, (v) => {
       s().freq = v;
       app.lessonFlags.freqChanged = 1;
     }, { min: 6, max: 15, step: 1, fmt: (v) => `${v} MHz` }));
-    add(cImg, field('Foco', () => s().focus, (v) => (s().focus = Math.min(v, s().depth - 1)), { min: 2, max: 50, step: 1, fmt: (v) => `${v} mm` }));
-    add(cImg, field('Rango din.', () => s().dr, (v) => (s().dr = v), { min: 40, max: 90, step: 5, fmt: (v) => `${v} dB` }));
-    add(cImg, field('Persistencia', () => s().persistence, (v) => (s().persistence = v), { min: 0, max: 0.85, step: 0.05, fmt: (v) => String(Math.round(v * 10)) }));
-    add(cImg, field('Speckle', () => s().sri, (v) => (s().sri = v), { min: 0, max: 1, step: 0.05, fmt: (v) => String(Math.round(v * 5)), title: 'Reducción de speckle' }));
-    add(cImg, field('Fusión', () => s().fusion, (v) => (s().fusion = v), { min: 0, max: 1, step: 0.05, fmt: (v) => `${Math.round(v * 100)} %`, title: 'Superponer la anatomía real sobre la ecografía' }));
+    add(cImg, field(tr('Foco', 'Focus'), () => s().focus, (v) => (s().focus = Math.min(v, s().depth - 1)), { min: 2, max: 50, step: 1, fmt: (v) => `${v} mm` }));
+    add(cImg, field(tr('Rango din.', 'Dyn. range'), () => s().dr, (v) => (s().dr = v), { min: 40, max: 90, step: 5, fmt: (v) => `${v} dB` }));
+    add(cImg, field(tr('Persistencia', 'Persistence'), () => s().persistence, (v) => (s().persistence = v), { min: 0, max: 0.85, step: 0.05, fmt: (v) => String(Math.round(v * 10)) }));
+    add(cImg, field('Speckle', () => s().sri, (v) => (s().sri = v), { min: 0, max: 1, step: 0.05, fmt: (v) => String(Math.round(v * 5)), title: tr('Reducción de speckle', 'Speckle reduction') }));
+    add(cImg, field(tr('Fusión', 'Fusion'), () => s().fusion, (v) => (s().fusion = v), { min: 0, max: 1, step: 0.05, fmt: (v) => `${Math.round(v * 100)} %`, title: tr('Superponer la anatomía real sobre la ecografía', 'Overlay the real anatomy on the ultrasound image') }));
     const ri = btnRow(cImg);
-    add(ri, button('Invertir I/D', () => {
+    add(ri, button(tr('Invertir I/D', 'Flip L/R'), () => {
       s().flipLR = !s().flipLR;
       if (s().flipLR) app.lessonFlags.flipSeen = 1;
     }, { active: () => s().flipLR }));
-    add(ri, button('Ayudas', () => (app.aids = !app.aids), { active: () => app.aids, title: 'Posición real de la punta y tejido bajo el dedo' }));
-    add(ri, button('2 focos', () => (s().focusZones = s().focusZones === 2 ? 1 : 2), { active: () => s().focusZones === 2 }));
-    add(ri, selectBox([['0', 'Gris'], ['1', 'Sepia'], ['2', 'Azul']], () => String(s().grayMap) as '0', (v) => (s().grayMap = parseInt(v) as 0 | 1 | 2), 'Mapa de color del modo B'));
+    add(ri, button(tr('Ayudas', 'Aids'), () => (app.aids = !app.aids), { active: () => app.aids, title: tr('Posición real de la punta y tejido bajo el dedo', 'True tip position and tissue under your finger') }));
+    add(ri, button(tr('2 focos', '2 foci'), () => (s().focusZones = s().focusZones === 2 ? 1 : 2), { active: () => s().focusZones === 2 }));
+    add(ri, selectBox([['0', tr('Gris', 'Gray')], ['1', 'Sepia'], ['2', tr('Azul', 'Blue')]], () => String(s().grayMap) as '0', (v) => (s().grayMap = parseInt(v) as 0 | 1 | 2), tr('Mapa de color del modo B', 'B-mode color map')));
 
     // Doppler
     const cDop = sec('Doppler');
     const rd = btnRow(cDop);
-    add(rd, button('Modo B', () => {
+    add(rd, button(tr('Modo B', 'B-mode'), () => {
       s().mode = 'B';
       s().pw = false;
     }, { active: () => s().mode === 'B' && !s().pw }));
@@ -740,103 +750,114 @@ export class MobileUI {
       app.spectral.enabled = s().pw;
       if (s().pw && s().mode === 'B') s().mode = 'color';
     }, { active: () => s().pw }));
-    add(cDop, field('Escala', () => (s().pw ? app.spectral.scale : s().scale), (v) => {
+    add(cDop, field(tr('Escala', 'Scale'), () => (s().pw ? app.spectral.scale : s().scale), (v) => {
       if (s().pw) app.spectral.scale = v;
       else s().scale = v;
-    }, { min: 10, max: 600, step: 5, fmt: (v) => `±${v}`, title: 'Escala de velocidad / PRF (cm/s); con PW, la del espectro' }));
-    add(cDop, field('Gan. color', () => s().colorGain, (v) => (s().colorGain = v), { min: 0, max: 1, step: 0.02, fmt: (v) => String(Math.round(v * 100)) }));
-    add(cDop, field('Filtro pared', () => s().wallFilter, (v) => (s().wallFilter = v), { min: 0, max: 30, step: 1, fmt: (v) => `${v}` }));
-    add(cDop, field('Línea base', () => app.spectral.baseline, (v) => {
+    }, { min: 10, max: 600, step: 5, fmt: (v) => `±${v}`, title: tr('Escala de velocidad / PRF (cm/s); con PW, la del espectro', 'Velocity scale / PRF (cm/s); with PW, the spectrum scale') }));
+    add(cDop, field(tr('Gan. color', 'Color gain'), () => s().colorGain, (v) => (s().colorGain = v), { min: 0, max: 1, step: 0.02, fmt: (v) => String(Math.round(v * 100)) }));
+    add(cDop, field(tr('Filtro pared', 'Wall filter'), () => s().wallFilter, (v) => (s().wallFilter = v), { min: 0, max: 30, step: 1, fmt: (v) => `${v}` }));
+    add(cDop, field(tr('Línea base', 'Baseline'), () => app.spectral.baseline, (v) => {
       app.spectral.baseline = v;
       s().baseline = (v - 0.5) * 2;
     }, { min: 0.1, max: 0.9, step: 0.05, fmt: (v) => `${Math.round((v - 0.5) * 200)}%` }));
-    add(cDop, field('Corr. ángulo', () => app.spectral.angleCorr, (v) => (app.spectral.angleCorr = v), { min: 0, max: 80, step: 1, fmt: (v) => `${v}°`, title: 'Alinéala con el eje del vaso (≤ 60°)' }));
-    add(cDop, field('Vol. muestra', () => s().pwGate.size, (v) => (s().pwGate.size = v), { min: 0.5, max: 12, step: 0.5, fmt: (v) => `${v} mm` }));
+    add(cDop, field(tr('Corr. ángulo', 'Angle corr.'), () => app.spectral.angleCorr, (v) => (app.spectral.angleCorr = v), { min: 0, max: 80, step: 1, fmt: (v) => `${v}°`, title: tr('Alinéala con el eje del vaso (≤ 60°)', 'Align it with the vessel axis (≤ 60°)') }));
+    add(cDop, field(tr('Vol. muestra', 'Sample vol.'), () => s().pwGate.size, (v) => (s().pwGate.size = v), { min: 0.5, max: 12, step: 0.5, fmt: (v) => `${v} mm` }));
     const rd2 = btnRow(cDop);
-    const steer = add(rd2, button('Haz 0°', () => {
+    const steer = add(rd2, button(tr('Haz 0°', 'Steer 0°'), () => {
       const v = s().steer;
       s().steer = v === 0 ? 20 : v === 20 ? -20 : 0;
-    }, { title: 'Angulación del haz Doppler (−20°, 0°, +20°)' }));
+    }, { title: tr('Angulación del haz Doppler (−20°, 0°, +20°)', 'Doppler beam steering (−20°, 0°, +20°)') }));
     const steerUpd = steer.update;
     steer.update = () => {
       steerUpd();
-      steer.el.textContent = `Haz ${s().steer > 0 ? '+' : ''}${s().steer}°`;
+      steer.el.textContent = `${tr('Haz', 'Steer')} ${s().steer > 0 ? '+' : ''}${s().steer}°`;
     };
-    add(rd2, button('Invertir', () => {
+    add(rd2, button(tr('Invertir', 'Invert'), () => {
       s().invert = !s().invert;
       app.spectral.invert = s().invert;
     }, { active: () => s().invert }));
     add(rd2, button('Audio', async () => {
       if (app.audio.ctx?.state === 'running') app.audio.stop();
       else await app.audio.start();
-    }, { active: () => app.audio.ctx?.state === 'running', title: 'Sonido Doppler' }));
+    }, { active: () => app.audio.ctx?.state === 'running', title: tr('Sonido Doppler', 'Doppler sound') }));
 
     // aguja
-    const cNd = sec('Aguja');
-    labeled(cNd, 'Calibre', selectBox([['17', '17G'], ['16', '16G'], ['15', '15G'], ['14', '14G']], () => String(app.needle.gauge) as '15', (v) => {
+    const cNd = sec(tr('Aguja', 'Needle'));
+    labeled(cNd, tr('Calibre', 'Gauge'), selectBox([['17', '17G'], ['16', '16G'], ['15', '15G'], ['14', '14G']], () => String(app.needle.gauge) as '15', (v) => {
       app.needle.gauge = parseInt(v);
       app.scene.resetNeedles();
     }));
-    labeled(cNd, 'Longitud', selectBox([['25', '25 mm'], ['32', '32 mm']], () => String(app.needle.length) as '25', (v) => (app.needle.length = parseInt(v))));
+    labeled(cNd, tr('Longitud', 'Length'), selectBox([['25', '25 mm'], ['32', '32 mm']], () => String(app.needle.length) as '25', (v) => (app.needle.length = parseInt(v))));
     const rn = btnRow(cNd);
-    add(rn, button('Tocar la piel…', () => {
+    add(rn, button(tr('Tocar la piel…', 'Tap the skin…'), () => {
       app.placingNeedle = !app.placingNeedle;
       if (app.placingNeedle) {
         if (!app.needleMode()) app.setMode('cannulate');
         this.openSheet(null);
         if (this.pipOff) this.paneAction('show');
-        app.toast('Toca la piel del brazo en 3D para elegir el punto de punción', 'info');
+        app.toast(tr('Toca la piel del brazo en 3D para elegir el punto de punción', 'Tap the arm skin in the 3D view to choose the insertion site'), 'info');
       }
-    }, { active: () => app.placingNeedle, title: 'Elegir el punto de punción tocando la piel' }));
-    add(rn, button('Invertir dirección', () => {
+    }, { active: () => app.placingNeedle, title: tr('Elegir el punto de punción tocando la piel', 'Choose the insertion site by tapping the skin') }));
+    add(rn, button(tr('Invertir dirección', 'Reverse direction'), () => {
       const n = app.needle;
       if (n.placed && n.depth > 0) {
-        app.toast('Retira la aguja de la piel para invertir su dirección', 'warn');
+        app.toast(tr('Retira la aguja de la piel para invertir su dirección', 'Withdraw the needle from the skin to reverse its direction'), 'warn');
         return;
       }
       n.heading = n.heading > 0 ? n.heading - 180 : n.heading + 180;
-    }, { title: 'Anterógrada / retrógrada, con la aguja fuera de la piel' }));
-    add(rn, button('Realce', () => (s().needleEnhance = !s().needleEnhance), { active: () => s().needleEnhance }));
+    }, { title: tr('Anterógrada / retrógrada, con la aguja fuera de la piel', 'Antegrade / retrograde, with the needle out of the skin') }));
+    add(rn, button(tr('Realce', 'Enhance'), () => (s().needleEnhance = !s().needleEnhance), { active: () => s().needleEnhance }));
 
     // vista 3D
-    const c3 = sec('Vista 3D');
+    const c3 = sec(tr('Vista 3D', '3D view'));
     const skin = orig<HTMLInputElement>('optSkin');
-    add(c3, field('Piel', () => parseFloat(skin.value), (v) => {
+    add(c3, field(tr('Piel', 'Skin'), () => parseFloat(skin.value), (v) => {
       skin.value = String(v);
       fire(skin, 'input');
-    }, { min: 0, max: 1, step: 0.05, fmt: (v) => `${Math.round(v * 100)} %`, title: 'Opacidad de la piel' }));
-    labeled(c3, 'Plano', mirrorSelect('optPlane', [['us', 'Ecografía'], ['anat', 'Anatomía'], ['none', 'Oculto']]));
+    }, { min: 0, max: 1, step: 0.05, fmt: (v) => `${Math.round(v * 100)} %`, title: tr('Opacidad de la piel', 'Skin opacity') }));
+    labeled(c3, tr('Plano', 'Plane'), mirrorSelect('optPlane', [['us', tr('Ecografía', 'Ultrasound')], ['anat', tr('Anatomía', 'Anatomy')], ['none', tr('Oculto', 'Hidden')]]));
     const r3 = btnRow(c3);
-    add(r3, mirrorCheck('optVessels', 'Vasos'));
-    add(r3, mirrorCheck('optNerves', 'Nervios'));
-    add(r3, mirrorCheck('optBones', 'Huesos'));
-    add(r3, mirrorCheck('optTendons', 'Tendones'));
-    add(r3, mirrorCheck('optMuscle', 'Músculo'));
-    add(r3, mirrorCheck('optFlow', 'Flujo'));
-    add(r3, mirrorCheck('optFollow', 'Seguir sonda'));
-    add(r3, button('Sala', () => (app.scene.roomVisible = !app.scene.roomVisible), { active: () => app.scene.roomVisible, title: 'Mostrar la sala y el paciente (más lento)' }));
+    add(r3, mirrorCheck('optVessels', tr('Vasos', 'Vessels')));
+    add(r3, mirrorCheck('optNerves', tr('Nervios', 'Nerves')));
+    add(r3, mirrorCheck('optBones', tr('Huesos', 'Bones')));
+    add(r3, mirrorCheck('optTendons', tr('Tendones', 'Tendons')));
+    add(r3, mirrorCheck('optMuscle', tr('Músculo', 'Muscle')));
+    add(r3, mirrorCheck('optFlow', tr('Flujo', 'Flow')));
+    add(r3, mirrorCheck('optFollow', tr('Seguir sonda', 'Follow probe')));
+    add(r3, button(tr('Sala', 'Room'), () => (app.scene.roomVisible = !app.scene.roomVisible), { active: () => app.scene.roomVisible, title: tr('Mostrar la sala y el paciente (más lento)', 'Show the room and the patient (slower)') }));
     const rc = btnRow(c3);
     for (const [preset, name] of CAMERAS) add(rc, button(name[0].toUpperCase() + name.slice(1), () => app.scene.setPreset(preset)));
 
     // sesión
-    const cSes = sec('Sesión');
+    const cSes = sec(tr('Sesión', 'Session'));
     const rs = btnRow(cSes);
     const closeThen = (f: () => void) => () => {
       this.openSheet(null);
       f();
     };
-    add(rs, button('Informe', closeThen(() => app.panels.showReport())));
-    add(rs, button('Ayuda', closeThen(() => app.panels.showHelp())));
-    add(rs, button('Bienvenida', closeThen(() => app.panels.showWelcome(true))));
+    add(rs, button(tr('Informe', 'Report'), closeThen(() => app.panels.showReport())));
+    add(rs, button(tr('Ayuda', 'Help'), closeThen(() => app.panels.showHelp())));
+    add(rs, button(tr('Bienvenida', 'Welcome'), closeThen(() => app.panels.showWelcome(true))));
     // en el móvil la barra superior no muestra el enlace de apoyo
-    rs.appendChild(el('a', { class: 'm-kofi', href: SITE.kofi, target: '_blank', rel: 'noopener' }, 'Apoyar en Ko-fi'));
+    rs.appendChild(el('a', { class: 'm-kofi', href: SITE.kofi, target: '_blank', rel: 'noopener' }, tr('Apoyar en Ko-fi', 'Support on Ko-fi')));
+    // la misma vista en el otro idioma (enlace normal: es otra página)
+    rs.appendChild(el('a', { class: 'm-kofi', href: otherLangUrl(), hreflang: OTHER_LANG.code, lang: OTHER_LANG.code }, OTHER_LANG.name));
     this.installRow = btnRow(cSes);
-    add(this.installRow, button('Instalar en el móvil', async () => {
-      if (await installApp()) app.toast('Aplicación instalada: ábrela desde la pantalla de inicio', 'ok');
+    add(this.installRow, button(tr('Instalar en el móvil', 'Install on your phone'), async () => {
+      if (await installApp()) app.toast(tr('Aplicación instalada: ábrela desde la pantalla de inicio', 'App installed: open it from your home screen'), 'ok');
       this.installRow.classList.add('hidden');
     }, { cls: 'primary' }));
     const desk = new URL(location.href);
     desk.searchParams.set('movil', '0');
-    cSes.appendChild(el('p', { class: 'muted m-note' }, `La <b>sala y ergonomía</b>, la sección anatómica aparte y el TGC por bandas están en la <a href="${desk.search}">versión de escritorio</a>.`));
+    cSes.appendChild(
+      el(
+        'p',
+        { class: 'muted m-note' },
+        tr(
+          `La <b>sala y ergonomía</b>, la sección anatómica aparte y el TGC por bandas están en la <a href="${desk.search}">versión de escritorio</a>.`,
+          `<b>Room &amp; ergonomics</b>, the separate anatomy cross-section and per-band TGC are in the <a href="${desk.search}">desktop version</a>.`,
+        ),
+      ),
+    );
   }
 }

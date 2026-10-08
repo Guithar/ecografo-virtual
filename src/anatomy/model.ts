@@ -12,6 +12,7 @@
 import { CatmullRomCurve3, Vector3 } from 'three';
 import { ArmShape } from './armShape';
 import { WaveKind, waveFactor, pulse01, profilePeakFactor } from './hemo';
+import { tr } from '../i18n';
 
 export type StructKind = 'artery' | 'vein' | 'avf' | 'graft' | 'nerve' | 'tendon' | 'bone' | 'hematoma' | 'infiltrado';
 
@@ -214,7 +215,7 @@ export class AnatomyModel {
   }
 
   addStructure(def: StructDef, rebuild = true): Structure {
-    if (this.structures.length >= MAX_STRUCTS) throw new Error('Demasiadas estructuras');
+    if (this.structures.length >= MAX_STRUCTS) throw new Error(tr('Demasiadas estructuras', 'Too many structures'));
     const st = new Structure(def, this.structures.length);
     this.resolve(st);
     this.structures.push(st);

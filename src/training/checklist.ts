@@ -5,6 +5,7 @@
  * Basado en: Moyano Franco MJ, Salgueira Lazo M, Roca-Tey R. Punción ecoguiada del acceso vascular
  * para hemodiálisis (Nefrología al día); GEMAV 2017; procedimientos SEDEN 3.3 y 3.4.
  */
+import { tr } from '../i18n';
 
 export interface ChecklistState {
   /** ángulo entre el brazo y el cuerpo del paciente (°) y descenso del brazo desde el hombro (°) */
@@ -56,27 +57,45 @@ export function procedureChecklist(s: ChecklistState): ChecklistItem[] {
   const graft = !!s.access?.graft;
   return [
     {
-      label: 'Brazo apoyado, a unos 45° del cuerpo',
+      label: tr('Brazo apoyado, a unos 45° del cuerpo', 'Arm supported, about 45° from the body'),
       done: armPositionOk(s.armAngle, s.armPitch),
-      how: `sobre una superficie firme y plana (ahora ${Math.round(s.armAngle)}°) · Sala y ergonomía`,
+      how: tr(
+        `sobre una superficie firme y plana (ahora ${Math.round(s.armAngle)}°) · Sala y ergonomía`,
+        `on a firm, flat surface (now ${Math.round(s.armAngle)}°) · Room &amp; ergonomics`,
+      ),
     },
-    { label: 'Vena localizada y medida', done: s.measures >= 2, how: 'en transversal (1), profundidad y diámetro con el calibre (M)' },
     {
-      label: 'Zona de punción adecuada',
+      label: tr('Vena localizada y medida', 'Vein located and measured'),
+      done: s.measures >= 2,
+      how: tr('en transversal (1), profundidad y diámetro con el calibre (M)', 'in short axis (1), depth and diameter with the caliper (M)'),
+    },
+    {
+      label: tr('Zona de punción adecuada', 'Suitable cannulation site'),
       done: zoneOk(s),
-      how: `≥ 3 cm de la anastomosis, fuera de zonas a evitar${s.otherTipX !== null ? ' y ≥ 5 cm de la otra aguja' : ''} · pestaña Caso`,
+      how: tr(
+        `≥ 3 cm de la anastomosis, fuera de zonas a evitar${s.otherTipX !== null ? ' y ≥ 5 cm de la otra aguja' : ''} · pestaña Caso`,
+        `≥ 3 cm from the anastomosis, outside areas to avoid${s.otherTipX !== null ? ' and ≥ 5 cm from the other needle' : ''} · Case tab`,
+      ),
     },
     graft
-      ? { label: 'Sin compresor (prótesis)', done: !s.tourniquet, how: 'K' }
-      : { label: 'Compresor (FAV nativa)', done: s.tourniquet, how: 'K' },
-    { label: 'Asepsia', done: s.asepsis, how: 'piel desinfectada, funda y gel estériles · botón Asepsia' },
-    { label: 'Aguja colocada', done: s.placed, how: 'sonda en una mano, aguja en la otra · N o «Longitudinal · en plano»' },
-    { label: 'Punta en la luz (reflujo)', done: s.flashed, how: '↑ siguiendo la punta en la pantalla' },
+      ? { label: tr('Sin compresor (prótesis)', 'No tourniquet (graft)'), done: !s.tourniquet, how: 'K' }
+      : { label: tr('Compresor (FAV nativa)', 'Tourniquet (native AVF)'), done: s.tourniquet, how: 'K' },
     {
-      label: 'Aguja alineada y comprobada con suero',
-      done: s.inLumen && s.angleToVessel !== null && s.angleToVessel <= 25 && s.flushes > 0,
-      how: '≤ 25° con el vaso (AvPág + ↑) y lavado con suero (J)',
+      label: tr('Asepsia', 'Asepsis'),
+      done: s.asepsis,
+      how: tr('piel desinfectada, funda y gel estériles · botón Asepsia', 'disinfected skin, sterile cover and gel · Asepsis button'),
     },
-    { label: 'Punción confirmada', done: s.confirmed, how: 'Intro' },
+    {
+      label: tr('Aguja colocada', 'Needle placed'),
+      done: s.placed,
+      how: tr('sonda en una mano, aguja en la otra · N o «Longitudinal · en plano»', 'probe in one hand, needle in the other · N or “Long axis · in-plane”'),
+    },
+    { label: tr('Punta en la luz (reflujo)', 'Tip in the lumen (flashback)'), done: s.flashed, how: tr('↑ siguiendo la punta en la pantalla', '↑ following the tip on the screen') },
+    {
+      label: tr('Aguja alineada y comprobada con suero', 'Needle aligned and checked with saline'),
+      done: s.inLumen && s.angleToVessel !== null && s.angleToVessel <= 25 && s.flushes > 0,
+      how: tr('≤ 25° con el vaso (AvPág + ↑) y lavado con suero (J)', '≤ 25° to the vessel (PgDn + ↑) and saline flush (J)'),
+    },
+    { label: tr('Punción confirmada', 'Cannulation confirmed'), done: s.confirmed, how: tr('Intro', 'Enter') },
   ];
 }

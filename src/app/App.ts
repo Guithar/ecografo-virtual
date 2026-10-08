@@ -6,7 +6,7 @@ import { Color, Matrix4, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three';
 import { ArmShape } from '../anatomy/armShape';
 import { CaseDef, CASES, caseById } from '../anatomy/cases';
 import { AnatomyModel, Structure } from '../anatomy/model';
-import { Needle, NeedleEvent, NeedleRole } from '../interaction/needle';
+import { Needle, NeedleEvent, NeedleRole, roleLabel, stateLabel } from '../interaction/needle';
 import { clampProbe, computePose, defaultProbeState, ProbeState, skinParamAbove, skinParamOf } from '../interaction/probePose';
 import { SceneManager, CameraPreset, defaultRoomConfig, placeDefaults, NeedleVisual } from '../scene/SceneManager';
 import { DopplerAudio, SpectralDoppler } from '../sim/spectral';
@@ -25,10 +25,14 @@ import { FloatingView } from '../ui/floating';
 import { FocusMode } from '../ui/focus';
 import { MobileUI } from '../ui/mobile';
 import { Panels } from '../ui/panels';
+import { LOCALE, tr } from '../i18n';
 
 export type AppMode = 'explore' | 'cannulate' | 'room' | 'learn';
 
 const CLEAR_COLOR = new Color('#0b1117');
+
+/** Primera letra en mayúscula (textos en inglés que empiezan por el nombre de la aguja). */
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * Matriz que escala una malla alrededor de un centro: uniforme (colección esférica) o sólo
@@ -214,8 +218,8 @@ export class App {
     (document.getElementById('caseSelect') as HTMLSelectElement).value = cd.id;
     const diff = document.getElementById('caseDiff')!;
     diff.className = `diff d${cd.difficulty}`;
-    diff.textContent = ['', 'Básico', 'Intermedio', 'Avanzado'][cd.difficulty];
-    document.getElementById('monCase')!.textContent = `${cd.short} · ${this.scene.cfg.side === 'left' ? 'MSI' : 'MSD'}`;
+    diff.textContent = ['', tr('Básico', 'Basic'), tr('Intermedio', 'Intermediate'), tr('Avanzado', 'Advanced')][cd.difficulty];
+    document.getElementById('monCase')!.textContent = `${cd.short} · ${this.scene.cfg.side === 'left' ? tr('MSI', 'L arm') : tr('MSD', 'R arm')}`;
     this.panels.renderCase();
     this.panels.renderMetrics();
     this.panels.renderMeasures();
@@ -274,14 +278,23 @@ export class App {
   statusLine(): string {
     if (this.needleMode()) {
       const n = this.needle;
-      if (!n.placed) return this.dt(`Aguja ${n.role} ${n.gauge}G sin colocar: {{pulsa N para colocarla|pulsa «Fuera de plano» o «En plano»}}`);
+      if (!n.placed)
+        return this.dt(
+          tr(
+            `Aguja ${roleLabel(n.role)} ${n.gauge}G sin colocar: {{pulsa N para colocarla|pulsa «Fuera de plano» o «En plano»}}`,
+            `${cap(roleLabel(n.role))} needle ${n.gauge}G not placed: {{press N to place it|tap "Out-of-plane" or "In-plane"}}`,
+          ),
+        );
       const where = n.inVessel ? ` (${n.inVessel.def.short ?? n.inVessel.def.name})` : '';
-      return `Aguja ${n.role} ${n.gauge}G · ${n.angle.toFixed(0)}° · ${Math.max(0, n.depth).toFixed(1)} mm · ${n.state}${where}${n.confirmed ? ' · evaluada' : ''}`;
+      return `${tr(`Aguja ${roleLabel(n.role)}`, `${cap(roleLabel(n.role))} needle`)} ${n.gauge}G · ${n.angle.toFixed(0)}° · ${Math.max(0, n.depth).toFixed(1)} mm · ${stateLabel(n.state)}${where}${n.confirmed ? tr(' · evaluada', ' · evaluated') : ''}`;
     }
     const p = this.probe;
     const rotN = ((p.rot % 180) + 180) % 180;
-    const view = rotN < 25 || rotN > 155 ? 'transversal' : rotN > 65 && rotN < 115 ? 'longitudinal' : 'oblicua';
-    return `Sonda ${view} · ${(p.x / 10).toFixed(1)} cm de la muñeca · presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · compresor' : ''}`;
+    const view = rotN < 25 || rotN > 155 ? tr('transversal', 'short axis') : rotN > 65 && rotN < 115 ? tr('longitudinal', 'long axis') : tr('oblicua', 'oblique');
+    return (
+      tr(`Sonda ${view} · ${(p.x / 10).toFixed(1)} cm de la muñeca · presión ${p.press.toFixed(1)} mm`, `Probe: ${view} · ${(p.x / 10).toFixed(1)} cm from wrist · pressure ${p.press.toFixed(1)} mm`) +
+      (this.tourniquet ? tr(' · compresor', ' · tourniquet') : '')
+    );
   }
 
   /** Los avisos van en la vista grande (en el móvil, sobre toda la pantalla). */
@@ -307,11 +320,11 @@ export class App {
   ensureNeedleMode(): boolean {
     if (this.needleMode()) return true;
     if (this.mode === 'learn' && this.lesson) {
-      this.toast('Esta lección no usa la aguja. Para puncionar, pasa al modo Punción.', 'warn');
+      this.toast(tr('Esta lección no usa la aguja. Para puncionar, pasa al modo Punción.', 'This lesson does not use the needle. To cannulate, switch to Cannulation mode.'), 'warn');
       return false;
     }
     this.setMode('cannulate');
-    this.toast('Modo Punción activado', 'info');
+    this.toast(tr('Modo Punción activado', 'Cannulation mode on'), 'info');
     return true;
   }
 
@@ -395,7 +408,7 @@ export class App {
     this.approach = approach;
     const n = this.needle;
     if (n.placed && n.depth > 0) {
-      this.toast('Retira primero la aguja actual', 'warn');
+      this.toast(tr('Retira primero la aguja actual', 'Withdraw the current needle first'), 'warn');
       return;
     }
     clampProbe(this.probe);
@@ -430,18 +443,23 @@ export class App {
     const f = this.arm.skinFrame(par.x, par.theta);
     const heading = (Math.atan2(dirH.dot(f.Tt), dirH.dot(f.Tx)) * 180) / Math.PI;
     n.place(this.arm, par.x, par.theta, heading, Math.round(angle));
-    this.toast(`Aguja ${n.role} (${n.gauge}G): abordaje ${approach === 'oop' ? 'transversal (fuera de plano)' : 'longitudinal (en plano)'}, ${Math.round(angle)}°`, 'info');
+    const ap = approach === 'oop' ? tr('transversal (fuera de plano)', 'short-axis (out-of-plane)') : tr('longitudinal (en plano)', 'long-axis (in-plane)');
+    this.toast(tr(`Aguja ${roleLabel(n.role)} (${n.gauge}G): abordaje ${ap}, ${Math.round(angle)}°`, `${cap(roleLabel(n.role))} needle (${n.gauge}G): ${ap} approach, ${Math.round(angle)}°`), 'info');
     this.remindAsepsis();
     this.panels.renderMetrics();
   }
 
   private remindAsepsis() {
-    if (!this.asepsis) this.toast('Sin asepsia: desinfecta la piel y pon funda y gel estériles antes de puncionar (botón Asepsia)', 'warn');
+    if (!this.asepsis)
+      this.toast(
+        tr('Sin asepsia: desinfecta la piel y pon funda y gel estériles antes de puncionar (botón Asepsia)', 'No asepsis: disinfect the skin and use a sterile probe cover and gel before cannulating (Asepsis button)'),
+        'warn',
+      );
   }
 
   setAsepsis(on: boolean) {
     this.asepsis = on;
-    this.toast(on ? 'Asepsia: piel desinfectada, funda estéril en la sonda y gel estéril' : 'Asepsia retirada', on ? 'ok' : 'info');
+    this.toast(on ? tr('Asepsia: piel desinfectada, funda estéril en la sonda y gel estéril', 'Asepsis: skin disinfected, sterile probe cover and sterile gel') : tr('Asepsia retirada', 'Asepsis off'), on ? 'ok' : 'info');
   }
 
   setUiLevel(level: 'basico' | 'avanzado') {
@@ -458,7 +476,7 @@ export class App {
   placeNeedleAt(p: Vector3) {
     const n = this.needle;
     if (n.placed && n.depth > 0) {
-      this.toast('Retira primero la aguja actual', 'warn');
+      this.toast(tr('Retira primero la aguja actual', 'Withdraw the current needle first'), 'warn');
       return;
     }
     const par = skinParamOf(p);
@@ -469,7 +487,10 @@ export class App {
     if (toProbe.length() < 60) heading = (Math.atan2(toProbe.dot(f.Tt), toProbe.dot(f.Tx)) * 180) / Math.PI;
     n.place(this.arm, par.x, par.theta, heading, this.caseDef.access?.angle ?? 30);
     this.placingNeedle = false;
-    this.toast(this.dt('Aguja colocada en la piel. {{Avanza con ↑ o la rueda del ratón.|Avanza con «Avance» en la rueda de ajuste.}}'), 'info');
+    this.toast(
+      this.dt(tr('Aguja colocada en la piel. {{Avanza con ↑ o la rueda del ratón.|Avanza con «Avance» en la rueda de ajuste.}}', 'Needle placed on the skin. {{Advance with ↑ or the mouse wheel.|Advance with "Advance" on the adjustment dial.}}')),
+      'info',
+    );
     this.remindAsepsis();
   }
 
@@ -480,13 +501,16 @@ export class App {
     n.update(this.model, this.time, this.accessIds());
     n.placed = false;
     this.needleFlash[this.activeNeedle] = 0;
-    this.toast('Aguja retirada', 'info');
+    this.toast(tr('Aguja retirada', 'Needle withdrawn'), 'info');
   }
 
   advanceNeedle(mm: number) {
     const n = this.needle;
     if (!n.placed) {
-      this.toast(this.dt('Primero coloca la aguja {{(tecla N o botones de abordaje de la consola)|(«Fuera de plano» o «En plano»)}}'), 'warn');
+      this.toast(
+        this.dt(tr('Primero coloca la aguja {{(tecla N o botones de abordaje de la consola)|(«Fuera de plano» o «En plano»)}}', 'Place the needle first {{(N key or the approach buttons on the console)|("Out-of-plane" or "In-plane")}}')),
+        'warn',
+      );
       return;
     }
     if (n.confirmed) return;
@@ -517,7 +541,7 @@ export class App {
     const rmax = kind === 'artery' ? 7 : kind === 'avf' || kind === 'graft' ? 5.5 : 3.2;
     const st = this.model.addStructure({
       id: `hematoma_${Date.now()}`,
-      name: 'Hematoma (extravasación)',
+      name: tr('Hematoma (extravasación)', 'Hematoma (extravasation)'),
       short: 'Hematoma',
       kind: 'hematoma',
       group: 'hematoma',
@@ -535,7 +559,7 @@ export class App {
   flushNeedle() {
     const n = this.needle;
     if (!n.placed || n.depth <= 0) {
-      this.toast(this.dt('Primero introduce la aguja; después lava con suero {{(J)|(«Suero»)}} para comprobar la posición'), 'warn');
+      this.toast(this.dt(tr('Primero introduce la aguja; después lava con suero {{(J)|(«Suero»)}} para comprobar la posición', 'Insert the needle first, then flush with saline {{(J)|("Saline")}} to check its position')), 'warn');
       return;
     }
     if (this.flush && this.time - this.flush.t0 < FLUSH_INJECT_S) return;
@@ -556,10 +580,16 @@ export class App {
         flowDir: smp.t.clone().multiplyScalar(st.dyn.qNow >= 0 ? 1 : -1),
         needle: this.activeNeedle,
       };
-      ev('flush', `Lavado con suero: entra sin resistencia y las microburbujas recorren la luz (${st.def.short ?? st.def.name}): punta intraluminal`, 'ok', st.def.id);
+      const name = st.def.short ?? st.def.name;
+      ev(
+        'flush',
+        tr(`Lavado con suero: entra sin resistencia y las microburbujas recorren la luz (${name}): punta intraluminal`, `Saline flush: flows without resistance and microbubbles travel along the lumen (${name}): tip intraluminal`),
+        'ok',
+        st.def.id,
+      );
     } else {
       this.addInfiltration(n);
-      ev('infiltration', 'Infiltración: el suero se acumula en el tejido y no en la luz. Detén el lavado y recoloca la aguja.', 'error');
+      ev('infiltration', tr('Infiltración: el suero se acumula en el tejido y no en la luz. Detén el lavado y recoloca la aguja.', 'Infiltration: saline is pooling in the tissue, not in the lumen. Stop the flush and reposition the needle.'), 'error');
     }
   }
 
@@ -594,8 +624,8 @@ export class App {
     }
     const st = this.model.addStructure({
       id: `infiltrado_${Date.now()}`,
-      name: 'Infiltración de suero',
-      short: 'Suero',
+      name: tr('Infiltración de suero', 'Saline infiltration'),
+      short: tr('Suero', 'Saline'),
       kind: 'infiltrado',
       group: 'hematoma',
       pts: axis ? [{ x: a.x, y: a.y, z: a.z, r: r0 }, { x: b.x, y: b.y, z: b.z, r: r0 }] : [{ x: a.x, y: a.y, z: a.z, r: r0 }],
@@ -608,52 +638,71 @@ export class App {
   confirmPuncture() {
     const n = this.needle;
     if (!n.placed || n.depth <= 0) {
-      this.toast('No hay aguja insertada', 'warn');
+      this.toast(tr('No hay aguja insertada', 'No needle inserted'), 'warn');
       return;
     }
     if (n.confirmed) {
-      this.toast('Esta punción ya está evaluada. Retira la aguja para repetir.', 'info');
+      this.toast(tr('Esta punción ya está evaluada. Retira la aguja para repetir.', 'This cannulation has already been evaluated. Withdraw the needle to repeat it.'), 'info');
       return;
     }
     const checks: FinalCheck[] = [];
     const access = this.accessIds();
     const inAccess = n.state === 'luz' && !!n.inVessel && access.has(n.inVessel.def.id);
-    checks.push({ label: 'Punta en la luz del acceso vascular', ok: inAccess, detail: inAccess ? `En ${n.inVessel!.def.name}` : `Estado: ${n.state}${n.inVessel ? ' en ' + n.inVessel.def.name : ''}`, penalty: 35 });
+    const OK = tr('Correcto', 'OK');
+    const YES = tr('Sí', 'Yes');
+    checks.push({
+      label: tr('Punta en la luz del acceso vascular', 'Tip in the lumen of the vascular access'),
+      ok: inAccess,
+      detail: inAccess ? tr(`En ${n.inVessel!.def.name}`, `In ${n.inVessel!.def.name}`) : tr('Estado: ', 'Status: ') + `${stateLabel(n.state)}${n.inVessel ? tr(' en ', ' in ') + n.inVessel.def.name : ''}`,
+      penalty: 35,
+    });
     const len = n.intraluminalLength(this.model);
-    checks.push({ label: 'Recorrido intraluminal ≥ 5 mm', ok: inAccess ? len >= 5 : null, detail: `${len.toFixed(1)} mm`, penalty: 8 });
+    checks.push({ label: tr('Recorrido intraluminal ≥ 5 mm', 'Intraluminal path ≥ 5 mm'), ok: inAccess ? len >= 5 : null, detail: `${len.toFixed(1)} mm`, penalty: 8 });
     // cada criterio se decide sobre el valor redondeado que se muestra (nunca «25°» con ✗ en «≤ 25°»)
     const cen = n.centering(this.model);
     const cenPct = cen === null ? null : Math.round(cen * 100);
-    checks.push({ label: 'Punta centrada en la luz', ok: cenPct === null ? null : cenPct < 65, detail: cenPct === null ? '—' : `${cenPct} % del radio desde el eje`, penalty: 5 });
+    checks.push({ label: tr('Punta centrada en la luz', 'Tip centered in the lumen'), ok: cenPct === null ? null : cenPct < 65, detail: cenPct === null ? '—' : tr(`${cenPct} % del radio desde el eje`, `${cenPct}% of the radius off-axis`), penalty: 5 });
     const av = n.angleToVessel(this.model);
     const avR = av === null ? null : Math.round(av * 10) / 10;
-    checks.push({ label: 'Aguja alineada con el vaso (≤ 25° tras bajar el ángulo)', ok: avR === null ? null : avR <= 25, detail: avR === null ? '—' : `${avR.toFixed(1)}°`, penalty: 5 });
+    checks.push({ label: tr('Aguja alineada con el vaso (≤ 25° tras bajar el ángulo)', 'Needle aligned with the vessel (≤ 25° after lowering the angle)'), ok: avR === null ? null : avR <= 25, detail: avR === null ? '—' : `${avR.toFixed(1)}°`, penalty: 5 });
     const acc = this.caseDef.access;
     if (acc) {
       if (acc.anastomosisX !== undefined) {
         const d = Math.round(Math.abs(n.tip.x - acc.anastomosisX));
-        checks.push({ label: 'Distancia a la anastomosis ≥ 3 cm', ok: d >= 30, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
+        checks.push({ label: tr('Distancia a la anastomosis ≥ 3 cm', 'Distance from the anastomosis ≥ 3 cm'), ok: d >= 30, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
       }
       const inZone = n.tip.x >= acc.zone[0] && n.tip.x <= acc.zone[1];
-      checks.push({ label: 'Dentro de la zona de punción recomendada', ok: inZone, detail: `${(n.tip.x / 10).toFixed(1)} cm desde la muñeca`, penalty: 5 });
+      checks.push({ label: tr('Dentro de la zona de punción recomendada', 'Within the recommended cannulation zone'), ok: inZone, detail: tr(`${(n.tip.x / 10).toFixed(1)} cm desde la muñeca`, `${(n.tip.x / 10).toFixed(1)} cm from the wrist`), penalty: 5 });
       const bad = acc.avoid?.find((z) => n.tip.x >= z.x0 && n.tip.x <= z.x1);
-      checks.push({ label: 'Fuera de zonas a evitar', ok: !bad, detail: bad ? bad.reason : 'Correcto', penalty: 15 });
+      checks.push({ label: tr('Fuera de zonas a evitar', 'Outside zones to avoid'), ok: !bad, detail: bad ? bad.reason : OK, penalty: 15 });
     }
     if (inAccess && n.inVessel) {
       const fd = n.flowDirection(this.model, n.inVessel);
-      if (n.role === 'venosa') checks.push({ label: 'Aguja venosa anterógrada (hacia el corazón)', ok: fd > 0, detail: fd > 0 ? 'Anterógrada' : 'Retrógrada', penalty: 10 });
-      else checks.push({ label: 'Dirección de la aguja arterial', ok: null, detail: fd > 0 ? 'Anterógrada' : 'Retrógrada (aceptable según protocolo)', penalty: 0 });
+      if (n.role === 'venosa')
+        checks.push({ label: tr('Aguja venosa anterógrada (hacia el corazón)', 'Venous needle antegrade (toward the heart)'), ok: fd > 0, detail: fd > 0 ? tr('Anterógrada', 'Antegrade') : tr('Retrógrada', 'Retrograde'), penalty: 10 });
+      else
+        checks.push({
+          label: tr('Dirección de la aguja arterial', 'Arterial needle direction'),
+          ok: null,
+          detail: fd > 0 ? tr('Anterógrada', 'Antegrade') : tr('Retrógrada (aceptable según protocolo)', 'Retrograde (acceptable per protocol)'),
+          penalty: 0,
+        });
     }
     const other = this.needles[1 - this.activeNeedle];
     if (other.placed && other.confirmed) {
       const d = Math.round(other.tip.distanceTo(n.tip));
-      checks.push({ label: 'Separación entre puntas ≥ 5 cm', ok: d >= 50, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
+      checks.push({ label: tr('Separación entre puntas ≥ 5 cm', 'Tip-to-tip distance ≥ 5 cm'), ok: d >= 50, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
     }
-    checks.push({ label: 'Sin transfixión ni punción arterial/nerviosa', ok: !n.transfixed && !n.arteryHit && !n.nerveHit, detail: [n.transfixed ? 'transfixión' : '', n.arteryHit ? 'arteria' : '', n.nerveHit ? 'nervio' : ''].filter(Boolean).join(', ') || 'Correcto', penalty: 0 });
-    checks.push({ label: 'Técnica aséptica (piel desinfectada, funda y gel estériles)', ok: this.asepsis, detail: this.asepsis ? 'Sí' : 'No', penalty: 5 });
+    checks.push({
+      label: tr('Sin transfixión ni punción arterial/nerviosa', 'No transfixion, arterial or nerve puncture'),
+      ok: !n.transfixed && !n.arteryHit && !n.nerveHit,
+      detail: [n.transfixed ? tr('transfixión', 'transfixion') : '', n.arteryHit ? tr('arteria', 'artery') : '', n.nerveHit ? tr('nervio', 'nerve') : ''].filter(Boolean).join(', ') || OK,
+      penalty: 0,
+    });
+    checks.push({ label: tr('Técnica aséptica (piel desinfectada, funda y gel estériles)', 'Aseptic technique (skin disinfected, sterile cover and gel)'), ok: this.asepsis, detail: this.asepsis ? YES : 'No', penalty: 5 });
     const graft = acc?.graft;
-    if (graft) checks.push({ label: 'Sin compresor en prótesis', ok: !this.tourniquet, detail: this.tourniquet ? 'Compresor aplicado' : 'Correcto', penalty: 5 });
-    else checks.push({ label: 'Compresor aplicado (FAV nativa)', ok: this.tourniquet, detail: this.tourniquet ? 'Sí' : 'No (la vena se distiende menos)', penalty: 2 });
+    if (graft) checks.push({ label: tr('Sin compresor en prótesis', 'No tourniquet on a graft'), ok: !this.tourniquet, detail: this.tourniquet ? tr('Compresor aplicado', 'Tourniquet applied') : OK, penalty: 5 });
+    else checks.push({ label: tr('Compresor aplicado (FAV nativa)', 'Tourniquet applied (native AVF)'), ok: this.tourniquet, detail: this.tourniquet ? YES : tr('No (la vena se distiende menos)', 'No (the vein distends less)'), penalty: 2 });
     this.metrics.checks = checks;
     n.confirmed = true;
     const score = this.metrics.score();
@@ -661,9 +710,9 @@ export class App {
       date: new Date().toISOString(),
       caseId: this.caseDef.id,
       caseTitle: this.caseDef.short,
-      approach: this.approach === 'oop' ? 'Transversal (fuera de plano)' : 'Longitudinal (en plano)',
+      approach: this.approach === 'oop' ? tr('Transversal (fuera de plano)', 'Short-axis (out-of-plane)') : tr('Longitudinal (en plano)', 'Long-axis (in-plane)'),
       score,
-      needle: `${n.role} ${n.gauge}G`,
+      needle: `${roleLabel(n.role)} ${n.gauge}G`,
       checks,
     };
     this.history.push(rec);
@@ -672,7 +721,12 @@ export class App {
     } catch {
       /* almacenamiento no disponible */
     }
-    this.toast(inAccess ? `Punción ${n.role} evaluada: ${score}/100` : 'Punción no válida: la punta no está en la luz', inAccess ? 'ok' : 'error');
+    this.toast(
+      inAccess
+        ? tr(`Punción ${roleLabel(n.role)} evaluada: ${score}/100`, `${cap(roleLabel(n.role))} cannulation evaluated: ${score}/100`)
+        : tr('Punción no válida: la punta no está en la luz', 'Invalid cannulation: the tip is not in the lumen'),
+      inAccess ? 'ok' : 'error',
+    );
     this.panels.renderMetrics();
     this.panels.showTab('metrics');
     this.focus?.onEvaluated();
@@ -770,14 +824,14 @@ export class App {
   setTourniquet(on: boolean) {
     this.tourniquet = on;
     this.model.tourniquet = on;
-    this.toast(on ? 'Compresor aplicado: la vena se distiende' : 'Compresor retirado', 'info');
+    this.toast(on ? tr('Compresor aplicado: la vena se distiende', 'Tourniquet applied: the vein distends') : tr('Compresor retirado', 'Tourniquet released'), 'info');
   }
 
   setSide(side: 'left' | 'right') {
     const cfg = { ...this.scene.cfg, side };
     placeDefaults(cfg);
     this.scene.setRoomConfig(cfg, true);
-    document.getElementById('monCase')!.textContent = `${this.caseDef.short} · ${side === 'left' ? 'MSI' : 'MSD'}`;
+    document.getElementById('monCase')!.textContent = `${this.caseDef.short} · ${side === 'left' ? tr('MSI', 'L arm') : tr('MSD', 'R arm')}`;
     this.scene.setPreset(this.mode === 'room' ? 'sala' : 'procedimiento');
   }
 
@@ -884,7 +938,7 @@ export class App {
     const addMax = (paneId: string, cls: string) => {
       const b = document.createElement('button');
       b.className = 'maxbtn';
-      b.title = 'Maximizar / restaurar panel';
+      b.title = tr('Maximizar / restaurar panel', 'Maximize / restore panel');
       b.textContent = '⤢';
       b.addEventListener('click', () => {
         const on = !grid.classList.contains(cls);
@@ -1424,27 +1478,31 @@ export class App {
     const p = this.probe;
     const s = this.sim.settings;
     const rotN = ((p.rot % 180) + 180) % 180;
-    const view = rotN < 25 || rotN > 155 ? 'transversal (eje corto)' : rotN > 65 && rotN < 115 ? 'longitudinal (eje largo)' : 'oblicua';
+    const view = rotN < 25 || rotN > 155 ? tr('transversal (eje corto)', 'short axis (transverse)') : rotN > 65 && rotN < 115 ? tr('longitudinal (eje largo)', 'long axis (longitudinal)') : tr('oblicua', 'oblique');
     const acc = this.caseDef.access;
-    const distAn = acc?.anastomosisX !== undefined ? `\nA la anastomosis: <b>${(Math.abs(p.x - acc.anastomosisX) / 10).toFixed(1)} cm</b>` : '';
+    const distAn = acc?.anastomosisX !== undefined ? tr('\nA la anastomosis: ', '\nTo anastomosis: ') + `<b>${(Math.abs(p.x - acc.anastomosisX) / 10).toFixed(1)} cm</b>` : '';
     document.getElementById('probeHud')!.innerHTML =
-      `Sonda: <b>${view}</b>\n` +
-      `Posición: ${(p.x / 10).toFixed(1)} cm desde la muñeca${distAn}\n` +
-      `Rotación ${p.rot.toFixed(0)}° · Inclinación ${p.tilt.toFixed(0)}° · Balanceo ${p.rock.toFixed(0)}°\n` +
-      `Presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · <b>compresor</b>' : ''}${this.asepsis ? ' · <b>asepsia</b>' : ''}` +
-      (s.frozen ? '\n<b>IMAGEN CONGELADA</b>' : '');
+      tr(`Sonda: <b>${view}</b>\n`, `Probe: <b>${view}</b>\n`) +
+      tr(`Posición: ${(p.x / 10).toFixed(1)} cm desde la muñeca`, `Position: ${(p.x / 10).toFixed(1)} cm from the wrist`) +
+      `${distAn}\n` +
+      tr(`Rotación ${p.rot.toFixed(0)}° · Inclinación ${p.tilt.toFixed(0)}° · Balanceo ${p.rock.toFixed(0)}°\n`, `Rotation ${p.rot.toFixed(0)}° · Tilt ${p.tilt.toFixed(0)}° · Rock ${p.rock.toFixed(0)}°\n`) +
+      tr(`Presión ${p.press.toFixed(1)} mm`, `Pressure ${p.press.toFixed(1)} mm`) +
+      `${this.tourniquet ? tr(' · <b>compresor</b>', ' · <b>tourniquet</b>') : ''}${this.asepsis ? tr(' · <b>asepsia</b>', ' · <b>asepsis</b>') : ''}` +
+      (s.frozen ? tr('\n<b>IMAGEN CONGELADA</b>', '\n<b>IMAGE FROZEN</b>') : '');
     const n = this.needle;
     const nh = document.getElementById('needleHud')!;
     if (!nh.classList.contains('hidden')) {
-      if (!n.placed) nh.innerHTML = `Aguja <b>${n.role}</b> ${n.gauge}G\nSin colocar · pulsa <b>N</b> o "Colocar"`;
+      const role = roleLabel(n.role);
+      if (!n.placed) nh.innerHTML = tr(`Aguja <b>${role}</b> ${n.gauge}G\nSin colocar · pulsa <b>N</b> o "Colocar"`, `<b>${cap(role)}</b> needle ${n.gauge}G\nNot placed · press <b>N</b> or "Place"`);
       else {
         const im = this.sim.tissueToImage(n.tip);
         nh.innerHTML =
-          `Aguja <b>${n.role}</b> ${n.gauge}G · ${n.length} mm\n` +
-          `Ángulo ${n.angle.toFixed(0)}° · rumbo ${n.heading.toFixed(0)}°\n` +
-          `Insertada ${Math.max(0, n.depth).toFixed(1)} mm\n` +
-          `Estado: <b>${n.state}</b>${n.inVessel ? ' (' + (n.inVessel.def.short ?? n.inVessel.def.name) + ')' : ''}\n` +
-          `Punta: ${im.w.toFixed(1)} mm prof · ${Math.abs(im.e).toFixed(1)} mm del plano`;
+          tr(`Aguja <b>${role}</b> ${n.gauge}G · ${n.length} mm\n`, `<b>${cap(role)}</b> needle ${n.gauge}G · ${n.length} mm\n`) +
+          tr(`Ángulo ${n.angle.toFixed(0)}° · rumbo ${n.heading.toFixed(0)}°\n`, `Angle ${n.angle.toFixed(0)}° · heading ${n.heading.toFixed(0)}°\n`) +
+          tr(`Insertada ${Math.max(0, n.depth).toFixed(1)} mm\n`, `Inserted ${Math.max(0, n.depth).toFixed(1)} mm\n`) +
+          tr('Estado: ', 'Status: ') +
+          `<b>${stateLabel(n.state)}</b>${n.inVessel ? ' (' + (n.inVessel.def.short ?? n.inVessel.def.name) + ')' : ''}\n` +
+          tr(`Punta: ${im.w.toFixed(1)} mm prof · ${Math.abs(im.e).toFixed(1)} mm del plano`, `Tip: ${im.w.toFixed(1)} mm deep · ${Math.abs(im.e).toFixed(1)} mm from plane`);
       }
     }
     // barra de cine visible al congelar
@@ -1462,7 +1520,7 @@ export class App {
     }
     const clk = document.getElementById('monClock')!;
     const d = new Date();
-    clk.textContent = `${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+    clk.textContent = `${d.toLocaleDateString(LOCALE)} ${d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })}`;
     if (this.mode === 'room' || this.panels.currentTab === 'ergo') this.ergo = evaluateErgonomics(this.scene, this.sim);
     // PW: medidas
     if (s.pw) {
@@ -1472,9 +1530,11 @@ export class App {
       const qa = area && m.valid ? m.tamv * area * 60 : null;
       this.monitor.setSpecMeasures(
         m.valid
-          ? `<span>VPS <b>${m.psv.toFixed(0)}</b> cm/s</span><span>VFD <b>${m.edv.toFixed(0)}</b></span><span>IR <b>${m.ri.toFixed(2)}</b></span><span>IP <b>${m.pi.toFixed(2)}</b></span><span>TAMV <b>${m.tamv.toFixed(0)}</b></span>` +
-              (qa !== null ? `<span>Ø ${dmm!.toFixed(1)} mm → Q <b>${qa.toFixed(0)}</b> mL/min</span>` : '<span class="muted">Mide el diámetro para calcular el flujo</span>')
-          : '<span class="muted">Coloca el volumen de muestra dentro de un vaso</span>',
+          ? `<span>${tr('VPS', 'PSV')} <b>${m.psv.toFixed(0)}</b> cm/s</span><span>${tr('VFD', 'EDV')} <b>${m.edv.toFixed(0)}</b></span><span>${tr('IR', 'RI')} <b>${m.ri.toFixed(2)}</b></span><span>${tr('IP', 'PI')} <b>${m.pi.toFixed(2)}</b></span><span>TAMV <b>${m.tamv.toFixed(0)}</b></span>` +
+              (qa !== null
+                ? `<span>Ø ${dmm!.toFixed(1)} mm → Q <b>${qa.toFixed(0)}</b> mL/min</span>`
+                : tr('<span class="muted">Mide el diámetro para calcular el flujo</span>', '<span class="muted">Measure the diameter to calculate flow</span>'))
+          : tr('<span class="muted">Coloca el volumen de muestra dentro de un vaso</span>', '<span class="muted">Place the sample volume inside a vessel</span>'),
       );
     } else this.monitor.setSpecMeasures('');
   }
@@ -1488,7 +1548,7 @@ export class App {
       try {
         if (step.check(this.lessonCtx())) {
           L.done[L.step] = true;
-          this.toast('✓ Paso completado', 'ok');
+          this.toast(tr('✓ Paso completado', '✓ Step completed'), 'ok');
           setTimeout(() => {
             if (this.lesson === L && L.step < L.lesson.steps.length - 1) {
               L.step++;

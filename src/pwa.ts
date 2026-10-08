@@ -2,6 +2,8 @@
  * Aplicación instalable (PWA): service worker para usarla sin conexión y aviso de instalación
  * («Añadir a pantalla de inicio»), que la abre a pantalla completa sin las barras del navegador.
  */
+import { LANG } from './i18n';
+
 interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -18,8 +20,10 @@ export function setupPwa() {
   window.addEventListener('appinstalled', () => (deferred = null));
   // sólo en la versión publicada: en desarrollo la caché serviría módulos antiguos
   if (import.meta.env.PROD && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    // uno solo para todo el sitio: la versión inglesa (/en/) registra el de la raíz
+    const root = LANG === 'en' ? '../' : './';
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {
+      navigator.serviceWorker.register(`${root}sw.js`, { scope: root }).catch(() => {
         /* p. ej. dentro de un marco: la aplicación funciona igual, sin caché */
       });
     });
