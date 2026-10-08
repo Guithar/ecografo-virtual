@@ -5,7 +5,11 @@ import { caseById, CASES } from '../../src/anatomy/cases';
 import { waveFactor, waveStats } from '../../src/anatomy/hemo';
 import { AnatomyModel } from '../../src/anatomy/model';
 import { Needle } from '../../src/interaction/needle';
+import { computePose, defaultProbeState, skinParamAbove } from '../../src/interaction/probePose';
+import type { ProbePose } from '../../src/sim/UltrasoundSim';
 import { Metrics } from '../../src/training/metrics';
+import { FLUSH_INJECT_S, flushParams, innerDiameter, jetVelocity } from '../../src/sim/flush';
+import { armPositionOk, ChecklistState, procedureChecklist, zoneOk } from '../../src/training/checklist';
 
 function build(id: string) {
   const cd = caseById(id);
@@ -35,6 +39,36 @@ describe('hemodinámica', () => {
 });
 
 describe('forma del brazo', () => {
+  it('centrar la sonda sobre el vaso deja su eje en la normal de la piel', () => {
+    const { arm, model } = build('rc_madura');
+    const fav = model.byId('fav')!;
+    for (const k of [40, 70, 100]) {
+      const c = fav.samples[k].p;
+      const f = (() => {
+        const par = skinParamAbove(arm, c);
+        return arm.skinFrame(par.x, par.theta);
+      })();
+      const d = c.clone().sub(f.S);
+      const offAxis = d.addScaledVector(f.N, -d.dot(f.N)).length();
+      expect(offAxis).toBeLessThan(0.05); // mm
+    }
+  });
+
+  it('en eje largo sobre el vaso hay una sola etiqueta para él', () => {
+    const { arm, model } = build('rc_madura');
+    const fav = model.byId('fav')!;
+    const st = { ...defaultProbeState(), ...skinParamAbove(arm, fav.samples[70].p), rot: 90 };
+    const pose = computePose(arm, st, { F: new Vector3(), L: new Vector3(), B: new Vector3(), E: new Vector3(), press: 0, width: 38 } as ProbePose);
+    const cr = model.planeCrossings(pose.F, pose.L, pose.B, pose.E, 38, 25).filter((c) => c.st === fav);
+    expect(cr.length).toBe(1);
+    expect(cr[0].along).toBe(true);
+    // en eje corto sigue siendo un cruce (las lecciones distinguen así el corte transversal)
+    const tr = computePose(arm, { ...st, rot: 0 }, { ...pose } as ProbePose);
+    const cc = model.planeCrossings(tr.F, tr.L, tr.B, tr.E, 38, 25).filter((c) => c.st === fav);
+    expect(cc.length).toBe(1);
+    expect(cc[0].along).toBe(false);
+  });
+
   it('surfacePoint y skinDepth son coherentes', () => {
     const arm = new ArmShape();
     for (const [x, th, d] of [
@@ -141,6 +175,39 @@ describe('aguja', () => {
     expect(events).toContain('backwall');
   });
 
+  it('bajar el ángulo con la punta en la luz no es una redirección; pivotar en el tejido sí', () => {
+    const { arm, model } = build('rc_madura');
+    const fav = model.byId('fav')!;
+    const target = fav.samples[70].p;
+    const th = (Math.atan2(target.z, target.y) * 180) / Math.PI;
+    const ids = new Set(['fav']);
+    const n = new Needle('venosa');
+    n.place(arm, target.x - 9, th, 0, 35);
+    let t = 0;
+    for (let i = 0; i < 120 && n.state !== 'luz'; i++) {
+      n.depth += 0.2;
+      n.update(model, (t += 0.05), ids);
+    }
+    expect(n.state).toBe('luz');
+    // aplanar y avanzar a la vez (AvPág + ↑) hasta 23°
+    for (let i = 0; i < 12; i++) {
+      n.angle -= 1;
+      n.depth += 0.4;
+      n.update(model, (t += 0.05), ids);
+    }
+    expect(n.state).toBe('luz');
+    expect(n.redirections).toBe(0);
+    // con la punta en el tejido, un giro de 6° sí es una redirección
+    const m = new Needle('venosa');
+    m.place(arm, target.x - 9, th, 0, 35);
+    m.depth = 3;
+    m.update(model, 0, ids);
+    expect(m.state).toBe('tejido');
+    m.heading = 6;
+    m.update(model, 0.1, ids);
+    expect(m.redirections).toBe(1);
+  });
+
   it('cruzar el rumbo ±180° gira por el camino corto (sin barrido de 360°)', () => {
     const { arm, model } = build('rc_madura');
     const n = new Needle('venosa');
@@ -171,7 +238,101 @@ describe('aguja', () => {
   });
 });
 
+describe('lavado con suero', () => {
+  it('chorro de alta velocidad a la salida de una aguja 15G (≈ 2 m/s)', () => {
+    const v = jetVelocity(innerDiameter(1.829));
+    expect(v).toBeGreaterThan(150);
+    expect(v).toBeLessThan(300);
+  });
+
+  it('en una FAV de alto flujo el penacho sale del campo en cuanto termina la inyección', () => {
+    const fav = { t0: 10, sidx: 3, vmean: 500, qVessel: 15, jetVel: 200 };
+    const during = flushParams(fav, 11);
+    expect(during.active).toBe(true);
+    expect(during.jet).toBeCloseTo(1, 5);
+    expect(during.tail).toBe(0);
+    expect(during.intensity).toBeGreaterThan(0.5);
+    expect(flushParams(fav, 10 + FLUSH_INJECT_S + 1).active).toBe(false);
+  });
+
+  it('en una vena de flujo lento el penacho se ve más tiempo y está menos diluido', () => {
+    const vein = { t0: 0, sidx: 1, vmean: 40, qVessel: 0.5, jetVel: 200 };
+    const p = flushParams(vein, FLUSH_INJECT_S + 1);
+    expect(p.active).toBe(true);
+    expect(p.tail).toBeGreaterThan(0);
+    expect(p.front).toBeGreaterThan(p.tail);
+    expect(p.jet).toBeLessThan(0.01);
+    const fav = flushParams({ ...vein, vmean: 500, qVessel: 15 }, 1);
+    expect(flushParams(vein, 1).intensity).toBeGreaterThan(fav.intensity);
+  });
+});
+
+describe('lista de pasos de la punción', () => {
+  const base: ChecklistState = {
+    armAngle: 58,
+    armPitch: 17,
+    measures: 0,
+    probeX: 110,
+    access: { anastomosisX: 27, zone: [60, 230] },
+    otherTipX: null,
+    tourniquet: false,
+    asepsis: false,
+    placed: false,
+    flashed: false,
+    inLumen: false,
+    angleToVessel: null,
+    flushes: 0,
+    confirmed: false,
+  };
+
+  it('brazo a unos 45° del cuerpo y apoyado', () => {
+    expect(armPositionOk(45, 10)).toBe(true);
+    expect(armPositionOk(58, 17)).toBe(true); // disposición por defecto de la sala
+    expect(armPositionOk(80, 10)).toBe(false); // pegado al cuerpo
+    expect(armPositionOk(15, 10)).toBe(false); // abierto en cruz
+    expect(armPositionOk(45, 35)).toBe(false); // colgando
+  });
+
+  it('zona: ≥ 3 cm de la anastomosis, dentro de la zona y ≥ 5 cm de la otra aguja', () => {
+    expect(zoneOk(base)).toBe(true);
+    expect(zoneOk({ ...base, probeX: 50 })).toBe(false); // a 2,3 cm de la anastomosis
+    expect(zoneOk({ ...base, probeX: 250 })).toBe(false); // fuera de la zona
+    expect(zoneOk({ ...base, otherTipX: 140 })).toBe(false); // 3 cm de la otra punta
+    expect(zoneOk({ ...base, probeX: 160, otherTipX: 102 })).toBe(true);
+    expect(zoneOk({ ...base, access: { ...base.access!, avoid: [{ x0: 100, x1: 120 }] } })).toBe(false);
+  });
+
+  it('los pasos se marcan con el estado y el compresor depende del tipo de acceso', () => {
+    const done = (s: ChecklistState) => procedureChecklist(s).filter((i) => i.done).length;
+    expect(done(base)).toBe(2); // brazo y zona
+    const full = { ...base, measures: 2, tourniquet: true, asepsis: true, placed: true, flashed: true, inLumen: true, angleToVessel: 20, flushes: 1, confirmed: true };
+    expect(done(full)).toBe(9);
+    const graft = procedureChecklist({ ...full, access: { ...base.access!, graft: true } });
+    expect(graft[3].label).toContain('Sin compresor');
+    expect(graft[3].done).toBe(false);
+  });
+});
+
 describe('métricas', () => {
+  it('penaliza la infiltración de suero y cuenta los lavados', () => {
+    const m = new Metrics();
+    m.onEvent({ t: 1, type: 'flush', msg: '', severity: 'ok' });
+    expect(m.score()).toBe(100);
+    m.onEvent({ t: 2, type: 'infiltration', msg: '', severity: 'error' });
+    expect(m.score()).toBe(88);
+    expect(m.snapshot().flushes).toBe(1);
+    expect(m.snapshot().infiltrations).toBe(1);
+  });
+
+  it('el avance en plano antes de que la punta entre en la imagen no cuenta como avance a ciegas', () => {
+    const m = new Metrics();
+    m.frame(0, 4, null, false, 0, 0); // bajo el extremo de la sonda
+    m.frame(1, 10, true, false, 0, 0);
+    expect(m.tipVisiblePct()).toBe(100);
+    m.frame(2, 10, false, false, 0, 0); // fuera del haz dentro del campo: sí cuenta
+    expect(m.tipVisiblePct()).toBe(50);
+  });
+
   it('penaliza transfixión y punción arterial', () => {
     const m = new Metrics();
     expect(m.score()).toBe(100);

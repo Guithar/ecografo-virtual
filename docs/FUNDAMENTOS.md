@@ -1,4 +1,4 @@
-# Fundamentos médicos y físicos del Ecógrafo Virtual FAV
+# Fundamentos médicos y físicos de Fistulab
 
 Este documento recoge los parámetros clínicos y físicos que usa el simulador y de dónde salen.
 Se consultaron guías clínicas, estudios revisados por pares y bibliografía de física de ultrasonidos.
@@ -133,14 +133,24 @@ protocolos y las guías vigentes.
 
 ## 5. Punción ecoguiada
 
-- **Sonda:** lineal de alta frecuencia, 7–15 MHz [11,26].
-- **Eje corto / fuera de plano:**
-  - Ventaja: centra el vaso y muestra las estructuras vecinas.
-  - Riesgo: **confundir el cuerpo de la aguja con la punta** y perforar la pared posterior. En maniquí, el 64 % de los residentes perforó la pared posterior de la yugular interna con este abordaje [64].
-- **Eje largo / en plano:**
-  - Ventaja: se ve toda la aguja.
+- **Indicaciones:** es especialmente útil en las **primeras punciones** e indicada en **pacientes obesos**, **vasos muy profundos** y **FAV difíciles de puncionar a ciegas** [11]. Una FAV es difícil por escasa maduración o desarrollo, estenosis de la vena yuxtaanastomótica, venas accesorias, colaterales no puncionables o hematomas de punciones previas [11]. Cada caso del simulador explica por qué la punción ecoguiada está indicada en él.
+- **Ecografía a pie de cama (POCUS) por el personal de la unidad:** permite detectar antes la patología del acceso, facilita la punción y reduce los intentos fallidos, con lo que preserva mejor la FAV [11].
+- **Sonda:** lineal de alta frecuencia, 7,5–12,5 MHz: mucha resolución y poca penetración, adecuada para el acceso vascular [11,26].
+- **Posición:** paciente tumbado o sentado, con el brazo apoyado en una **superficie dura y plana, a unos 45° del cuerpo** [11]. El simulador lo comprueba en *Sala y ergonomía* y en la lista de pasos.
+- **Asepsia:** la punción se hace con técnica aséptica; algunos centros usan **funda y gel estériles** [11]. En el simulador es un paso (botón *Asepsia*) y un criterio de la evaluación.
+- **Técnica:** la sonda se sujeta con una mano y la aguja con la otra, viendo el vaso en todo momento. En el abordaje transversal, el punto de entrada queda a pocos milímetros del centro del transductor. Hay que **localizar siempre la punta** y ajustar el ángulo en consecuencia [11].
+- **Abordaje longitudinal (eje largo, en plano):**
+  - Es el **preferido en la mayoría de las unidades de hemodiálisis**: la aguja se mantiene en el campo de visión durante todo el trayecto, también al abordar y canalizar el vaso [11].
   - Inconveniente: es más difícil mantener la alineación y se pierden las estructuras laterales.
+- **Abordaje transversal (eje corto, fuera de plano):**
+  - Ventaja: centra el vaso y muestra las estructuras vecinas.
+  - Inconveniente: **no se ve la entrada en la pared del vaso** y cuesta ver la aguja completa; requiere más experiencia [11].
+  - Riesgo: **confundir el cuerpo de la aguja con la punta** y perforar la pared posterior. En maniquí, el 64 % de los residentes perforó la pared posterior de la yugular interna con este abordaje [64].
 - **Posicionamiento dinámico de la punta (DNTP):** en eje corto, se avanza la sonda hasta que desaparece el punto de la punta, después se avanza la aguja, y se repite. En varios ensayos aleatorizados (acceso arterial y venoso periférico) mejora el éxito frente al abordaje en plano; en FAV es una extrapolación [43,50].
+- **Comprobación con suero:** tras el reflujo, se lava la aguja con unos mililitros de suero mientras se mira la pantalla.
+  - Si la punta está en la luz, el suero entra sin resistencia. Las microburbujas que arrastra son dispersores muy potentes: se ve un penacho de ecos brillantes que recorre la luz aguas abajo de la punta y, en Doppler color, un chorro de alta velocidad con *aliasing* junto al bisel. En una FAV de alto flujo el penacho sale del campo en cuanto termina el lavado.
+  - Si la punta está fuera de la luz (pared, tejido o pared posterior atravesada), el suero no avanza por el vaso. Aparece una colección anecoica alrededor del vaso (infiltración), con dolor y tumefacción. Hay que detener el lavado y recolocar la aguja.
+  - El mismo principio (microburbujas del suero como contraste) se usa para confirmar la posición de catéteres venosos centrales [73].
 - **Evidencia en FAV:**
   - Eves 2021 (ECA en FAV difícil): menos pases de aguja (72 frente a 99) y menos punciones cutáneas (10 frente a 25) [36].
   - Chen 2023 (ECA): mayor tasa de éxito con la guía ecográfica [37].
@@ -205,7 +215,9 @@ protocolos y las guías vigentes.
 ### 7.4 Visibilidad de la aguja
 
 - La reflexión en la aguja es **especular**: la visibilidad cae al aumentar el ángulo de inserción [44–46].
-- **Reverberación:** líneas paralelas separadas un diámetro de la aguja; la «cola de cometa» se forma dentro de la luz de la aguja [48].
+  - En plano, el eco sale desviado 2θ en la dirección lateral y lo recoge la apertura del transductor (≈ 4 cm): la aguja se ve bien hasta ≈ 40–45°.
+  - Fuera de plano, la desviación es en elevación, donde la apertura es de pocos milímetros: queda sobre todo la componente difusa (bisel, rugosidad). El punto de la aguja es tenue en el tejido y mucho más claro dentro de la luz anecoica.
+- **Reverberación:** el sonido rebota dentro del tubo, entre las caras interiores de sus paredes anterior y posterior. Se ven líneas paralelas, separadas el diámetro interior de la aguja (su cuerda a lo largo del haz), bastante más tenues que la aguja y cada vez más débiles. Son más numerosas con la aguja plana y desaparecen al inclinarla. Se ven sobre todo sobre la luz anecoica del vaso. La «cola de cometa» se forma dentro de la luz de la aguja [48].
 - **Artefacto en bayoneta:** aparece por las diferencias de velocidad del sonido entre tejidos [49].
 
 ## 8. Métodos de simulación (estado del arte)
@@ -316,9 +328,16 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 
 **Aguja:**
 - Intersección analítica rayo-cilindro en 7 planos de elevación.
-- Reflexión especular según el ángulo de incidencia (visibilidad menor con ángulos más pronunciados), refuerzo del bisel y reverberaciones cada cuerda de la aguja (un diámetro).
+- El eco especular de un cilindro liso procede de su **cresta** (punto de fase estacionaria): cada rayo pesa según su distancia al eje de la aguja, y los que tocan el flanco apenas devuelven eco.
+- Visibilidad según el ángulo de inserción, con un lóbulo ancho en la dirección lateral (en plano) y estrecho en elevación (fuera de plano), más una componente difusa; refuerzo del bisel.
+- El eco de la pared y sus 5 reverberaciones llevan una **fase constante a lo largo de la aguja**. Las reverberaciones van separadas la cuerda interior del tubo a lo largo del haz, con diámetro interior ≈ exterior − 0,3 mm. La 1.ª queda ≈ 20 dB por debajo del eco de la aguja con la aguja plana, y cada rebote resta ≈ 8 dB más. En plano, cada rebote se atenúa además con el ángulo de inserción (factor exp[−(θ/26°)²] por rebote): a 10° se ven 3–4 líneas, a 20° dos o tres y a 35° ninguna. Con la fase de cada píxel o de cada profundidad, el eco fino del metal se cancelaba parcialmente entre filas o entre columnas vecinas según la rejilla de la calidad elegida, y la aguja se veía discontinua.
+- Fuera de plano, cada eco se ensancha lo que la aguja desciende entre dos planos de elevación: el corte integra una banda continua (grosor de corte × tan α).
 - Sombra parcial.
 - Deformación en «tienda» de la pared antes de la perforación. Los umbrales son 1–2,6 mm según el vaso.
+
+**Lavado con suero (tecla J):**
+- Con la punta en la luz: penacho de microburbujas (dispersores brillantes que se mueven con la sangre) desde la punta hacia aguas abajo, que avanza a la velocidad media del vaso y se despega y lava al acabar la inyección (10 mL en 2,5 s). Chorro a la salida del bisel (≈ 2 m/s en 15G, caudal/área interna) con turbulencia y *aliasing* en Doppler color, que se ordena en ≈ 1 cm.
+- Con la punta fuera de la luz: infiltración. Junto a un vaso, halo anecoico perivascular que crece en 1–3 s a lo largo de ≈ 12 mm; lejos de un vaso, colección esférica. Penaliza la puntuación.
 
 **Doppler pulsado:**
 - Muestreo del volumen de muestra en el modelo: 7 puntos a lo largo del haz × 3 laterales × 3 en elevación.
@@ -349,7 +368,7 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 ### Nefrología al día y procedimientos de enfermería
 
 10. Aragoncillo I, Caldés S. Ecografía Doppler en el acceso vascular. *Nefrología al día*.
-11. Punción ecoguiada del acceso vascular para hemodiálisis. *Nefrología al día*.
+11. Moyano Franco MJ, Salgueira Lazo M, Roca-Tey R. Punción ecoguiada del acceso vascular para hemodiálisis. *Nefrología al día*. https://nefrologiaaldia.org/articulo/puncion-ecoguiada-del-acceso-vascular-para-hemodialisis/
 12. Síndrome de hiperaflujo de la FAV. *Nefrología al día*.
 14. SEDEN. Procedimientos de enfermería nefrológica 3.3 y 3.4.
 
@@ -381,6 +400,7 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 36. Eves J et al. *J Vasc Access* 2021.
 37. Chen S et al. *Hemodial Int* 2023;27:21–7.
 43. Estudios sobre DNTP (PMID 23059741; PMC10941806).
+73. Vezzani A et al. Ultrasound localization of central vein catheter and detection of postprocedural pneumothorax: an alternative to chest radiography. *Crit Care Med* 2010;38(2):533–538 (contraste con suero para confirmar la posición del catéter).
 
 ### Complicaciones de la punción
 

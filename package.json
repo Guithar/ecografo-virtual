@@ -1,8 +1,32 @@
 {
-  "name": "ecografo-virtual",
+  "name": "fistulab",
   "private": true,
-  "version": "0.1.0",
-  "description": "Simulador virtual de ecografía para punción ecoguiada de fístula arteriovenosa (FAV) en el navegador",
+  "version": "1.0.0",
+  "description": "Fistulab: simulador de punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis, en el navegador",
+  "homepage": "https://fistulab.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Guithar/ecografo-virtual.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Guithar/ecografo-virtual/issues"
+  },
+  "funding": {
+    "type": "ko-fi",
+    "url": "https://ko-fi.com/fistulab"
+  },
+  "keywords": [
+    "ecografía",
+    "hemodiálisis",
+    "fístula arteriovenosa",
+    "acceso vascular",
+    "punción ecoguiada",
+    "simulador",
+    "ultrasound",
+    "cannulation",
+    "AVF",
+    "webgl"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +38,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
     "three": "^0.186.1"
   },
   "devDependencies": {

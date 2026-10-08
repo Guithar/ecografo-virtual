@@ -2,9 +2,10 @@
  * Service worker: permite abrir el simulador sin conexión tras la primera visita.
  * - Página: primero la red (para recibir versiones nuevas) y, sin conexión, la copia guardada.
  * - Recursos con huella en el nombre (assets/…): primero la caché; nunca cambian.
- * - Resto (iconos, manifiesto, tipografías): la copia guardada al momento y se actualiza en segundo plano.
+ * - Resto (iconos, manifiesto): la copia guardada al momento y se actualiza en segundo plano.
+ * Las tipografías van dentro de assets/: todo es del propio sitio.
  */
-const CACHE = 'ecofav-v1';
+const CACHE = 'fistulab-v1';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -21,7 +22,7 @@ self.addEventListener('activate', (e) => {
 });
 
 const put = (req, res) => {
-  if (res && (res.ok || res.type === 'opaque')) {
+  if (res && res.ok) {
     const copy = res.clone();
     caches.open(CACHE).then((c) => c.put(req, copy));
   }
@@ -32,8 +33,7 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const fonts = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (url.origin !== self.location.origin && !fonts) return;
+  if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
     // sólo la página del simulador (con cualquier parámetro: ?caso=, ?modo=…)

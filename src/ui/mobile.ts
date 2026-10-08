@@ -8,6 +8,7 @@ import { CASES } from '../anatomy/cases';
 import type { App, AppMode } from '../app/App';
 import { canInstall, installApp, isStandalone } from '../pwa';
 import type { CameraPreset } from '../scene/SceneManager';
+import { SITE } from '../site';
 import { IMAGE_PRESETS } from './console';
 import { Bound, button, el, field, selectBox } from './controls';
 import { COMPACT_QUERY, forcedCompact } from './device';
@@ -182,6 +183,7 @@ export class MobileUI {
     };
     add(this.rowNeedle, button('Fuera de plano', () => app.placeNeedleAuto('oop'), { title: 'Colocar la aguja fuera de plano (eje corto)' }));
     add(this.rowNeedle, button('En plano', () => app.placeNeedleAuto('ip'), { title: 'Colocar la aguja en plano (eje largo)' }));
+    add(this.rowNeedle, button('Suero', () => app.flushNeedle(), { title: 'Lavar con suero para comprobar la posición de la punta' }));
     add(this.rowNeedle, button('Retirar', () => app.withdrawNeedle(), { cls: 'danger' }));
     add(this.rowNeedle, button('Confirmar', () => app.confirmPuncture(), { cls: 'primary', title: 'Evaluar la posición final de la aguja' }));
 
@@ -194,17 +196,17 @@ export class MobileUI {
     const extra = add(
       rowProbe,
       button('Etiquetas', () => {
-        if (app.cannulating) s().needleEnhance = !s().needleEnhance;
+        if (app.needleMode()) app.setAsepsis(!app.asepsis);
         else app.labels = !app.labels;
       }),
     );
     const extraUpd = extra.update;
     extra.update = () => {
       extraUpd();
-      const c = app.cannulating;
-      extra.el.textContent = c ? 'Realce' : 'Etiquetas';
-      extra.el.title = c ? 'Realce de la aguja' : 'Nombres de las estructuras sobre la imagen';
-      extra.el.classList.toggle('on', c ? s().needleEnhance : app.labels);
+      const c = app.needleMode();
+      extra.el.textContent = c ? 'Asepsia' : 'Etiquetas';
+      extra.el.title = c ? 'Piel desinfectada, funda estéril en la sonda y gel estéril' : 'Nombres de las estructuras sobre la imagen';
+      extra.el.classList.toggle('on', c ? app.asepsis : app.labels);
     };
 
     // imagen (exploración)
@@ -527,7 +529,7 @@ export class MobileUI {
 
   private openInfo(tab?: string) {
     const app = this.app;
-    app.panels.showTab(tab ?? (app.cannulating ? 'metrics' : app.mode === 'learn' ? 'lessons' : 'case'));
+    app.panels.showTab(tab ?? (app.needleMode() ? 'metrics' : app.mode === 'learn' ? 'lessons' : 'case'));
     this.openSheet('info');
   }
 
@@ -563,7 +565,7 @@ export class MobileUI {
   update() {
     if (!this.active) return;
     const app = this.app;
-    const cann = app.cannulating;
+    const cann = app.needleMode();
     const sig = `${app.mode}|${cann}`;
     if (sig !== this.modeSig) {
       this.modeSig = sig;
@@ -780,7 +782,7 @@ export class MobileUI {
     add(rn, button('Tocar la piel…', () => {
       app.placingNeedle = !app.placingNeedle;
       if (app.placingNeedle) {
-        if (!app.cannulating) app.setMode('cannulate');
+        if (!app.needleMode()) app.setMode('cannulate');
         this.openSheet(null);
         if (this.pipOff) this.paneAction('show');
         app.toast('Toca la piel del brazo en 3D para elegir el punto de punción', 'info');
@@ -826,6 +828,8 @@ export class MobileUI {
     add(rs, button('Informe', closeThen(() => app.panels.showReport())));
     add(rs, button('Ayuda', closeThen(() => app.panels.showHelp())));
     add(rs, button('Bienvenida', closeThen(() => app.panels.showWelcome(true))));
+    // en el móvil la barra superior no muestra el enlace de apoyo
+    rs.appendChild(el('a', { class: 'm-kofi', href: SITE.kofi, target: '_blank', rel: 'noopener' }, 'Apoyar en Ko-fi'));
     this.installRow = btnRow(cSes);
     add(this.installRow, button('Instalar en el móvil', async () => {
       if (await installApp()) app.toast('Aplicación instalada: ábrela desde la pantalla de inicio', 'ok');

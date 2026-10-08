@@ -1,13 +1,20 @@
-# Ecógrafo Virtual · Punción ecoguiada de FAV
+# Fistulab · Simulador de punción ecoguiada de la FAV
 
-Simulador de ecografía que funciona **en el navegador**, pensado para aprender la **punción ecoguiada de accesos vasculares para hemodiálisis**, sobre todo fístulas arteriovenosas (FAV). Es un primer contacto de bajo coste, previo a los simuladores físicos comerciales. Sirve para practicar:
+[![Publicación](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml/badge.svg)](https://github.com/Guithar/ecografo-virtual/actions/workflows/deploy.yml)
+[![fistulab.com](https://img.shields.io/badge/web-fistulab.com-3fc1c9)](https://fistulab.com)
+[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-8ba0b2)](LICENSE)
+[![Apoya en Ko-fi](https://img.shields.io/badge/Ko--fi-apoya_el_proyecto-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/fistulab)
+
+**[Fistulab](https://fistulab.com)** es un simulador de ecografía que funciona **en el navegador**, pensado para aprender la **punción ecoguiada del acceso vascular para hemodiálisis**: fístulas arteriovenosas (FAV) nativas y protésicas. Es un primer contacto gratuito, previo a los simuladores físicos comerciales. Sirve para practicar:
 
 - la **posición del transductor**, del **paciente** y de la **pantalla**;
 - la relación entre lo que muestra la pantalla y la **realidad física** que se explora: anatomía 3D con el plano de corte y la sección anatómica real;
-- la **técnica de punción** en eje corto (fuera de plano, con posicionamiento dinámico de la punta) y en eje largo (en plano);
+- la **técnica de punción** paso a paso, con **abordaje longitudinal (en plano)**, el preferido en la mayoría de las unidades, y **transversal (fuera de plano)**, con posicionamiento dinámico de la punta;
 - la **valoración de la FAV**: diámetro, profundidad, flujo (Qa) y criterios Doppler de estenosis.
 
-> ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md). La propuesta de itinerario formativo y la rúbrica de evaluación están en [`docs/GUIA_DOCENTE.md`](docs/GUIA_DOCENTE.md).
+**Úsalo en <https://fistulab.com>.** No necesita instalación ni registro.
+
+> ⚠️ **Herramienta educativa.** No sirve para diagnosticar ni para decidir tratamientos, y no sustituye la formación práctica supervisada. Los fundamentos y las referencias están en [`docs/FUNDAMENTOS.md`](docs/FUNDAMENTOS.md); la técnica sigue, entre otras fuentes, [*Punción ecoguiada del acceso vascular para hemodiálisis*](https://nefrologiaaldia.org/articulo/puncion-ecoguiada-del-acceso-vascular-para-hemodialisis/) (Moyano Franco, Salgueira Lazo, Roca-Tey; *Nefrología al día*) y la guía GEMAV 2017. La propuesta de itinerario formativo y la rúbrica de evaluación están en [`docs/GUIA_DOCENTE.md`](docs/GUIA_DOCENTE.md).
 
 ## Funciones
 
@@ -29,8 +36,8 @@ La imagen no es una textura pregrabada. Se calcula en cada fotograma a partir de
    - ruido electrónico.
 6. **Contacto sonda-piel:** gel, falta de contacto (aire) en los bordes y **compresión** del tejido. Las venas colapsan según su presión intraluminal; las arterias no.
 7. **Aguja analítica:**
-   - reflexión especular que depende del ángulo de inserción;
-   - **reverberaciones** («cola de cometa» y líneas paralelas), sombra y realce de la punta;
+   - reflexión especular desde la cresta del cilindro, que depende del ángulo de inserción: en plano se ve hasta ≈ 45°; fuera de plano el punto es más tenue;
+   - **reverberaciones** («cola de cometa» y líneas paralelas de intensidad decreciente), sombra y realce de la punta;
    - **signo de la tienda** de la pared antes del «pop».
 8. **Doppler:**
    - **color y power**: velocidad por continuidad Q/A, perfil de flujo, remolino en aneurismas, turbulencia, **aliasing**, filtro de pared, prioridad y angulación ±20°;
@@ -73,13 +80,16 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
 
 ### Punción y evaluación
 
-- Agujas **arterial y venosa** de 14–17G, de 25 o 32 mm. Tres formas de colocarlas: fuera de plano, en plano o con un clic sobre la piel.
+- Agujas **arterial y venosa** de 14–17G, de 25 o 32 mm. Tres formas de colocarlas: abordaje longitudinal (en plano), transversal (fuera de plano) o con un clic sobre la piel. La tecla N elige el abordaje según la vista de la sonda.
+- **Lista de pasos de la punción** que se marca sola: brazo a unos 45° del cuerpo, vena localizada y medida, zona adecuada, compresor, **asepsia** (funda y gel estériles), aguja colocada, punta en la luz, alineación y lavado con suero, confirmación.
+- Cada caso explica **por qué está indicada la punción ecoguiada** (primeras punciones, FAV profunda, maduración escasa, estenosis, hematoma…).
 - Control del ángulo, del rumbo y del avance.
 - **Eventos clínicos:**
   - punción cutánea, signo de la tienda, pérdida de resistencia;
   - **reflujo** (pulsátil, rojo brillante si la punción es arterial);
   - contacto con la pared posterior, **transfixión** con **hematoma que crece**;
-  - punción arterial, **parestesia** por contacto nervioso, contacto óseo.
+  - punción arterial, **parestesia** por contacto nervioso, contacto óseo;
+  - **lavado con suero** para comprobar la posición: con la punta en la luz, microburbujas arrastradas por el flujo y chorro en Doppler color; fuera de la luz, **infiltración** (halo anecoico alrededor del vaso).
 - **Métricas.** Se inspiran en NeedleTrainer, PerkTutor y Sites et al. 2007:
   - tiempo total y tiempo de piel a reflujo;
   - punciones cutáneas y redirecciones;
@@ -94,18 +104,20 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
   - ≥ 3 cm de la anastomosis y ≥ 5 cm entre agujas;
   - aguja venosa anterógrada;
   - fuera de zonas a evitar (aneurisma, estenosis, hematoma);
+  - técnica aséptica;
   - uso correcto del compresor.
 - **Informe** imprimible y exportable (JSON y CSV), con historial guardado en el navegador.
 
 ### Ergonomía (sala)
 
-- Arrastra el ecógrafo y al operador. Ajusta el brazo del paciente (abducción, descenso, rotación) y el monitor (giro, inclinación, altura).
+- Arrastra el ecógrafo y al operador. Ajusta el brazo del paciente (ángulo con el cuerpo, descenso, rotación) y el monitor (giro, inclinación, altura).
 - El simulador evalúa:
   - la **alineación de la mirada** entre el sitio de punción y la pantalla;
   - el desplazamiento total de la mirada;
   - la distancia y la altura de la pantalla, y su orientación;
   - el alcance del operador;
-  - la **coherencia entre el marcador de la sonda y la pantalla**.
+  - la **coherencia entre el marcador de la sonda y la pantalla**;
+  - el **brazo del paciente**, apoyado en una superficie firme y plana, a unos 45° del cuerpo.
 
 ### Aprendizaje
 
@@ -115,8 +127,8 @@ Ocho lecciones guiadas con **comprobación automática** de cada paso:
 2. Optimización de la imagen.
 3. Arteria frente a vena.
 4. Regla de los 6.
-5. Punción en eje corto con posicionamiento dinámico de la punta (DNTP).
-6. Punción en eje largo.
+5. Abordaje longitudinal (en plano), el preferido.
+6. Abordaje transversal (fuera de plano), con posicionamiento dinámico de la punta (DNTP).
 7. Artefactos.
 8. Doppler en la FAV.
 
@@ -139,7 +151,7 @@ En el móvil, la tableta en vertical y las ventanas pequeñas se abre una **inte
 - **Sonda:**
   - un dedo sobre el brazo en 3D lleva la sonda a ese punto; fuera del brazo gira la cámara y con dos dedos se acerca;
   - las maniobras finas (a lo largo, alrededor, girar, inclinar, balanceo, presión) se hacen con una **rueda de ajuste**, igual que la profundidad, la ganancia y el foco.
-- **Punción:** la rueda pasa a controlar el **avance**, el ángulo y el rumbo de la aguja. Al **confirmar** aparece la evaluación.
+- **Punción:** la rueda pasa a controlar el **avance**, el ángulo y el rumbo de la aguja, con botones para la **asepsia** y el **lavado con suero**. Al **confirmar** aparece la evaluación.
 - **Lecciones:** las ocho, con los textos adaptados a los controles táctiles.
 - **Más ajustes:** caso, brazo, calidad, frecuencia, Doppler completo, aguja, capas del 3D e informe.
 - **Rendimiento:** en móviles y tabletas se dibuja a 30 fps, sin sombras y sin la sala (se puede activar en «Más»).
@@ -150,6 +162,10 @@ En el móvil, la tableta en vertical y las ventanas pequeñas se abre una **inte
 
 Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior (en el móvil, en «Más»).
 
+Empieza en **modo básico**, con los controles de la punción. El botón **Más controles**, a la derecha de la consola, muestra el Doppler, el PW y los ajustes finos de imagen.
+
+Para usarlo basta con abrir <https://fistulab.com>. Para trabajar con el código:
+
 ```bash
 npm install
 npm run dev          # servidor de desarrollo en http://localhost:5173
@@ -157,9 +173,42 @@ npm run build        # sitio estático en dist/ (p. ej. GitHub Pages)
 npm run build:single # un único HTML autocontenido en dist-single/ (abre sin servidor)
 npm run typecheck
 npm test             # pruebas unitarias (hemodinámica, modelo, aguja, métricas)
+node tests/e2e-puncion.mjs http://localhost:5173/  # punción completa con clics y teclado en Chromium (requiere Playwright)
 ```
 
-El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub Pages** en cada push a `main`. Antes hay que activar Pages en *Settings → Pages → Source: GitHub Actions*.
+### Publicación en fistulab.com
+
+El flujo de trabajo `.github/workflows/deploy.yml` publica el sitio en **GitHub Pages**, con el dominio propio **fistulab.com**, en cada push a `main`. Antes de publicar, pasa las pruebas y compila. También se puede lanzar a mano desde la pestaña *Actions*.
+
+Configuración necesaria una sola vez:
+
+1. *Settings → Pages → Build and deployment → Source*: **GitHub Actions**. No uses «Deploy from a branch». Ese modo publica los archivos fuente sin compilar y la página se queda en la pantalla de carga.
+2. *Settings → General → Default branch*: `main`.
+3. **DNS del dominio** (en el registrador, DonDominio): quitar los registros de aparcamiento y añadir
+
+   | Tipo | Nombre | Valor |
+   |---|---|---|
+   | A | `@` | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` (cuatro registros) |
+   | AAAA | `@` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` (cuatro registros) |
+   | CNAME | `www` | `guithar.github.io` |
+
+   Sin registros comodín (`*.fistulab.com`): GitHub los desaconseja y llevarían cualquier subdominio a otro sitio.
+
+   **Correo.** Las direcciones `@fistulab.com` van con Banahosting. Sus registros se añaden en esta misma zona de DonDominio, con los valores que da cPanel en *Entregabilidad del correo*:
+   - MX;
+   - `mail`;
+   - SPF: solo puede haber uno, así que sustituye el de DonDominio por el de Banahosting;
+   - DKIM (`default._domainkey`);
+   - DMARC (`_dmarc`).
+
+   No cambies los servidores de nombres a los de Banahosting: la web dejaría de apuntar a GitHub Pages.
+
+4. *Settings → Pages → Custom domain*: `fistulab.com`. Cuando GitHub compruebe el DNS y emita el certificado, marca **Enforce HTTPS**. `www.fistulab.com` y la dirección antigua (`guithar.github.io/ecografo-virtual`) redirigen solas a `https://fistulab.com`.
+5. Recomendado: verifica el dominio en la configuración de tu cuenta de GitHub (*Settings → Pages → Add a domain*, con un registro TXT). Así nadie más puede usarlo en GitHub Pages.
+
+Con *Actions* como origen no hace falta archivo `CNAME`: el dominio se guarda en la configuración del repositorio.
+
+Si un despliegue falla con «Branch "main" is not allowed to deploy to github-pages», añade `main` en *Settings → Environments → github-pages → Deployment branches and tags*.
 
 Parámetros de URL útiles:
 
@@ -181,10 +230,11 @@ Parámetros de URL útiles:
 | Rotar / inclinar / balancear | `Q` `E` / `R` `F` / `T` `G` |
 | Presión | `Z` `X` |
 | Vista transversal / longitudinal del vaso | `1` / `2` |
-| Colocar, avanzar y confirmar la aguja | `N`, `↑` `↓` (o rueda sobre la imagen), `Intro` |
+| Colocar, avanzar y confirmar la aguja | `N` (pasa al modo Punción), `↑` `↓` (o rueda sobre la imagen), `Intro` |
 | Ángulo / rumbo de la aguja | `RePág` `AvPág` / `←` `→` |
 | Profundidad / ganancia | `+` `−` / `[` `]` |
 | Color / PW / modo B / congelar | `C` / `P` / `B` / `Espacio` |
+| Lavar la aguja con suero | `J` |
 | Medir / etiquetas / invertir I-D / compresor | `M` / `L` / `I` / `K` |
 | Vistas de cámara / modo enfoque / ayuda | `V` / `O` / `H` |
 
@@ -203,8 +253,6 @@ src/
   pwa.ts       aplicación instalable (public/: manifiesto, iconos y service worker)
 ```
 
-Los iconos de `public/icons` se generan con `node scripts/make-icons.mjs`.
-
 La misma descripción anatómica alimenta:
 
 - la simulación ecográfica (evaluación por segmentos en la GPU);
@@ -213,6 +261,14 @@ La misma descripción anatómica alimenta:
 
 Por eso la pantalla y la «realidad» coinciden siempre.
 
+## Privacidad
+
+Sin cookies, sin analítica y sin publicidad. Todo se calcula en el navegador y no se envía nada a ningún servidor; las fuentes tipográficas se sirven desde el propio sitio. El historial de punciones y las preferencias se guardan solo en el navegador de cada persona (`localStorage`). GitHub Pages, el alojamiento, puede registrar la dirección IP de las visitas por seguridad.
+
+## Apoya el proyecto
+
+Fistulab es gratuito y lo seguirá siendo. Si te resulta útil para formar a tu unidad, puedes apoyarlo con un café en **[Ko-fi](https://ko-fi.com/fistulab)**: ayuda a mantenerlo y a añadir casos, lecciones y la versión en inglés.
+
 ## Licencia
 
-MIT. Se agradecen contribuciones clínicas y técnicas: casos nuevos, validación de valores y traducciones.
+MIT. Se agradecen contribuciones clínicas y técnicas: casos nuevos, validación de valores y traducciones. Escribe en [Issues](https://github.com/Guithar/ecografo-virtual/issues) o a **[hola@fistulab.com](mailto:hola@fistulab.com)**.

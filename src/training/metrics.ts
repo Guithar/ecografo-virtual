@@ -29,6 +29,8 @@ export interface MetricsSnapshot {
   arterialPunctures: number;
   nerveContacts: number;
   boneContacts: number;
+  flushes: number;
+  infiltrations: number;
   tipVisiblePct: number;
   shaftConfusions: number;
   probeMoveDuringAdvance: number;
@@ -49,6 +51,10 @@ export class Metrics {
   arterialPunctures = 0;
   nerveContacts = 0;
   boneContacts = 0;
+  /** lavados con suero con la punta en la luz (comprobación de posición) */
+  flushes = 0;
+  /** suero infiltrado en el tejido (punta fuera de la luz) */
+  infiltrations = 0;
   advVisible = 0;
   advTotal = 0;
   shaftConfusions = 0;
@@ -97,6 +103,12 @@ export class Metrics {
       case 'redirect':
         this.redirections++;
         break;
+      case 'flush':
+        this.flushes++;
+        break;
+      case 'infiltration':
+        this.infiltrations++;
+        break;
       default:
         break;
     }
@@ -105,16 +117,19 @@ export class Metrics {
   /**
    * Registro por fotograma durante el avance de la aguja.
    * @param advance mm avanzados en este fotograma (>0 avanzando)
-   * @param tipVisible punta dentro del haz (lateral, profundidad y grosor de corte)
+   * @param tipVisible punta dentro del haz (lateral, profundidad y grosor de corte); null si ninguna
+   *   técnica permite verla (en plano, antes de entrar en la imagen): ese avance no cuenta
    * @param shaftInBeamTipBeyond el haz corta el cuerpo de la aguja pero la punta está más allá
    * @param probeMove mm de desplazamiento de la sonda en este fotograma
    */
-  frame(t: number, advance: number, tipVisible: boolean, shaftInBeamTipBeyond: boolean, probeMove: number, collapse: number) {
+  frame(t: number, advance: number, tipVisible: boolean | null, shaftInBeamTipBeyond: boolean, probeMove: number, collapse: number) {
     this.now = t;
     if (advance > 0.001) {
       this.start(t);
-      this.advTotal += advance;
-      if (tipVisible) this.advVisible += advance;
+      if (tipVisible !== null) {
+        this.advTotal += advance;
+        if (tipVisible) this.advVisible += advance;
+      }
       if (probeMove > 0.02) this.probeMoveDuringAdvance += probeMove;
       if (shaftInBeamTipBeyond) {
         if (!this.confusionActive) {
@@ -140,6 +155,7 @@ export class Metrics {
     s -= this.arterialPunctures * 30;
     s -= this.nerveContacts * 20;
     s -= this.boneContacts * 6;
+    s -= this.infiltrations * 12;
     s -= this.shaftConfusions * 4;
     const tv = this.tipVisiblePct();
     if (tv < 80) s -= (80 - tv) * 0.4;
@@ -160,6 +176,8 @@ export class Metrics {
       arterialPunctures: this.arterialPunctures,
       nerveContacts: this.nerveContacts,
       boneContacts: this.boneContacts,
+      flushes: this.flushes,
+      infiltrations: this.infiltrations,
       tipVisiblePct: this.tipVisiblePct(),
       shaftConfusions: this.shaftConfusions,
       probeMoveDuringAdvance: this.probeMoveDuringAdvance,

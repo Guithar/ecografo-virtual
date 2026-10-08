@@ -12,6 +12,8 @@ export interface CaseDef {
   short: string;
   difficulty: 1 | 2 | 3;
   accessType: string;
+  /** por qué está indicada la punción ecoguiada en este caso (Nefrología al día) */
+  indication: string;
   description: string;
   objectives: string[];
   /** hallazgos esperables (se muestran en "Solución") */
@@ -604,6 +606,8 @@ export const CASES: CaseDef[] = [
     short: 'Anatomía normal',
     difficulty: 1,
     accessType: 'Sin acceso',
+    indication:
+      'No hay acceso que puncionar: la ecografía sirve para el mapeo vascular antes de crear la FAV (calibre y trayecto de arterias y venas).',
     description:
       'Brazo izquierdo sin fístula. Úsalo para reconocer la anatomía ecográfica normal: arterias radial, cubital y humeral con sus venas satélites, venas superficiales (cefálica, basílica, mediana), nervios mediano, cubital y radial, tendones y huesos. Sirve también para el mapeo prequirúrgico (diámetros mínimos: arteria ≥ 2 mm, vena ≥ 2,5 mm con compresor) y para practicar la canalización venosa periférica ecoguiada.',
     objectives: [
@@ -634,8 +638,10 @@ export const CASES: CaseDef[] = [
     short: 'FAV RC madura',
     difficulty: 1,
     accessType: 'FAV radiocefálica (Brescia-Cimino)',
+    indication:
+      'Primeras punciones de una FAV nueva: es cuando más ayuda la ecografía, porque la vena aún es frágil y un fallo produce hematomas que retrasan su uso.',
     description:
-      'Fístula radiocefálica latero-terminal en la muñeca izquierda, de 8 meses, bien desarrollada. Vena rectilínea, superficial y de buen calibre. Caso de referencia para aprender la técnica de punción ecoguiada en eje corto (fuera de plano) y en eje largo (en plano).',
+      'Fístula radiocefálica latero-terminal en la muñeca izquierda, de 8 meses, bien desarrollada. Vena rectilínea, superficial y de buen calibre. Caso de referencia para aprender la punción ecoguiada con abordaje longitudinal (en plano), el preferido, y transversal (fuera de plano).',
     objectives: [
       'Localizar la anastomosis y recorrer la vena arterializada hacia proximal.',
       'Medir diámetro y profundidad de la vena en la zona de punción (regla de los 6).',
@@ -671,6 +677,8 @@ export const CASES: CaseDef[] = [
     short: 'FAV profunda (obesidad)',
     difficulty: 2,
     accessType: 'FAV humerocefálica',
+    indication:
+      'Paciente obeso con la vena muy profunda: no se palpa bien y la punción a ciegas falla con frecuencia.',
     description:
       'Fístula humerocefálica en el codo izquierdo de un paciente con obesidad. La vena cefálica del brazo tiene buen calibre y alto flujo, pero discurre a más de 1 cm de profundidad bajo un tejido celular subcutáneo grueso. La palpación es difícil y la ecografía es de gran ayuda.',
     objectives: [
@@ -752,6 +760,8 @@ export const CASES: CaseDef[] = [
     short: 'FAV tortuosa',
     difficulty: 2,
     accessType: 'FAV radiocefálica',
+    indication:
+      'FAV tortuosa, difícil de puncionar a ciegas: la ecografía muestra un segmento recto donde alinear la aguja con la vena.',
     description:
       'Vena arterializada con trayecto serpenteante y cambios de profundidad. En eje largo es imposible mantener todo el vaso en el plano; hay que elegir un segmento rectilíneo de al menos 2–3 cm para la punción y orientar la aguja según el eje local del vaso.',
     objectives: [
@@ -785,6 +795,8 @@ export const CASES: CaseDef[] = [
     short: 'Estenosis yuxtaanast.',
     difficulty: 2,
     accessType: 'FAV radiocefálica disfuncionante',
+    indication:
+      'Estenosis en la vena yuxtaanastomótica: hay que localizarla y puncionar lejos de ella, en vena sana.',
     description:
       'FAV radiocefálica con estenosis en el segmento de salida (swing segment), a unos 2 cm de la anastomosis, por hiperplasia intimal. La vena distal a la estenosis tiene menor calibre y el flujo del acceso está reducido. En la estenosis hay aliasing en Doppler color y velocidades muy elevadas.',
     objectives: [
@@ -832,6 +844,8 @@ export const CASES: CaseDef[] = [
     short: 'Aneurisma + trombo',
     difficulty: 3,
     accessType: 'FAV radiocefálica evolucionada',
+    indication:
+      'Aneurisma con trombo mural: la ecografía delimita los segmentos sanos y evita puncionar el trombo o la piel adelgazada.',
     description:
       'FAV radiocefálica de 6 años con una dilatación aneurismática en el tercio medio del antebrazo (≈ 15 mm), trombo mural en la pared profunda y piel adelgazada sobre la cúpula. El flujo es turbulento, en remolino ("yin-yang"). Resultado típico de la punción repetida en área.',
     objectives: [
@@ -875,6 +889,8 @@ export const CASES: CaseDef[] = [
     short: 'FAV inmadura',
     difficulty: 2,
     accessType: 'FAV radiocefálica reciente',
+    indication:
+      'Escasa maduración y una vena accesoria que roba flujo: la ecografía decide si la FAV se puede puncionar ya, y dónde.',
     description:
       'Fístula radiocefálica de 5 semanas que no ha madurado: vena de pequeño calibre y pared fina, flujo bajo y una vena accesoria que "roba" parte del flujo. El objetivo es decidir si es apta para la punción.',
     objectives: ['Medir diámetro, profundidad y Qa.', 'Aplicar los criterios de maduración (regla de los 6 / GEMAV).', 'Identificar la vena accesoria competidora.'],
@@ -920,6 +936,8 @@ export const CASES: CaseDef[] = [
     short: 'Colaterales',
     difficulty: 2,
     accessType: 'FAV radiocefálica',
+    indication:
+      'Venas colaterales no puncionables y un desdoblamiento: la ecografía distingue la vena principal de sus ramas.',
     description:
       'FAV radiocefálica madura con una gran rama colateral dorsal y un desdoblamiento de la vena en el tercio proximal del antebrazo. Riesgo de puncionar una rama de menor calibre o de atravesar una bifurcación.',
     objectives: ['Seguir el canal principal en eje corto.', 'Localizar los puntos de bifurcación y evitarlos.', 'Elegir un segmento único y rectilíneo para cada aguja.'],
@@ -986,6 +1004,8 @@ export const CASES: CaseDef[] = [
     short: 'Humerobasílica',
     difficulty: 3,
     accessType: 'FAV humerobasílica transpuesta',
+    indication:
+      'Vena transpuesta sobre la arteria humeral y el nervio mediano: una punción demasiado profunda puede alcanzarlos, y la ecografía controla la profundidad.',
     description:
       'Vena basílica transpuesta a un túnel subcutáneo anteromedial del brazo. Es un acceso de alto flujo cuya vena discurre por encima de la arteria humeral y del nervio mediano. Una punción demasiado profunda o con demasiado ángulo puede atravesar la vena y alcanzar la arteria o el nervio.',
     objectives: ['Identificar la arteria humeral y el nervio mediano profundos a la vena.', 'Mantener la punta visible y controlar la profundidad.', 'Evitar la transfixión de la pared posterior.'],
@@ -1054,6 +1074,8 @@ export const CASES: CaseDef[] = [
     short: 'Prótesis PTFE',
     difficulty: 2,
     accessType: 'Injerto protésico húmero-basílico en asa',
+    indication:
+      'Prótesis en asa: la ecografía distingue la rama arterial de la venosa y el sentido del flujo, y guía la punción a 45° sin compresor.',
     description:
       'Prótesis de PTFE de 6 mm en asa en el antebrazo: rama arterial (desde la arteria humeral) y rama venosa (hacia la vena del codo). La pared protésica produce un doble contorno ecogénico. Se punciona a 45°, sin compresor, siguiendo la dirección del flujo en cada rama.',
     objectives: ['Identificar la rama arterial y la venosa por la dirección del flujo en Doppler color.', 'Reconocer la pared protésica (doble línea).', 'Puncionar a ≈ 45° con rotación de sitios.'],
@@ -1145,6 +1167,8 @@ export const CASES: CaseDef[] = [
     short: 'Hematoma',
     difficulty: 3,
     accessType: 'FAV radiocefálica',
+    indication:
+      'Hematoma de una punción previa: la ecografía lo delimita y busca un segmento sano lejos de él.',
     description:
       'FAV radiocefálica madura con un hematoma perivascular de la sesión anterior (extravasación por punción transfixiante). El hematoma comprime parcialmente la vena y distorsiona la anatomía. Hay que reconocerlo y elegir un sitio de punción alejado.',
     objectives: ['Identificar el hematoma (colección heterogénea, sin flujo Doppler).', 'Medir su extensión.', 'Elegir un sitio de punción sano, ≥ 2–3 cm alejado.'],
@@ -1191,6 +1215,8 @@ export const CASES: CaseDef[] = [
     short: 'Arterias calcificadas',
     difficulty: 2,
     accessType: 'FAV radiocefálica',
+    indication:
+      'Paciente diabético con arterias calcificadas y la vena algo más profunda: las sombras acústicas confunden, y la ecografía localiza la vena lejos de la arteria.',
     description:
       'Paciente diabético con calcificación de la media (Mönckeberg) en las arterias del antebrazo y algo más de tejido subcutáneo. Las arterias muestran paredes muy ecogénicas con sombra acústica, que puede ocultar estructuras profundas. La vena de la FAV es algo más profunda.',
     objectives: ['Reconocer la calcificación arterial y la sombra acústica.', 'Diferenciar la arteria de la vena de la FAV.', 'Puncionar una vena algo más profunda (≈ 5 mm).'],

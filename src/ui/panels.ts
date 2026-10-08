@@ -4,6 +4,8 @@
 import { TISSUES } from '../anatomy/tissues';
 import type { App } from '../app/App';
 import type { NeedleEvent } from '../interaction/needle';
+import { BUILD, SITE } from '../site';
+import { procedureChecklist } from '../training/checklist';
 import { LESSONS } from '../training/lessons';
 import { grade } from '../training/metrics';
 
@@ -42,6 +44,7 @@ export class Panels {
       <h3>${c.title}</h3>
       <p class="muted">${c.accessType} · dificultad ${['', 'básica', 'intermedia', 'avanzada'][c.difficulty]}</p>
       <p>${c.description}</p>
+      <div class="indication"><b>¿Por qué ecoguiada?</b> ${c.indication}</div>
       <div class="cols">
         <div><h4>Objetivos</h4><ul>${c.objectives.map((o) => `<li>${o}</li>`).join('')}</ul></div>
         <div><h4>Consejos</h4><ul>${c.tips.map((o) => `<li>${o}</li>`).join('')}</ul></div>
@@ -71,6 +74,8 @@ export class Panels {
       <div class="score"><div class="big" style="color:${g.color}" id="mScore">${snap.score}</div><div><b id="mGrade">${g.label}</b><br><span class="muted">Puntuación (100 = sin errores)</span></div>
         <span class="grow"></span>
         <button id="mReset">Reiniciar intento</button></div>
+      <h4>Pasos de la punción</h4>
+      <ul class="steps" id="mSteps"></ul>
       <div class="metric-grid" id="mGrid"></div>
       ${checks.length ? `<h4>Evaluación de la punción (${n.role})</h4><ul class="checklist">${checks
         .map((c) => `<li class="lv-${c.ok === null ? 'info' : c.ok ? 'good' : 'bad'}"><span class="ic">${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'}</span><span>${c.label} <span class="muted">— ${c.detail}</span></span></li>`)
@@ -94,6 +99,14 @@ export class Panels {
   renderMetricsLive() {
     const grid = document.getElementById('mGrid');
     if (!grid) return;
+    const steps = document.getElementById('mSteps');
+    if (steps) {
+      const items = procedureChecklist(this.app.checklistState());
+      const next = items.findIndex((i) => !i.done);
+      steps.innerHTML = items
+        .map((it, k) => `<li class="${it.done ? 'done' : k === next ? 'next' : ''}" title="${it.how}"><span class="ic">${it.done ? '✔' : k + 1}</span><span><span class="lbl">${it.label}</span>${k === next ? ` <span class="how">· ${it.how}</span>` : ''}</span></li>`)
+        .join('');
+    }
     const s = this.app.metrics.snapshot();
     const m = (v: string, l: string, cls = '') => `<div class="metric ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
     grid.innerHTML = [
@@ -107,6 +120,7 @@ export class Panels {
       m(String(s.transfixions), 'Transfixiones', s.transfixions ? 'bad' : ''),
       m(String(s.arterialPunctures), 'Punciones arteriales', s.arterialPunctures ? 'bad' : ''),
       m(String(s.nerveContacts), 'Contactos nerviosos', s.nerveContacts ? 'bad' : ''),
+      m(`${s.flushes} / ${s.infiltrations}`, 'Lavados con suero / infiltraciones', s.infiltrations ? 'bad' : ''),
       m(`${s.probeMoveDuringAdvance.toFixed(0)} mm`, 'Movimiento de sonda al avanzar', s.probeMoveDuringAdvance > 8 ? 'warn' : ''),
       m(`${this.app.metrics.pathInTissue.toFixed(0)} mm`, 'Recorrido en tejido'),
       m(`${Math.round(s.maxCollapse * 100)} %`, 'Colapso máx. del vaso', s.maxCollapse > 0.5 ? 'warn' : ''),
@@ -253,8 +267,8 @@ export class Panels {
     if (this.app.touchUI) this.openModal(WELCOME_TOUCH);
     else
       this.openModal(`
-      <h2>Ecógrafo Virtual FAV</h2>
-      <p>Simulador para aprender la <b>punción ecoguiada de fístulas arteriovenosas</b> sin equipo físico. La imagen ecográfica se calcula en tiempo real a partir de la anatomía que ves en 3D.</p>
+      <h2>Fistu<span class="accent">lab</span></h2>
+      <p>Simulador de <b>punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis</b>, nativa y protésica, para practicar sin equipo físico. La imagen ecográfica se calcula en tiempo real a partir de la anatomía que ves en 3D.</p>
       <div class="cols">
         <div>
           <h4>La pantalla</h4>
@@ -269,14 +283,16 @@ export class Panels {
           <h4>Primeros pasos</h4>
           <ol>
             <li>Arrastra la <b>sonda</b> sobre la piel o usa <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. Gira con <kbd>Q</kbd>/<kbd>E</kbd> y presiona con <kbd>X</kbd>.</li>
-            <li>Pulsa <kbd>1</kbd> o <kbd>2</kbd> para ver el vaso en transversal o en longitudinal.</li>
-            <li>En <b>Punción</b>, coloca la aguja con <kbd>N</kbd>, avanza con <kbd>↑</kbd> y confirma con <kbd>Intro</kbd>.</li>
+            <li>Pulsa <kbd>1</kbd> para localizar la vena en transversal y <kbd>2</kbd> para verla en longitudinal.</li>
+            <li>En el modo <b>Punción</b>, sigue la lista de <b>pasos</b>: se marca sola. Coloca la aguja con <kbd>N</kbd> (en plano si la sonda está en longitudinal, el abordaje preferido), avanza con <kbd>↑</kbd> viendo la punta y confirma con <kbd>Intro</kbd>.</li>
             <li>En <b>Aprendizaje</b> tienes 8 lecciones guiadas que se corrigen solas.</li>
           </ol>
+          <p class="muted">Empiezas en <b>modo básico</b>, con los controles de la punción. El botón <b>Más controles</b>, a la derecha de la consola, muestra todos (Doppler, PW, ajustes de imagen).</p>
         </div>
       </div>
       <p class="muted">Herramienta educativa: no sustituye la formación práctica supervisada. Pulsa <kbd>H</kbd> para ver todos los atajos.</p>
-      <div class="crow" style="margin-top:12px"><button class="primary" id="wlStart">Empezar</button><button id="wlLesson">Ir a la lección 1</button></div>`);
+      <div class="crow" style="margin-top:12px"><button class="primary" id="wlStart">Empezar</button><button id="wlLesson">Ir a la lección 1</button></div>
+      <p class="site-foot">${SITE.name} es gratuito, sin publicidad y de código abierto · <a href="${SITE.url}" target="_blank" rel="noopener">${SITE.host}</a> · <a class="kofi-link" href="${SITE.kofi}" target="_blank" rel="noopener">Apóyalo en Ko-fi</a></p>`);
     const done = () => {
       try {
         localStorage.setItem('ecofav-bienvenida', '1');
@@ -295,12 +311,12 @@ export class Panels {
 
   showHelp() {
     if (this.app.touchUI) {
-      this.openModal(HELP_TOUCH);
+      this.openModal(HELP_TOUCH + this.aboutHtml());
       return;
     }
     this.openModal(`
-      <h2>Ayuda del Ecógrafo Virtual</h2>
-      <p>Simulador de ecografía para aprender la <b>punción ecoguiada de accesos vasculares</b> (FAV y prótesis). A la izquierda ves la <b>realidad física</b> (brazo, anatomía interna, sonda, aguja y plano de corte); a la derecha, la <b>pantalla del ecógrafo</b> y la <b>anatomía real</b> del plano que estás explorando.</p>
+      <h2>Ayuda de Fistu<span class="accent">lab</span></h2>
+      <p>Simulador de <b>punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis</b>, nativa y protésica. A la izquierda ves la <b>realidad física</b> (brazo, anatomía interna, sonda, aguja y plano de corte); a la derecha, la <b>pantalla del ecógrafo</b> y la <b>anatomía real</b> del plano que estás explorando.</p>
       <div class="cols">
         <div>
           <h4>Sonda (maniobras PART)</h4>
@@ -317,8 +333,10 @@ export class Panels {
           </table>
           <h4>Aguja (modo Punción)</h4>
           <table class="tbl">
-            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda</td></tr>
+            <tr><td><kbd>N</kbd></td><td>Colocar la aguja junto a la sonda (pasa al modo Punción): con la sonda en longitudinal, abordaje longitudinal (en plano, el preferido); en transversal, abordaje transversal (fuera de plano)</td></tr>
+            <tr><td>Botón <b>Asepsia</b></td><td>Piel desinfectada, funda y gel estériles antes de puncionar</td></tr>
             <tr><td><kbd>↑</kbd>/<kbd>↓</kbd> o rueda sobre la imagen</td><td>Avanzar / retirar</td></tr>
+            <tr><td><kbd>J</kbd></td><td>Lavar con suero: en la luz se ven microburbujas arrastradas por el flujo (y un chorro en Doppler color); fuera, infiltración</td></tr>
             <tr><td><kbd>←</kbd>/<kbd>→</kbd></td><td>Rumbo (dirección)</td></tr>
             <tr><td><kbd>RePág</kbd>/<kbd>AvPág</kbd></td><td>Ángulo de inserción</td></tr>
             <tr><td><kbd>Intro</kbd></td><td>Confirmar la punción (evaluación)</td></tr>
@@ -348,10 +366,27 @@ export class Panels {
             <li><b>Sala y ergonomía</b>: coloca paciente, operador y pantalla.</li>
             <li><b>Aprendizaje</b>: lecciones guiadas paso a paso.</li>
           </ul>
+          <p class="muted"><b>Modo básico / avanzado</b>: el botón <b>Más controles</b> / <b>Menos controles</b>, a la derecha de la consola, muestra u oculta el Doppler, el PW y los ajustes finos de imagen. Los atajos de teclado funcionan en los dos modos.</p>
         </div>
       </div>
       <p class="muted">En el móvil y en pantallas pequeñas se abre una versión táctil; puedes forzarla con <a href="?movil=1">?movil=1</a> o volver a esta con <code>?movil=0</code>.</p>
-      <p class="muted">Los fundamentos médicos y físicos, con referencias (KDOQI 2019, GEMAV 2017, ESVS 2018…), están en <code>docs/FUNDAMENTOS.md</code>. Herramienta educativa: no sustituye la formación práctica supervisada.</p>`);
+      <p class="muted">Los <a href="${SITE.docs}FUNDAMENTOS.md" target="_blank" rel="noopener">fundamentos médicos y físicos</a>, con referencias, siguen <i>Punción ecoguiada del acceso vascular para hemodiálisis</i> (Moyano Franco, Salgueira Lazo, Roca-Tey; <i>Nefrología al día</i>), GEMAV 2017, KDOQI 2019 y ESVS 2018. Para docentes hay una <a href="${SITE.docs}GUIA_DOCENTE.md" target="_blank" rel="noopener">guía con itinerario y rúbrica</a>.</p>
+      ${this.aboutHtml()}`);
+  }
+
+  /** Acerca de: versión, código, privacidad, aviso y apoyo. */
+  private aboutHtml() {
+    const link = (href: string, text: string, cls = '') => `<a${cls ? ` class="${cls}"` : ''} href="${href}" target="_blank" rel="noopener">${text}</a>`;
+    const commit = BUILD.commit ? ` · ${link(`${SITE.repo}/commit/${BUILD.commit}`, BUILD.commit)}` : '';
+    return `
+      <h4>Acerca de ${SITE.name}</h4>
+      <div class="about">
+        <p><b>${SITE.name}</b> · versión ${BUILD.version} · ${BUILD.date}${commit} · ${link(SITE.url, SITE.host)}<br>
+          Código abierto con licencia MIT en ${link(SITE.repo, 'GitHub')}. Contacto: <a href="mailto:${SITE.email}">${SITE.email}</a>. Sugerencias, casos nuevos y errores: ${link(`${SITE.repo}/issues`, 'GitHub Issues')}.</p>
+        <p><b>Privacidad.</b> Sin cookies, sin analítica y sin publicidad. Todo se calcula en tu navegador y no se envía nada a ningún servidor. El historial y las preferencias se guardan solo en este navegador (el historial se borra desde el Informe). El alojamiento, GitHub Pages, puede registrar la dirección IP de las visitas por seguridad.</p>
+        <p><b>Aviso.</b> Herramienta educativa. No es un producto sanitario, no sirve para diagnosticar ni para decidir tratamientos y no sustituye la formación práctica supervisada. Las cifras (diámetros, flujos, velocidades) son valores didácticos.</p>
+        <p><b>Apoya el proyecto.</b> ${SITE.name} es gratuito. Si te resulta útil, puedes apoyarlo con un café en ${link(SITE.kofi, 'Ko-fi', 'kofi-link')}: ayuda a mantenerlo y a añadir casos y lecciones.</p>
+      </div>`;
   }
 
   showReport() {
@@ -360,29 +395,31 @@ export class Panels {
     const g = grade(s.score);
     const hist = app.history.slice(-15).reverse();
     this.openModal(`
-      <h2>Informe de la sesión</h2>
+      <h2>Informe de la sesión <span class="muted report-brand">· ${SITE.name}</span></h2>
       <p><b>Caso:</b> ${app.caseDef.title}<br><b>Fecha:</b> ${new Date().toLocaleString('es-ES')}</p>
       <h4>Punción actual</h4>
-      <p>Puntuación: <b style="color:${g.color}">${s.score}/100 (${g.label})</b></p>
+      ${s.skinPunctures === 0 ? '<p class="muted">Todavía no hay ninguna punción: en el modo <b>Punción</b>, coloca la aguja con <kbd>N</kbd> y avanza con <kbd>↑</kbd>.</p>' : `<p>Puntuación: <b style="color:${g.color}">${s.score}/100 (${g.label})</b></p>
       <table class="tbl">
         <tr><td>Tiempo total</td><td>${s.elapsed.toFixed(0)} s</td><td>Piel → reflujo</td><td>${s.timeToFlash !== null ? s.timeToFlash.toFixed(1) + ' s' : '—'}</td></tr>
         <tr><td>Punciones cutáneas</td><td>${s.skinPunctures}</td><td>Redirecciones</td><td>${s.redirections}</td></tr>
         <tr><td>Avance con punta visible</td><td>${s.tipVisiblePct.toFixed(0)} %</td><td>Cuerpo tomado por punta</td><td>${s.shaftConfusions}</td></tr>
         <tr><td>Contactos pared posterior</td><td>${s.backWallContacts}</td><td>Transfixiones</td><td>${s.transfixions}</td></tr>
         <tr><td>Punciones arteriales</td><td>${s.arterialPunctures}</td><td>Contactos nerviosos</td><td>${s.nerveContacts}</td></tr>
+        <tr><td>Lavados con suero</td><td>${s.flushes}</td><td>Infiltraciones</td><td>${s.infiltrations}</td></tr>
         <tr><td>Movimiento de sonda al avanzar</td><td>${s.probeMoveDuringAdvance.toFixed(0)} mm</td><td>Colapso máx. del vaso</td><td>${Math.round(s.maxCollapse * 100)} %</td></tr>
-      </table>
+      </table>`}
       ${s.checks.length ? `<h4>Criterios</h4><ul>${s.checks.map((c) => `<li>${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'} ${c.label} — ${c.detail}</li>`).join('')}</ul>` : ''}
       <h4>Historial (este navegador)</h4>
       ${hist.length ? `<table class="tbl"><tr><th>Fecha</th><th>Caso</th><th>Abordaje</th><th>Aguja</th><th>Puntuación</th></tr>${hist.map((h) => `<tr><td>${new Date(h.date).toLocaleString('es-ES')}</td><td>${h.caseTitle}</td><td>${h.approach}</td><td>${h.needle}</td><td>${h.score}</td></tr>`).join('')}</table>` : '<p class="muted">Sin punciones evaluadas todavía.</p>'}
       <div class="crow no-print" style="margin-top:14px">${embedded ? '' : '<button class="primary" id="rpPrint">Imprimir / PDF</button><button id="rpJson">Exportar JSON</button><button id="rpCsv">Exportar CSV</button>'}<button id="rpCopyJson">Copiar JSON</button><button id="rpCopyCsv">Copiar CSV</button><button class="danger" id="rpClear">Borrar historial</button></div>
-      <textarea id="rpText" class="hidden" readonly rows="6" style="width:100%;margin-top:8px;background:#0d141a;color:#cfe;border:1px solid #243240;font:11px var(--mono)"></textarea>`);
-    const json = () => JSON.stringify({ caso: app.caseDef.id, metricas: s, eventos: app.metrics.log, historial: app.history }, null, 2);
+      <textarea id="rpText" class="hidden" readonly rows="6" style="width:100%;margin-top:8px;background:#0d141a;color:#cfe;border:1px solid #243240;font:11px var(--mono)"></textarea>
+      <p class="site-foot">Generado con ${SITE.name} ${BUILD.version} · ${SITE.host} · herramienta educativa</p>`);
+    const json = () => JSON.stringify({ app: { nombre: SITE.name, version: BUILD.version, url: SITE.url }, caso: app.caseDef.id, metricas: s, eventos: app.metrics.log, historial: app.history }, null, 2);
     const csv = () => ['fecha;caso;abordaje;aguja;puntuacion'].concat(app.history.map((h) => `${h.date};${h.caseId};${h.approach};${h.needle};${h.score}`)).join('\n');
     if (!embedded) {
       this.q('rpPrint').addEventListener('click', () => window.print());
-      this.q('rpJson').addEventListener('click', () => download('sesion-ecofav.json', json(), 'application/json'));
-      this.q('rpCsv').addEventListener('click', () => download('historial-ecofav.csv', csv(), 'text/csv'));
+      this.q('rpJson').addEventListener('click', () => download('sesion-fistulab.json', json(), 'application/json'));
+      this.q('rpCsv').addEventListener('click', () => download('historial-fistulab.csv', csv(), 'text/csv'));
     }
     const copy = (txt: string) => {
       const ta = this.q('rpText') as HTMLTextAreaElement;
@@ -411,8 +448,8 @@ export class Panels {
 }
 
 const WELCOME_TOUCH = `
-  <h2>Ecógrafo Virtual FAV</h2>
-  <p>Simulador para aprender la <b>punción ecoguiada de fístulas arteriovenosas</b>. La imagen ecográfica se calcula en tiempo real a partir de la anatomía del brazo en 3D.</p>
+  <h2>Fistu<span class="accent">lab</span></h2>
+  <p>Simulador de <b>punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis</b>. La imagen ecográfica se calcula en tiempo real a partir de la anatomía del brazo en 3D.</p>
   <h4>La pantalla</h4>
   <ul>
     <li>Arriba, el <b>monitor del ecógrafo</b>. En la esquina, el <b>brazo en 3D</b>: <b>⇄</b> intercambia las dos vistas y <b>–</b> oculta el 3D.</li>
@@ -429,7 +466,7 @@ const WELCOME_TOUCH = `
   <div class="crow" style="margin-top:12px"><button class="primary" id="wlStart">Empezar</button><button id="wlLesson">Ir a la lección 1</button></div>`;
 
 const HELP_TOUCH = `
-  <h2>Ayuda</h2>
+  <h2>Ayuda de Fistu<span class="accent">lab</span></h2>
   <h4>Gestos</h4>
   <table class="tbl">
     <tr><td>Un dedo sobre el brazo (3D)</td><td>Lleva la sonda a ese punto y la arrastra</td></tr>
@@ -451,7 +488,7 @@ const HELP_TOUCH = `
   <p><b>⇄</b> intercambia el monitor y el 3D, <b>Vista</b> cambia la cámara y <b>–</b> oculta el 3D. En horizontal, el monitor queda en el centro y el 3D a la derecha.</p>
   <h4>Más ajustes</h4>
   <p>En <b>Más</b>: caso, brazo, calidad, frecuencia, Doppler (escala, PW, corrección de ángulo), aguja, capas del 3D, informe y paso a la versión de escritorio. La <b>sala y ergonomía</b> sólo están en la versión de escritorio.</p>
-  <p class="muted">Los fundamentos y las referencias están en docs/FUNDAMENTOS.md. Herramienta educativa: no sustituye la formación práctica supervisada.</p>`;
+  <p class="muted">Los <a href="${SITE.docs}FUNDAMENTOS.md" target="_blank" rel="noopener">fundamentos médicos y físicos</a>, con sus referencias, y la <a href="${SITE.docs}GUIA_DOCENTE.md" target="_blank" rel="noopener">guía docente</a> están en GitHub.</p>`;
 
 /** Dentro de un marco (p. ej. un artefacto publicado) las descargas y la impresión están bloqueadas. */
 const embedded = (() => {

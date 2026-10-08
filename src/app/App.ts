@@ -2,15 +2,18 @@
  * Aplicación principal: orquesta el modelo anatómico, el simulador ecográfico, la escena 3D, la
  * interacción (sonda, aguja, sala) y el entrenamiento (métricas, lecciones, ergonomía).
  */
-import { Color, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three';
+import { Color, Matrix4, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three';
 import { ArmShape } from '../anatomy/armShape';
 import { CaseDef, CASES, caseById } from '../anatomy/cases';
 import { AnatomyModel, Structure } from '../anatomy/model';
 import { Needle, NeedleEvent, NeedleRole } from '../interaction/needle';
-import { clampProbe, computePose, defaultProbeState, ProbeState, skinParamOf } from '../interaction/probePose';
+import { clampProbe, computePose, defaultProbeState, ProbeState, skinParamAbove, skinParamOf } from '../interaction/probePose';
 import { SceneManager, CameraPreset, defaultRoomConfig, placeDefaults, NeedleVisual } from '../scene/SceneManager';
 import { DopplerAudio, SpectralDoppler } from '../sim/spectral';
+import { FLUSH_INJECT_S, FlushState, flushParams, innerDiameter, JET_LEN_MM, jetVelocity } from '../sim/flush';
+import { GAUGES } from '../scene/instruments';
 import { defaultSettings, MachineSettings, Quality, SOFT_LIFT, UltrasoundSim } from '../sim/UltrasoundSim';
+import type { ChecklistState } from '../training/checklist';
 import { evaluateErgonomics, ErgoResult } from '../training/ergonomics';
 import { LESSONS, Lesson, LessonCtx } from '../training/lessons';
 import { FinalCheck, Metrics } from '../training/metrics';
@@ -27,11 +30,33 @@ export type AppMode = 'explore' | 'cannulate' | 'room' | 'learn';
 
 const CLEAR_COLOR = new Color('#0b1117');
 
+/**
+ * Matriz que escala una malla alrededor de un centro: uniforme (colección esférica) o sólo
+ * perpendicular a un eje (colección alargada que crece en grosor, no en longitud).
+ */
+function scaleAbout(center: Vector3, s: number, axis: Vector3 | null, out: Matrix4): Matrix4 {
+  if (!axis) out.makeScale(s, s, s);
+  else {
+    const t = axis;
+    const k = 1 - s;
+    out.set(s + k * t.x * t.x, k * t.x * t.y, k * t.x * t.z, 0, k * t.y * t.x, s + k * t.y * t.y, k * t.y * t.z, 0, k * t.z * t.x, k * t.z * t.y, s + k * t.z * t.z, 0, 0, 0, 0, 1);
+  }
+  const sc = center.clone().applyMatrix4(out);
+  return out.setPosition(center.x - sc.x, center.y - sc.y, center.z - sc.z);
+}
+
+/** Colección que crece en el tejido: hematoma (sangre extravasada) o infiltración de suero. */
 interface Hematoma {
   st: Structure;
   t0: number;
+  /** radio inicial y final (mm) */
+  r0: number;
   rmax: number;
   center: Vector3;
+  /** constante de tiempo del crecimiento (s) */
+  tau: number;
+  /** eje de una colección alargada (crece sólo en grosor); null = esférica */
+  axis?: Vector3 | null;
 }
 
 export interface SessionRecord {
@@ -60,6 +85,10 @@ export class App {
   probe: ProbeState = defaultProbeState();
   mode: AppMode = 'explore';
   tourniquet = false;
+  /** preparación aséptica: piel desinfectada, funda y gel estériles */
+  asepsis = false;
+  /** interfaz básica (solo los controles de la punción) o avanzada (todos) */
+  uiLevel: 'basico' | 'avanzado' = 'basico';
   needles: Needle[] = [new Needle('arterial'), new Needle('venosa')];
   activeNeedle = 0;
   approach: 'oop' | 'ip' = 'oop';
@@ -68,6 +97,8 @@ export class App {
   labels = false;
   anatLabels = true;
   hematomas: Hematoma[] = [];
+  /** lavado con suero en curso (aguja activa al pulsar) */
+  flush: (FlushState & { flowDir: Vector3; needle: number }) | null = null;
   lesson: { lesson: Lesson; step: number; done: boolean[] } | null = null;
   lessonEvents = new Set<string>();
   lessonFlags: Record<string, number> = {};
@@ -111,6 +142,11 @@ export class App {
       this.history = JSON.parse(localStorage.getItem('ecofav-historial') ?? '[]');
     } catch {
       this.history = [];
+    }
+    try {
+      if (localStorage.getItem('ecofav-nivel') === 'avanzado') this.uiLevel = 'avanzado';
+    } catch {
+      /* sin almacenamiento: interfaz básica */
     }
   }
 
@@ -163,6 +199,7 @@ export class App {
     this.spectral.setModel(this.model);
     this.scene.setModel(this.model);
     this.hematomas = [];
+    this.asepsis = false;
     Object.assign(this.probe, { x: cd.probeStart.x, theta: cd.probeStart.theta, rot: cd.probeStart.rot, tilt: 0, rock: 0, press: 0.6 });
     // preajuste de profundidad según el vaso de acceso
     const s = this.sim.settings;
@@ -199,6 +236,8 @@ export class App {
     this.scene?.resetNeedles();
     this.sim.needles = [];
     this.sim.tent = null;
+    this.flush = null;
+    this.sim.flush = null;
   }
 
   setMode(m: AppMode) {
@@ -225,7 +264,7 @@ export class App {
       this.scene.applyOptions();
       if (!this.scene.useOperatorCam) this.scene.setPreset('procedimiento');
     }
-    document.getElementById('needleHud')!.classList.toggle('hidden', m !== 'cannulate' && !(m === 'learn' && this.lesson?.lesson.mode === 'cannulate'));
+    document.getElementById('needleHud')!.classList.toggle('hidden', !this.needleMode());
     this.consoleUpdate();
     this.focus?.refresh();
     this.mobile?.update();
@@ -233,9 +272,9 @@ export class App {
 
   /** Línea de estado bajo la imagen cuando el 3D no está a la vista: la sonda al explorar y la aguja al puncionar. */
   statusLine(): string {
-    if (this.cannulating) {
+    if (this.needleMode()) {
       const n = this.needle;
-      if (!n.placed) return this.dt(`Aguja ${n.role} ${n.gauge}G sin colocar: {{pulsa N o «Colocar»|pulsa «Fuera de plano» o «En plano»}}`);
+      if (!n.placed) return this.dt(`Aguja ${n.role} ${n.gauge}G sin colocar: {{pulsa N para colocarla|pulsa «Fuera de plano» o «En plano»}}`);
       const where = n.inVessel ? ` (${n.inVessel.def.short ?? n.inVessel.def.name})` : '';
       return `Aguja ${n.role} ${n.gauge}G · ${n.angle.toFixed(0)}° · ${Math.max(0, n.depth).toFixed(1)} mm · ${n.state}${where}${n.confirmed ? ' · evaluada' : ''}`;
     }
@@ -251,14 +290,29 @@ export class App {
     if (this.toastsEl.parentElement !== target) target.appendChild(this.toastsEl);
   }
 
-  /** Modo punción, directo o dentro de una lección de punción. */
-  get cannulating(): boolean {
-    return this.mode === 'cannulate' || (this.mode === 'learn' && this.lesson?.lesson.mode === 'cannulate');
-  }
-
   /** Texto según el dispositivo (ver `deviceText`). */
   dt(s: string): string {
     return deviceText(s, this.touchUI);
+  }
+
+  /** La aguja está disponible: modo Punción o lección de punción en curso. */
+  needleMode(): boolean {
+    return this.mode === 'cannulate' || (this.mode === 'learn' && this.lesson?.lesson.mode === 'cannulate');
+  }
+
+  /**
+   * Pasa al modo Punción si hace falta para usar la aguja (la N funciona desde cualquier modo).
+   * Dentro de una lección que no es de punción no cambia de modo, para no perder la lección, y avisa.
+   */
+  ensureNeedleMode(): boolean {
+    if (this.needleMode()) return true;
+    if (this.mode === 'learn' && this.lesson) {
+      this.toast('Esta lección no usa la aguja. Para puncionar, pasa al modo Punción.', 'warn');
+      return false;
+    }
+    this.setMode('cannulate');
+    this.toast('Modo Punción activado', 'info');
+    return true;
   }
 
   startLesson(id: string) {
@@ -309,7 +363,7 @@ export class App {
     const p = this.arm.surfacePoint(this.probe.x, this.probe.theta, 'skin');
     const { idx } = this.model.nearestSample(a, p);
     const c = a.samples[idx].p;
-    const par = skinParamOf(c);
+    const par = skinParamAbove(this.arm, c);
     this.probe.theta = par.theta;
     this.probe.x = par.x;
   }
@@ -326,8 +380,18 @@ export class App {
     return this.needles[this.activeNeedle];
   }
 
+  /**
+   * Abordaje que corresponde a la vista actual: con la sonda en longitudinal sobre el acceso, en plano;
+   * en transversal, fuera de plano. Sin el acceso en la imagen, el último usado.
+   */
+  viewApproach(): 'oop' | 'ip' {
+    const a = this.accessStruct();
+    const v = a ? this.vesselInImage(a.def.id) : null;
+    return v ? (v.along ? 'ip' : 'oop') : this.approach;
+  }
+
   /** Coloca la aguja activa junto a la sonda según el abordaje (fuera de plano / en plano). */
-  placeNeedleAuto(approach: 'oop' | 'ip' = this.approach) {
+  placeNeedleAuto(approach: 'oop' | 'ip' = this.viewApproach()) {
     this.approach = approach;
     const n = this.needle;
     if (n.placed && n.depth > 0) {
@@ -366,8 +430,29 @@ export class App {
     const f = this.arm.skinFrame(par.x, par.theta);
     const heading = (Math.atan2(dirH.dot(f.Tt), dirH.dot(f.Tx)) * 180) / Math.PI;
     n.place(this.arm, par.x, par.theta, heading, Math.round(angle));
-    this.toast(`Aguja ${n.role} (${n.gauge}G) colocada: ${approach === 'oop' ? 'fuera de plano' : 'en plano'}, ${Math.round(angle)}°`, 'info');
+    this.toast(`Aguja ${n.role} (${n.gauge}G): abordaje ${approach === 'oop' ? 'transversal (fuera de plano)' : 'longitudinal (en plano)'}, ${Math.round(angle)}°`, 'info');
+    this.remindAsepsis();
     this.panels.renderMetrics();
+  }
+
+  private remindAsepsis() {
+    if (!this.asepsis) this.toast('Sin asepsia: desinfecta la piel y pon funda y gel estériles antes de puncionar (botón Asepsia)', 'warn');
+  }
+
+  setAsepsis(on: boolean) {
+    this.asepsis = on;
+    this.toast(on ? 'Asepsia: piel desinfectada, funda estéril en la sonda y gel estéril' : 'Asepsia retirada', on ? 'ok' : 'info');
+  }
+
+  setUiLevel(level: 'basico' | 'avanzado') {
+    this.uiLevel = level;
+    document.body.classList.toggle('basic', level === 'basico');
+    this.consoleUpdate();
+    try {
+      localStorage.setItem('ecofav-nivel', level);
+    } catch {
+      /* sin almacenamiento */
+    }
   }
 
   placeNeedleAt(p: Vector3) {
@@ -385,6 +470,7 @@ export class App {
     n.place(this.arm, par.x, par.theta, heading, this.caseDef.access?.angle ?? 30);
     this.placingNeedle = false;
     this.toast(this.dt('Aguja colocada en la piel. {{Avanza con ↑ o la rueda del ratón.|Avanza con «Avance» en la rueda de ajuste.}}'), 'info');
+    this.remindAsepsis();
   }
 
   withdrawNeedle() {
@@ -400,7 +486,7 @@ export class App {
   advanceNeedle(mm: number) {
     const n = this.needle;
     if (!n.placed) {
-      this.toast(this.dt('Primero coloca la aguja {{(botón "Colocar" o clic en la piel)|(«Fuera de plano» o «En plano»)}}'), 'warn');
+      this.toast(this.dt('Primero coloca la aguja {{(tecla N o botones de abordaje de la consola)|(«Fuera de plano» o «En plano»)}}'), 'warn');
       return;
     }
     if (n.confirmed) return;
@@ -437,7 +523,84 @@ export class App {
       group: 'hematoma',
       pts: [{ x: c.x, y: c.y, z: c.z, r: 0.8 }],
     });
-    this.hematomas.push({ st, t0: this.time, rmax, center: c });
+    this.hematomas.push({ st, t0: this.time, r0: 0.8, rmax, center: c, tau: 6 });
+    this.scene.rebuildAnatomy();
+  }
+
+  /**
+   * Lava la aguja activa con 10 mL de suero para comprobar la posición de la punta.
+   * En la luz: fluye sin resistencia (penacho de microburbujas y chorro en Doppler color).
+   * Fuera de la luz: infiltración (colección anecoica que crece alrededor de la punta).
+   */
+  flushNeedle() {
+    const n = this.needle;
+    if (!n.placed || n.depth <= 0) {
+      this.toast(this.dt('Primero introduce la aguja; después lava con suero {{(J)|(«Suero»)}} para comprobar la posición'), 'warn');
+      return;
+    }
+    if (this.flush && this.time - this.flush.t0 < FLUSH_INJECT_S) return;
+    const ev = (type: NeedleEvent['type'], msg: string, severity: NeedleEvent['severity'], struct?: string) =>
+      this.onNeedleEvent(n, { t: this.time, type, msg, severity, struct });
+    if (n.state === 'luz' && n.inVessel) {
+      const st = n.inVessel;
+      const smp = st.samples[this.model.nearestSample(st, n.tip).idx];
+      const r = smp.r * st.dyn.radiusScale;
+      const q = Math.abs(st.dyn.qNow);
+      const od = GAUGES[n.gauge]?.od ?? 1.8;
+      this.flush = {
+        t0: this.time,
+        sidx: st.index,
+        vmean: (q * 1000) / (Math.PI * r * r),
+        qVessel: q,
+        jetVel: jetVelocity(innerDiameter(od)),
+        flowDir: smp.t.clone().multiplyScalar(st.dyn.qNow >= 0 ? 1 : -1),
+        needle: this.activeNeedle,
+      };
+      ev('flush', `Lavado con suero: entra sin resistencia y las microburbujas recorren la luz (${st.def.short ?? st.def.name}): punta intraluminal`, 'ok', st.def.id);
+    } else {
+      this.addInfiltration(n);
+      ev('infiltration', 'Infiltración: el suero se acumula en el tejido y no en la luz. Detén el lavado y recoloca la aguja.', 'error');
+    }
+  }
+
+  /**
+   * Suero extravasado. Junto a un vaso no puede entrar en la luz: diseca el plano perivascular y forma
+   * un halo anecoico alrededor del vaso a lo largo de un tramo (manguito coaxial que crece desde la
+   * pared; el vaso, con más prioridad, tapa la parte interior). Lejos de un vaso, colección esférica.
+   */
+  private addInfiltration(n: Needle) {
+    if (this.hematomas.length >= 4) return;
+    const tip = n.tip.clone();
+    const near = n.tentStruct ?? n.punctures[n.punctures.length - 1]?.st ?? this.accessStruct() ?? null;
+    let a = tip.clone();
+    let b = tip.clone();
+    let center = tip.clone();
+    let axis: Vector3 | null = null;
+    let r0 = 0.8;
+    let rmax = 4;
+    if (near && near.isVessel) {
+      const smp = near.samples[this.model.nearestSample(near, tip).idx];
+      const rel = tip.clone().sub(smp.p);
+      const dist = rel.addScaledVector(smp.t, -rel.dot(smp.t)).length();
+      const rv = smp.r * near.dyn.radiusScale + smp.w;
+      if (dist < rv + 6) {
+        r0 = rv + 0.2;
+        rmax = rv + 3.2;
+        center = smp.p.clone();
+        axis = smp.t.clone().normalize();
+        a = center.clone().addScaledVector(axis, -6);
+        b = center.clone().addScaledVector(axis, 6);
+      }
+    }
+    const st = this.model.addStructure({
+      id: `infiltrado_${Date.now()}`,
+      name: 'Infiltración de suero',
+      short: 'Suero',
+      kind: 'infiltrado',
+      group: 'hematoma',
+      pts: axis ? [{ x: a.x, y: a.y, z: a.z, r: r0 }, { x: b.x, y: b.y, z: b.z, r: r0 }] : [{ x: a.x, y: a.y, z: a.z, r: r0 }],
+    });
+    this.hematomas.push({ st, t0: this.time, r0, rmax, center, tau: 1.2, axis });
     this.scene.rebuildAnatomy();
   }
 
@@ -458,16 +621,18 @@ export class App {
     checks.push({ label: 'Punta en la luz del acceso vascular', ok: inAccess, detail: inAccess ? `En ${n.inVessel!.def.name}` : `Estado: ${n.state}${n.inVessel ? ' en ' + n.inVessel.def.name : ''}`, penalty: 35 });
     const len = n.intraluminalLength(this.model);
     checks.push({ label: 'Recorrido intraluminal ≥ 5 mm', ok: inAccess ? len >= 5 : null, detail: `${len.toFixed(1)} mm`, penalty: 8 });
+    // cada criterio se decide sobre el valor redondeado que se muestra (nunca «25°» con ✗ en «≤ 25°»)
     const cen = n.centering(this.model);
-    checks.push({ label: 'Punta centrada en la luz', ok: cen === null ? null : cen < 0.65, detail: cen === null ? '—' : `${Math.round(cen * 100)} % del radio desde el eje`, penalty: 5 });
+    const cenPct = cen === null ? null : Math.round(cen * 100);
+    checks.push({ label: 'Punta centrada en la luz', ok: cenPct === null ? null : cenPct < 65, detail: cenPct === null ? '—' : `${cenPct} % del radio desde el eje`, penalty: 5 });
     const av = n.angleToVessel(this.model);
-    checks.push({ label: 'Aguja alineada con el vaso (≤ 25° tras bajar el ángulo)', ok: av === null ? null : av <= 25, detail: av === null ? '—' : `${av.toFixed(0)}°`, penalty: 5 });
+    const avR = av === null ? null : Math.round(av * 10) / 10;
+    checks.push({ label: 'Aguja alineada con el vaso (≤ 25° tras bajar el ángulo)', ok: avR === null ? null : avR <= 25, detail: avR === null ? '—' : `${avR.toFixed(1)}°`, penalty: 5 });
     const acc = this.caseDef.access;
     if (acc) {
       if (acc.anastomosisX !== undefined) {
-        const d = Math.abs(n.tip.x - acc.anastomosisX);
-        const ok = n.role === 'venosa' ? d >= 30 : d >= 30;
-        checks.push({ label: 'Distancia a la anastomosis ≥ 3 cm', ok, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
+        const d = Math.round(Math.abs(n.tip.x - acc.anastomosisX));
+        checks.push({ label: 'Distancia a la anastomosis ≥ 3 cm', ok: d >= 30, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
       }
       const inZone = n.tip.x >= acc.zone[0] && n.tip.x <= acc.zone[1];
       checks.push({ label: 'Dentro de la zona de punción recomendada', ok: inZone, detail: `${(n.tip.x / 10).toFixed(1)} cm desde la muñeca`, penalty: 5 });
@@ -481,10 +646,11 @@ export class App {
     }
     const other = this.needles[1 - this.activeNeedle];
     if (other.placed && other.confirmed) {
-      const d = other.tip.distanceTo(n.tip);
+      const d = Math.round(other.tip.distanceTo(n.tip));
       checks.push({ label: 'Separación entre puntas ≥ 5 cm', ok: d >= 50, detail: `${(d / 10).toFixed(1)} cm`, penalty: 10 });
     }
     checks.push({ label: 'Sin transfixión ni punción arterial/nerviosa', ok: !n.transfixed && !n.arteryHit && !n.nerveHit, detail: [n.transfixed ? 'transfixión' : '', n.arteryHit ? 'arteria' : '', n.nerveHit ? 'nervio' : ''].filter(Boolean).join(', ') || 'Correcto', penalty: 0 });
+    checks.push({ label: 'Técnica aséptica (piel desinfectada, funda y gel estériles)', ok: this.asepsis, detail: this.asepsis ? 'Sí' : 'No', penalty: 5 });
     const graft = acc?.graft;
     if (graft) checks.push({ label: 'Sin compresor en prótesis', ok: !this.tourniquet, detail: this.tourniquet ? 'Compresor aplicado' : 'Correcto', penalty: 5 });
     else checks.push({ label: 'Compresor aplicado (FAV nativa)', ok: this.tourniquet, detail: this.tourniquet ? 'Sí' : 'No (la vena se distiende menos)', penalty: 2 });
@@ -495,7 +661,7 @@ export class App {
       date: new Date().toISOString(),
       caseId: this.caseDef.id,
       caseTitle: this.caseDef.short,
-      approach: this.approach === 'oop' ? 'Eje corto' : 'Eje largo',
+      approach: this.approach === 'oop' ? 'Transversal (fuera de plano)' : 'Longitudinal (en plano)',
       score,
       needle: `${n.role} ${n.gauge}G`,
       checks,
@@ -570,10 +736,34 @@ export class App {
       calipers: this.monitor.calipers,
       spectral: this.spectral,
       tourniquet: this.tourniquet,
+      asepsis: this.asepsis,
       labels: this.labels,
       collapse: (id) => this.collapseOf(id),
       events: this.lessonEvents,
       flags: this.lessonFlags,
+    };
+  }
+
+  /** Estado para la lista de pasos de la punción. */
+  checklistState(): ChecklistState {
+    const n = this.needle;
+    const other = this.needles[1 - this.activeNeedle];
+    const cfg = this.scene.cfg;
+    return {
+      armAngle: 90 - cfg.armYaw,
+      armPitch: cfg.armPitch,
+      measures: this.monitor.calipers.filter((c) => c.b).length,
+      probeX: this.probe.x,
+      access: this.caseDef.access,
+      otherTipX: other.placed && other.confirmed ? other.tip.x : null,
+      tourniquet: this.tourniquet,
+      asepsis: this.asepsis,
+      placed: n.placed,
+      flashed: n.firstFlashTime >= 0,
+      inLumen: n.state === 'luz',
+      angleToVessel: n.placed ? n.angleToVessel(this.model) : null,
+      flushes: this.metrics.flushes,
+      confirmed: n.confirmed,
     };
   }
 
@@ -637,6 +827,7 @@ export class App {
     const ql = document.getElementById('quality') as HTMLSelectElement;
     ql.addEventListener('change', () => this.setQuality(ql.value as Quality));
     document.getElementById('btnHelp')!.addEventListener('click', () => this.panels.showHelp());
+    this.setUiLevel(this.uiLevel);
     document.getElementById('btnReport')!.addEventListener('click', () => this.panels.showReport());
     document.getElementById('modalClose')!.addEventListener('click', () => this.panels.closeModal());
     document.getElementById('modal')!.addEventListener('click', (e) => {
@@ -725,6 +916,9 @@ export class App {
       // no interferir con atajos del navegador o del sistema (Ctrl+C, Cmd+R…)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key.toLowerCase();
+      // un deslizador con el foco (navegación con Tab) usa las flechas: no mover además sonda o aguja
+      const act = document.activeElement as HTMLInputElement | null;
+      if (act?.tagName === 'INPUT' && act.type === 'range' && ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown', 'home', 'end'].includes(k)) return;
       if (held.has(k)) this.keys.add(k);
       if (e.shiftKey) this.keys.add('shift');
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'pageup', 'pagedown', ' '].includes(k)) e.preventDefault();
@@ -785,10 +979,13 @@ export class App {
           if (s.flipLR) this.lessonFlags.flipSeen = 1;
           break;
         case 'enter':
-          if (this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate') this.confirmPuncture();
+          if (this.needleMode()) this.confirmPuncture();
           break;
         case 'n':
-          if (this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate') this.placeNeedleAuto();
+          if (this.ensureNeedleMode()) this.placeNeedleAuto();
+          break;
+        case 'j':
+          this.flushNeedle();
           break;
         case 'v': {
           const order: CameraPreset[] = ['procedimiento', 'superior', 'lateral', 'corte', 'operador', 'sala'];
@@ -821,6 +1018,18 @@ export class App {
     });
     window.addEventListener('blur', () => this.keys.clear());
     document.addEventListener('visibilitychange', () => this.keys.clear());
+    // un botón pulsado con el ratón suelta el foco: si no, Intro o Espacio (confirmar, congelar)
+    // también lo volverían a «pulsar» (p. ej. recentrar la sonda o abrir el informe).
+    // Con el teclado (pointerType vacío) se conserva el foco para la navegación accesible.
+    document.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement | null)?.closest?.('button');
+      if (b && (e as PointerEvent).pointerType) b.blur();
+    });
+    // lo mismo con los deslizadores movidos con el ratón: las flechas vuelven a la sonda y la aguja
+    document.addEventListener('pointerup', (e) => {
+      const r = (e.target as HTMLElement | null)?.closest?.('input[type=range]') as HTMLInputElement | null;
+      if (r) setTimeout(() => r.blur(), 0);
+    });
 
     // ratón en la vista 3D
     const v3 = document.getElementById('view3d')!;
@@ -942,7 +1151,7 @@ export class App {
       'wheel',
       (e) => {
         if (e.shiftKey || e.altKey) return;
-        if ((this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate') && this.needle.placed) {
+        if (this.needleMode() && this.needle.placed) {
           e.preventDefault();
           this.advanceNeedle(e.deltaY < 0 ? 0.5 : -0.5);
         }
@@ -982,7 +1191,7 @@ export class App {
     if (k.has('x')) p.press += 3 * dt * fine;
     if (k.has('z')) p.press -= 3 * dt * fine;
     const n = this.needle;
-    if (n.placed && (this.mode === 'cannulate' || this.lesson?.lesson.mode === 'cannulate')) {
+    if (n.placed && this.needleMode()) {
       if (k.has('arrowup')) this.advanceNeedle(4 * dt * fine);
       if (k.has('arrowdown')) this.advanceNeedle(-4 * dt * fine);
       if (!n.confirmed) {
@@ -1047,7 +1256,10 @@ export class App {
         const tipVisible = inImg && Math.abs(im.e) < half;
         const entryIm = this.sim.tissueToImage(n.entry);
         const crosses = Math.sign(entryIm.e) !== Math.sign(im.e) && Math.abs(im.e) > half + 0.8;
-        this.metrics.frame(t, Math.max(0, adv), tipVisible, crosses, probeMove, this.accessCollapse);
+        // en plano, la punta aún bajo el extremo de la sonda (fuera del campo, del lado de la entrada):
+        // no se puede ver con ninguna técnica, así que ese avance no cuenta para el % de punta visible
+        const beforeField = Math.abs(im.e) < half && Math.abs(im.u) >= W / 2 && Math.sign(im.u) === Math.sign(entryIm.u);
+        this.metrics.frame(t, Math.max(0, adv), beforeField ? null : tipVisible, crosses, probeMove, this.accessCollapse);
         this.monitor.flags.tipMarker = { u: im.u, w: im.w, visible: tipVisible, inPlane: Math.abs(im.e) < 3 };
         // trayectoria prevista (línea recta de la aguja más allá de la punta)
         const guide: { u: number; w: number; e: number }[] = [];
@@ -1077,15 +1289,27 @@ export class App {
     this.sim.needles = renders;
     this.sim.tent = tent;
 
+    // lavado con suero: penacho y chorro desde la punta de la aguja que lo inyecta
+    const fl = this.flush;
+    const nf = fl ? this.needles[fl.needle] : null;
+    const fp = fl ? flushParams(fl, t) : null;
+    if (fl && nf && nf.placed && fp && fp.active) {
+      this.sim.flush = { tip: nf.tip.clone(), dir: nf.dir.clone(), flowDir: fl.flowDir, sidx: fl.sidx, intensity: fp.intensity, tail: fp.tail, front: fp.front, jet: fp.jet, jetVel: fl.jetVel, jetLen: JET_LEN_MM };
+    } else {
+      this.flush = null;
+      this.sim.flush = null;
+    }
+
     // hematomas
     for (const h of this.hematomas) {
-      const r = 0.8 + (h.rmax - 0.8) * (1 - Math.exp(-(t - h.t0) / 6));
+      const r = h.r0 + (h.rmax - h.r0) * (1 - Math.exp(-(t - h.t0) / h.tau));
       this.model.setUniformRadius(h.st, r);
       const mesh = this.scene.anat.meshes.get(h.st);
       if (mesh) {
         const s = r / ((mesh.userData.baseR as number) || 0.8);
-        mesh.scale.setScalar(s);
-        mesh.position.copy(h.center).multiplyScalar(1 - s);
+        scaleAbout(h.center, s, h.axis ?? null, mesh.matrix);
+        mesh.matrixAutoUpdate = false;
+        mesh.matrixWorldNeedsUpdate = true;
       }
     }
 
@@ -1207,7 +1431,7 @@ export class App {
       `Sonda: <b>${view}</b>\n` +
       `Posición: ${(p.x / 10).toFixed(1)} cm desde la muñeca${distAn}\n` +
       `Rotación ${p.rot.toFixed(0)}° · Inclinación ${p.tilt.toFixed(0)}° · Balanceo ${p.rock.toFixed(0)}°\n` +
-      `Presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · <b>compresor</b>' : ''}` +
+      `Presión ${p.press.toFixed(1)} mm${this.tourniquet ? ' · <b>compresor</b>' : ''}${this.asepsis ? ' · <b>asepsia</b>' : ''}` +
       (s.frozen ? '\n<b>IMAGEN CONGELADA</b>' : '');
     const n = this.needle;
     const nh = document.getElementById('needleHud')!;
