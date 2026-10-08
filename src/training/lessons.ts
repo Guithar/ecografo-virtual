@@ -30,6 +30,7 @@ export interface LessonCtx {
 }
 
 export interface LessonStep {
+  /** admite `{{escritorio|móvil}}` (ver `deviceText`) */
   text: string;
   hint?: string;
   check?: (c: LessonCtx) => boolean;
@@ -65,12 +66,12 @@ export const LESSONS: Lesson[] = [
         hint: 'Pulsa "Siguiente" cuando lo hayas identificado.',
       },
       {
-        text: 'Coloca la sonda en <b>transversal</b> (tecla 1) y céntrala sobre la vena de la FAV: la vena debe quedar en el centro de la imagen (±4 mm).',
+        text: 'Coloca la sonda en <b>transversal</b> {{(tecla 1)|(botón <b>Transv.</b>)}} y céntrala sobre la vena de la FAV: la vena debe quedar en el centro de la imagen (±4 mm).',
         check: (c) => {
           const v = nearAccess(c);
           return !!v && !v.along && Math.abs(v.u) < 4 && Math.abs(((c.probe.rot + 90) % 180) - 90) < 25;
         },
-        hint: 'Usa A/D para deslizar alrededor del brazo, W/S a lo largo, o arrastra la sonda sobre la piel.',
+        hint: '{{Usa A/D para deslizar alrededor del brazo, W/S a lo largo, o arrastra la sonda sobre la piel.|Toca el brazo en 3D para llevar la sonda y afina con <b>Alrededor</b> y <b>A lo largo</b> en la rueda de ajuste.}}',
       },
       {
         text: 'Desliza la sonda <b>hacia el lado del marcador</b> (luz verde). Observa hacia qué lado de la pantalla se desplaza la vena: se desplaza hacia el lado <b>opuesto</b> al marcador, porque la sonda se mueve hacia él.',
@@ -80,18 +81,18 @@ export const LESSONS: Lesson[] = [
         },
       },
       {
-        text: 'Activa <b>Invertir I/D</b> en la consola. El marcador pasa a la derecha de la pantalla y los movimientos se ven al revés: por eso es importante comprobar la orientación antes de puncionar. Vuelve a desactivarlo.',
+        text: 'Activa <b>Invertir I/D</b> {{en la consola|en <b>Más → Imagen</b>}}. El marcador pasa a la derecha de la pantalla y los movimientos se ven al revés: por eso es importante comprobar la orientación antes de puncionar. Vuelve a desactivarlo.',
         check: (c) => (c.flags.flipSeen ?? 0) > 0 && !c.settings.flipLR,
       },
       {
-        text: 'Gira la sonda a <b>longitudinal</b> (tecla 2): la vena aparece como un tubo horizontal. Rota con Q/E hasta ver la vena en toda la anchura de la imagen.',
+        text: 'Gira la sonda a <b>longitudinal</b> {{(tecla 2)|(botón <b>Long.</b>)}}: la vena aparece como un tubo horizontal. {{Rota con Q/E|Gira con <b>Girar</b> en la rueda}} hasta ver la vena en toda la anchura de la imagen.',
         check: (c) => {
           const v = nearAccess(c);
           return !!v && v.along;
         },
       },
       {
-        text: 'Pasa al modo <b>Sala y ergonomía</b> y comprueba que la pantalla está en tu línea de visión, detrás del sitio de punción. ¡Lección completada!',
+        text: '{{Pasa al modo <b>Sala y ergonomía</b> y comprueba que la pantalla está en tu línea de visión, detrás del sitio de punción.|En la sala, la pantalla debe quedar en tu línea de visión, detrás del sitio de punción. En el ordenador puedes practicarlo en el modo <b>Sala y ergonomía</b>.}} ¡Lección completada!',
       },
     ],
   },
@@ -124,7 +125,7 @@ export const LESSONS: Lesson[] = [
         },
       },
       {
-        text: 'Prueba la <b>frecuencia</b>: a menor frecuencia más penetración y menos resolución. Déjala entre 10 y 12 MHz para este vaso profundo.',
+        text: 'Prueba la <b>frecuencia</b>{{| (en <b>Más → Imagen</b>)}}: a menor frecuencia más penetración y menos resolución. Déjala entre 10 y 12 MHz para este vaso profundo.',
         check: (c) => c.settings.freq >= 9.5 && c.settings.freq <= 12.5 && (c.flags.freqChanged ?? 0) > 0,
       },
       {
@@ -147,15 +148,15 @@ export const LESSONS: Lesson[] = [
         },
       },
       {
-        text: 'Aumenta la <b>presión</b> (tecla X). Observa cómo las <b>venas satélites</b> se colapsan mientras la arteria permanece redonda y pulsátil.',
+        text: 'Aumenta la <b>presión</b> {{(tecla X)|(<b>Presión</b> en la rueda)}}. Observa cómo las <b>venas satélites</b> se colapsan mientras la arteria permanece redonda y pulsátil.',
         check: (c) => c.collapse('v_radial_1') > 0.7 || c.collapse('v_radial_2') > 0.7,
       },
       {
-        text: 'Reduce la presión (tecla Z) y activa el <b>Doppler color</b>. Con la sonda perpendicular al vaso no hay color (ángulo de 90°): inclina la sonda (R/F) o angula la caja de color.',
+        text: 'Reduce la presión {{(tecla Z)|}} y activa el <b>Doppler color</b>. Con la sonda perpendicular al vaso no hay color (ángulo de 90°): inclina la sonda {{(R/F)|(<b>Inclinar</b>)}} o angula la caja de color.',
         check: (c) => c.settings.mode === 'color' && c.probe.press < 2,
       },
       {
-        text: 'Activa el <b>Doppler pulsado (PW)</b>, sitúa el volumen de muestra dentro de la arteria (clic sobre la imagen) y observa la onda <b>trifásica de alta resistencia</b> (IR ≈ 1).',
+        text: 'Activa el <b>Doppler pulsado (PW)</b>, sitúa el volumen de muestra dentro de la arteria ({{clic|toca}} sobre la imagen) y observa la onda <b>trifásica de alta resistencia</b> (IR ≈ 1).',
         check: (c) => c.settings.pw && c.spectral.measures().valid,
       },
       {
@@ -178,7 +179,7 @@ export const LESSONS: Lesson[] = [
         },
       },
       {
-        text: 'Congela (barra espaciadora) y mide el <b>diámetro</b> interno con el calibre (pared interna a pared interna). Criterio: ≥ 6 mm (KDOQI) o ≥ 4–5 mm (GEMAV).',
+        text: 'Congela {{(barra espaciadora)|(botón <b>Congelar</b>)}} y mide el <b>diámetro</b> interno con {{el calibre|<b>Medir</b>, tocando dos puntos}} (pared interna a pared interna). Criterio: ≥ 6 mm (KDOQI) o ≥ 4–5 mm (GEMAV).',
         check: (c) => c.calipers.some((k) => !!k.b),
       },
       {
@@ -186,7 +187,7 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.calipers.filter((k) => !!k.b).length >= 2,
       },
       {
-        text: 'Descongela. Mide el <b>flujo (Qa)</b> en la arteria humeral: eje largo, PW con el volumen de muestra cubriendo 50–70 % de la luz y corrección de ángulo ≤ 60°. Mide también el diámetro humeral para que el equipo calcule el Qa.',
+        text: 'Descongela. Mide el <b>flujo (Qa)</b> en la arteria humeral: eje largo, PW con el volumen de muestra cubriendo 50–70 % de la luz y corrección de ángulo ≤ 60°{{| (en <b>Más → Doppler</b>)}}. Mide también el diámetro humeral para que el equipo calcule el Qa.',
         check: (c) => c.settings.pw && c.spectral.measures().valid && c.probe.x > 300,
       },
       {
@@ -202,7 +203,7 @@ export const LESSONS: Lesson[] = [
     summary: 'Toda la aguja visible durante el trayecto. Es el abordaje preferido en la mayoría de las unidades (Nefrología al día).',
     steps: [
       {
-        text: 'Coloca la sonda en <b>longitudinal</b> (2) sobre un segmento recto de la vena, a ≥ 3 cm de la anastomosis. Aplica el <b>compresor</b> (K).',
+        text: 'Coloca la sonda en <b>longitudinal</b> {{(2)|(botón <b>Long.</b>)}} sobre un segmento recto de la vena, a ≥ 3 cm de la anastomosis. Aplica el <b>compresor</b> {{(K)|(botón <b>Compresor</b>)}}.',
         check: (c) => {
           const v = nearAccess(c);
           return !!v && v.along && c.tourniquet;
@@ -213,7 +214,7 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.asepsis,
       },
       {
-        text: 'Sujeta la sonda con una mano y la aguja con la otra. Pulsa <b>N</b> o <b>Longitudinal · en plano</b>: la aguja entra por el extremo de la sonda, alineada con el haz.',
+        text: 'Sujeta la sonda con una mano y la aguja con la otra. Pulsa {{<b>N</b> o <b>Longitudinal · en plano</b>|<b>En plano</b>}}: la aguja entra por el extremo de la sonda, alineada con el haz.',
         check: (c) => !!c.needle()?.placed,
       },
       {
@@ -225,7 +226,7 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.needle()?.state === 'luz' && (c.needle()?.angle ?? 90) < 22,
       },
       {
-        text: 'Comprueba la posición con un <b>lavado de suero</b> (J o botón <b>Suero</b>): las microburbujas deben recorrer la luz aguas abajo de la punta, y en Doppler color aparece un chorro en la punta. Si el suero se acumula alrededor del vaso (halo anecoico), la punta está fuera de la luz: detén el lavado y recoloca.',
+        text: 'Comprueba la posición con un <b>lavado de suero</b> {{(J o botón <b>Suero</b>)|(botón <b>Suero</b>)}}: las microburbujas deben recorrer la luz aguas abajo de la punta, y en Doppler color aparece un chorro en la punta. Si el suero se acumula alrededor del vaso (halo anecoico), la punta está fuera de la luz: detén el lavado y recoloca.',
         check: (c) => c.events.has('flush'),
       },
       {
@@ -242,7 +243,7 @@ export const LESSONS: Lesson[] = [
     summary: 'No se ve la entrada en la pared: hay que seguir la punta con posicionamiento dinámico (DNTP). Requiere más experiencia.',
     steps: [
       {
-        text: 'Centra la vena en <b>transversal</b> (1) en el antebrazo medio (≥ 3 cm de la anastomosis). Aplica el <b>compresor</b> (tecla K).',
+        text: 'Centra la vena en <b>transversal</b> {{(1)|(botón <b>Transv.</b>)}} en el antebrazo medio (≥ 3 cm de la anastomosis). Aplica el <b>compresor</b> {{(tecla K)|(botón <b>Compresor</b>)}}.',
         check: (c) => {
           const v = nearAccess(c);
           return !!v && !v.along && Math.abs(v.u) < 3 && c.tourniquet;
@@ -253,11 +254,11 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.asepsis,
       },
       {
-        text: 'Pulsa <b>N</b> o <b>Transversal · fuera de plano</b>: la aguja se sitúa en la línea media de la sonda, a una distancia similar a la profundidad del vaso, con 30–40°.',
+        text: 'Pulsa {{<b>N</b> o <b>Transversal · fuera de plano</b>|<b>Fuera de plano</b>}}: la aguja se sitúa en la línea media de la sonda, a una distancia similar a la profundidad del vaso, con 30–40°.',
         check: (c) => !!c.needle()?.placed,
       },
       {
-        text: 'Avanza la aguja (↑ o rueda) hasta ver aparecer un <b>punto hiperecogénico</b> con cola de cometa. ¿Es la punta o el cuerpo? Desliza la sonda hacia proximal (W) hasta que el punto desaparezca: justo antes de desaparecer está la punta.',
+        text: 'Avanza la aguja {{(↑ o rueda)|(<b>Avance</b> en la rueda de ajuste)}} hasta ver aparecer un <b>punto hiperecogénico</b> con cola de cometa. ¿Es la punta o el cuerpo? Desliza la sonda hacia proximal {{(W)|(<b>A lo largo</b>)}} hasta que el punto desaparezca: justo antes de desaparecer está la punta.',
         check: (c) => (c.needle()?.depth ?? 0) > 3,
       },
       {
@@ -265,11 +266,11 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.events.has('pop') || c.events.has('flash'),
       },
       {
-        text: 'Al ver la punta en la luz y el <b>reflujo</b>, <b>baja el ángulo</b> (PgDn) y avanza unos milímetros siguiendo la punta, sin tocar la pared posterior.',
+        text: 'Al ver la punta en la luz y el <b>reflujo</b>, <b>baja el ángulo</b> {{(AvPág)|(<b>Ángulo</b> en la rueda)}} y avanza unos milímetros siguiendo la punta, sin tocar la pared posterior.',
         check: (c) => (c.needle()?.state === 'luz' && (c.needle()?.angle ?? 90) < 22) || false,
       },
       {
-        text: 'Pulsa <b>Confirmar punción</b> para evaluar el resultado.',
+        text: 'Pulsa <b>{{Confirmar punción|Confirmar}}</b> para evaluar el resultado.',
         check: (c) => !!c.needle()?.confirmed,
       },
     ],
@@ -291,7 +292,7 @@ export const LESSONS: Lesson[] = [
         text: '<b>Sombra de borde</b>: finas sombras verticales bajo los bordes laterales de los vasos, por refracción e incidencia rasante.',
       },
       {
-        text: '<b>Anisotropía</b>: en la muñeca, inclina la sonda (R/F) sobre los tendones flexores. Con 10–20° se vuelven hipoecoicos y pueden confundirse con otras estructuras.',
+        text: '<b>Anisotropía</b>: en la muñeca, inclina la sonda {{(R/F)|(<b>Inclinar</b>)}} sobre los tendones flexores. Con 10–20° se vuelven hipoecoicos y pueden confundirse con otras estructuras.',
         check: (c) => Math.abs(c.probe.tilt) > 12 && c.probe.x < 60,
       },
       {
@@ -314,11 +315,11 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.settings.mode === 'color' && (nearAccess(c)?.along ?? false),
       },
       {
-        text: 'Sube la <b>escala</b> (PRF) hasta que desaparezca el aliasing fuera de la estenosis.',
+        text: 'Sube la <b>escala</b> (PRF){{| en <b>Más → Doppler</b>}} hasta que desaparezca el aliasing fuera de la estenosis.',
         check: (c) => c.settings.scale >= 80,
       },
       {
-        text: 'Con PW, mide la <b>VPS en la estenosis</b> con el cursor de ángulo alineado con el chorro (≤ 60°).',
+        text: 'Con PW, mide la <b>VPS en la estenosis</b> con el cursor de ángulo alineado con el chorro (≤ 60°){{| (<b>Corr. ángulo</b> en <b>Más → Doppler</b>)}}.',
         check: (c) => c.settings.pw && c.spectral.measures().psv > 250,
       },
       {

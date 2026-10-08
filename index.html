@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
     <title>Fistulab · Simulador de punción ecoguiada de la FAV</title>
     <meta name="description" content="Simulador gratuito, en el navegador, para aprender la punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis: ecografía en tiempo real, abordaje longitudinal y transversal, Doppler y evaluación según las guías." />
     <link rel="canonical" href="https://fistulab.com/" />
@@ -12,6 +12,10 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Fistulab" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Fistulab" />
     <meta property="og:locale" content="es_ES" />
@@ -93,6 +97,7 @@
             <option value="baja">Calidad baja</option>
           </select>
           <button id="mobileInfo" style="display:none" title="Mostrar/ocultar la información del caso y las métricas">Info</button>
+          <button id="btnFocus" title="Modo enfoque: vista grande y la otra en una ventana flotante (O)" aria-pressed="false">Enfoque</button>
           <button id="btnReport" title="Informe de la sesión">Informe</button>
           <button id="btnHelp" title="Ayuda, atajos de teclado y acerca de Fistulab">Ayuda</button>
           <a id="btnKofi" class="kofi" href="https://ko-fi.com/fistulab" target="_blank" rel="noopener" title="Fistulab es gratuito y sin publicidad. Si te resulta útil, apóyalo en Ko-fi (se abre en otra pestaña)">

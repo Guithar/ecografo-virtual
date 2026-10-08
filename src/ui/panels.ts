@@ -79,7 +79,7 @@ export class Panels {
       <div class="metric-grid" id="mGrid"></div>
       ${checks.length ? `<h4>Evaluación de la punción (${n.role})</h4><ul class="checklist">${checks
         .map((c) => `<li class="lv-${c.ok === null ? 'info' : c.ok ? 'good' : 'bad'}"><span class="ic">${c.ok === null ? 'ℹ' : c.ok ? '✔' : '✖'}</span><span>${c.label} <span class="muted">— ${c.detail}</span></span></li>`)
-        .join('')}</ul>` : '<p class="muted">Pulsa <b>Confirmar punción</b> (Intro) cuando la aguja esté en posición para evaluarla según las guías.</p>'}
+        .join('')}</ul>` : app.dt('<p class="muted">Pulsa <b>{{Confirmar punción</b> (Intro)|Confirmar</b>}} cuando la aguja esté en posición para evaluarla según las guías.</p>')}
       <h4>Registro de eventos</h4>
       <div class="eventlog" id="mLog">${this.log
         .slice(-60)
@@ -137,13 +137,13 @@ export class Panels {
 
   renderMeasures() {
     const app = this.app;
-    this.q('tab-measures').innerHTML = `
+    this.q('tab-measures').innerHTML = app.dt(`
       <div class="crow wrap" style="margin-bottom:6px">
-        <button id="msCal" class="${app.monitor.tool === 'caliper' ? 'on' : ''}">Calibre (M)</button>
+        <button id="msCal" class="${app.monitor.tool === 'caliper' ? 'on' : ''}">{{Calibre (M)|Medir}}</button>
         <button id="msClr">Borrar medidas</button>
-        <button id="msFreeze">${app.sim.settings.frozen ? 'Descongelar' : 'Congelar'} (espacio)</button>
+        <button id="msFreeze">${app.sim.settings.frozen ? 'Descongelar' : 'Congelar'}{{ (espacio)|}}</button>
       </div>
-      <div id="msBody"></div>`;
+      <div id="msBody"></div>`);
     this.q('msCal').addEventListener('click', () => {
       app.monitor.tool = app.monitor.tool === 'caliper' ? 'none' : 'caliper';
       this.renderMeasures();
@@ -173,17 +173,17 @@ export class Panels {
     const diam = vert.length ? vert[vert.length - 1].dz : null;
     const depth = vert.length > 1 ? vert[vert.length - 2] : null;
     const r6 = (ok: boolean | null, label: string, val: string) => `<li class="lv-${ok === null ? 'info' : ok ? 'good' : 'bad'}"><span class="ic">${ok === null ? '·' : ok ? '✔' : '✖'}</span><span>${label}: <b>${val}</b></span></li>`;
-    body.innerHTML = `
-      <table class="tbl"><tr><th>#</th><th>Distancia</th><th>Orientación</th></tr>${rows || '<tr><td colspan="3" class="muted">Sin medidas: activa el calibre y haz clic en dos puntos de la imagen</td></tr>'}</table>
+    body.innerHTML = app.dt(`
+      <table class="tbl"><tr><th>#</th><th>Distancia</th><th>Orientación</th></tr>${rows || '<tr><td colspan="3" class="muted">Sin medidas: activa {{el calibre y haz clic|<b>Medir</b> y toca}} en dos puntos de la imagen</td></tr>'}</table>
       <h4>Doppler pulsado</h4>
-      ${m.valid ? `<div class="kv"><span>VPS</span><span>${m.psv.toFixed(0)} cm/s</span><span>VFD</span><span>${m.edv.toFixed(0)} cm/s</span><span>IR</span><span>${m.ri.toFixed(2)}</span><span>IP</span><span>${m.pi.toFixed(2)}</span><span>TAMV</span><span>${m.tamv.toFixed(0)} cm/s</span><span>Flujo (Q = TAMV·área·60)</span><span>${qa !== null ? qa.toFixed(0) + ' mL/min' : 'mide el diámetro'}</span></div>` : '<p class="muted">Activa PW (tecla P) y sitúa el volumen de muestra en un vaso.</p>'}
+      ${m.valid ? `<div class="kv"><span>VPS</span><span>${m.psv.toFixed(0)} cm/s</span><span>VFD</span><span>${m.edv.toFixed(0)} cm/s</span><span>IR</span><span>${m.ri.toFixed(2)}</span><span>IP</span><span>${m.pi.toFixed(2)}</span><span>TAMV</span><span>${m.tamv.toFixed(0)} cm/s</span><span>Flujo (Q = TAMV·área·60)</span><span>${qa !== null ? qa.toFixed(0) + ' mL/min' : 'mide el diámetro'}</span></div>` : '<p class="muted">Activa PW {{(tecla P)|}} y sitúa el volumen de muestra en un vaso.</p>'}
       <h4>Criterios de maduración (con tus medidas)</h4>
       <ul class="checklist">
         ${r6(diam === null ? null : diam >= 6, 'Diámetro (último calibre) ≥ 6 mm (KDOQI) / ≥ 4–5 mm (GEMAV)', diam === null ? '—' : diam.toFixed(1) + ' mm')}
         ${r6(depth === null ? null : depth.dz < 6, 'Profundidad (penúltimo calibre) < 6 mm', depth === null ? '—' : depth.dz.toFixed(1) + ' mm')}
         ${r6(qa === null ? null : qa > 600, 'Flujo > 600 mL/min (KDOQI) / > 500 (GEMAV)', qa === null ? '—' : qa.toFixed(0) + ' mL/min')}
       </ul>
-      <p class="muted">Convención: mide primero la profundidad (piel → pared anterior) y después el diámetro (pared interna a pared interna). El flujo del acceso se mide en la arteria humeral.</p>`;
+      <p class="muted">Convención: mide primero la profundidad (piel → pared anterior) y después el diámetro (pared interna a pared interna). El flujo del acceso se mide en la arteria humeral.</p>`);
   }
 
   renderErgo() {
@@ -219,7 +219,7 @@ export class Panels {
       <div class="crow"><h3 style="flex:1">${L.lesson.title}</h3><button id="lsExit">Salir</button></div>
       <div class="progress"><div style="width:${pct}%"></div></div>
       <div class="muted">Paso ${L.step + 1} de ${L.lesson.steps.length}</div>
-      <div class="lesson-step ${L.done[L.step] ? 'done' : ''}">${step.text}${step.hint ? `<div class="muted" style="margin-top:6px">${step.hint}</div>` : ''}${step.check ? `<div class="mini" style="margin-top:6px">${L.done[L.step] ? '✔ completado' : '⏳ se comprueba automáticamente'}</div>` : ''}</div>
+      <div class="lesson-step ${L.done[L.step] ? 'done' : ''}">${app.dt(step.text)}${step.hint ? `<div class="muted" style="margin-top:6px">${app.dt(step.hint)}</div>` : ''}${step.check ? `<div class="mini" style="margin-top:6px">${L.done[L.step] ? '✔ completado' : '⏳ se comprueba automáticamente'}</div>` : ''}</div>
       <div class="crow"><button id="lsPrev" ${L.step === 0 ? 'disabled' : ''}>◀ Anterior</button><button id="lsNext" class="primary">${L.step === L.lesson.steps.length - 1 ? 'Finalizar' : 'Siguiente ▶'}</button></div>`;
     this.q('lsExit').addEventListener('click', () => {
       app.lesson = null;
@@ -264,7 +264,9 @@ export class Panels {
       /* sin almacenamiento */
     }
     if (seen && !force) return;
-    this.openModal(`
+    if (this.app.touchUI) this.openModal(WELCOME_TOUCH);
+    else
+      this.openModal(`
       <h2>Fistu<span class="accent">lab</span></h2>
       <p>Simulador de <b>punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis</b>, nativa y protésica, para practicar sin equipo físico. La imagen ecográfica se calcula en tiempo real a partir de la anatomía que ves en 3D.</p>
       <div class="cols">
@@ -308,6 +310,10 @@ export class Panels {
   }
 
   showHelp() {
+    if (this.app.touchUI) {
+      this.openModal(HELP_TOUCH + this.aboutHtml());
+      return;
+    }
     this.openModal(`
       <h2>Ayuda de Fistu<span class="accent">lab</span></h2>
       <p>Simulador de <b>punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis</b>, nativa y protésica. A la izquierda ves la <b>realidad física</b> (brazo, anatomía interna, sonda, aguja y plano de corte); a la derecha, la <b>pantalla del ecógrafo</b> y la <b>anatomía real</b> del plano que estás explorando.</p>
@@ -352,7 +358,7 @@ export class Panels {
             <tr><td><kbd>Alt</kbd>+rueda</td><td>Tamaño de la caja de color</td></tr>
           </table>
           <h4>Vistas</h4>
-          <table class="tbl"><tr><td><kbd>V</kbd></td><td>Alternar vistas de cámara</td></tr><tr><td><kbd>H</kbd></td><td>Esta ayuda</td></tr></table>
+          <table class="tbl"><tr><td><kbd>V</kbd></td><td>Alternar vistas de cámara</td></tr><tr><td><kbd>O</kbd></td><td>Modo enfoque: monitor grande y 3D en una ventana flotante (⠿ la mueve de esquina, ◱ cambia su tamaño, ⇄ intercambia, – la oculta)</td></tr><tr><td><kbd>H</kbd></td><td>Esta ayuda</td></tr></table>
           <h4>Modos</h4>
           <ul>
             <li><b>Exploración</b>: libre, con ayudas visuales y etiquetas.</li>
@@ -363,6 +369,7 @@ export class Panels {
           <p class="muted"><b>Modo básico / avanzado</b>: el botón <b>Más controles</b> / <b>Menos controles</b>, a la derecha de la consola, muestra u oculta el Doppler, el PW y los ajustes finos de imagen. Los atajos de teclado funcionan en los dos modos.</p>
         </div>
       </div>
+      <p class="muted">En el móvil y en pantallas pequeñas se abre una versión táctil; puedes forzarla con <a href="?movil=1">?movil=1</a> o volver a esta con <code>?movil=0</code>.</p>
       <p class="muted">Los <a href="${SITE.docs}FUNDAMENTOS.md" target="_blank" rel="noopener">fundamentos médicos y físicos</a>, con referencias, siguen <i>Punción ecoguiada del acceso vascular para hemodiálisis</i> (Moyano Franco, Salgueira Lazo, Roca-Tey; <i>Nefrología al día</i>), GEMAV 2017, KDOQI 2019 y ESVS 2018. Para docentes hay una <a href="${SITE.docs}GUIA_DOCENTE.md" target="_blank" rel="noopener">guía con itinerario y rúbrica</a>.</p>
       ${this.aboutHtml()}`);
   }
@@ -439,6 +446,49 @@ export class Panels {
     });
   }
 }
+
+const WELCOME_TOUCH = `
+  <h2>Fistu<span class="accent">lab</span></h2>
+  <p>Simulador de <b>punción ecoguiada de la fístula arteriovenosa (FAV) para hemodiálisis</b>. La imagen ecográfica se calcula en tiempo real a partir de la anatomía del brazo en 3D.</p>
+  <h4>La pantalla</h4>
+  <ul>
+    <li>Arriba, el <b>monitor del ecógrafo</b>. En la esquina, el <b>brazo en 3D</b>: <b>⇄</b> intercambia las dos vistas y <b>–</b> oculta el 3D.</li>
+    <li>Abajo, la <b>rueda de ajuste</b>: elige una maniobra (A lo largo, Girar, Inclinar, Presión…) y arrástrala con el pulgar.</li>
+  </ul>
+  <h4>Primeros pasos</h4>
+  <ol>
+    <li><b>Toca el brazo</b> en 3D para llevar la sonda a ese punto. Con <b>dos dedos</b> giras y acercas la cámara.</li>
+    <li><b>Transv.</b> y <b>Long.</b> orientan la sonda respecto al vaso; <b>Centrar</b> la lleva sobre él.</li>
+    <li>En <b>Punción</b>, coloca la aguja con <b>Fuera de plano</b> o <b>En plano</b>, avanza con la rueda y pulsa <b>Confirmar</b>.</li>
+    <li>En <b>Lecciones</b> tienes 8 lecciones guiadas que se corrigen solas.</li>
+  </ol>
+  <p class="muted">Añade la página a la pantalla de inicio para usarla a pantalla completa. Herramienta educativa: no sustituye la formación práctica supervisada.</p>
+  <div class="crow" style="margin-top:12px"><button class="primary" id="wlStart">Empezar</button><button id="wlLesson">Ir a la lección 1</button></div>`;
+
+const HELP_TOUCH = `
+  <h2>Ayuda de Fistu<span class="accent">lab</span></h2>
+  <h4>Gestos</h4>
+  <table class="tbl">
+    <tr><td>Un dedo sobre el brazo (3D)</td><td>Lleva la sonda a ese punto y la arrastra</td></tr>
+    <tr><td>Un dedo fuera del brazo</td><td>Gira la cámara</td></tr>
+    <tr><td>Dos dedos</td><td>Acercan, alejan y giran la cámara</td></tr>
+    <tr><td>Tocar la imagen</td><td>Mueve el volumen de muestra (PW) o la caja de color; con <b>Medir</b>, marca los dos puntos</td></tr>
+    <tr><td>Arrastrar sobre la imagen</td><td>Muestra la profundidad y el tejido bajo el dedo</td></tr>
+  </table>
+  <h4>Rueda de ajuste</h4>
+  <p>Elige la maniobra o el ajuste y arrastra la rueda a izquierda o derecha. Los botones − y + hacen pasos pequeños; mantenlos pulsados para un movimiento continuo.</p>
+  <table class="tbl">
+    <tr><td>A lo largo · Alrededor</td><td>Deslizar la sonda (proximal/distal · alrededor del brazo)</td></tr>
+    <tr><td>Girar · Inclinar · Balanceo</td><td>Rotación, inclinación en abanico y balanceo talón-punta</td></tr>
+    <tr><td>Presión</td><td>Comprime el tejido: las venas se colapsan y las arterias no</td></tr>
+    <tr><td>Prof. · Ganancia · Foco</td><td>Ajustes de la imagen</td></tr>
+    <tr><td>Avance · Ángulo · Rumbo</td><td>Aguja (modo Punción)</td></tr>
+  </table>
+  <h4>Vistas</h4>
+  <p><b>⇄</b> intercambia el monitor y el 3D, <b>Vista</b> cambia la cámara y <b>–</b> oculta el 3D. En horizontal, el monitor queda en el centro y el 3D a la derecha.</p>
+  <h4>Más ajustes</h4>
+  <p>En <b>Más</b>: caso, brazo, calidad, frecuencia, Doppler (escala, PW, corrección de ángulo), aguja, capas del 3D, informe y paso a la versión de escritorio. La <b>sala y ergonomía</b> sólo están en la versión de escritorio.</p>
+  <p class="muted">Los <a href="${SITE.docs}FUNDAMENTOS.md" target="_blank" rel="noopener">fundamentos médicos y físicos</a>, con sus referencias, y la <a href="${SITE.docs}GUIA_DOCENTE.md" target="_blank" rel="noopener">guía docente</a> están en GitHub.</p>`;
 
 /** Dentro de un marco (p. ej. un artefacto publicado) las descargas y la impresión están bloqueadas. */
 const embedded = (() => {

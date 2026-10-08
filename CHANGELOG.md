@@ -1,5 +1,15 @@
 # Cambios
 
+## Sin publicar
+
+- **Versión móvil**: interfaz táctil automática en móviles, tabletas en vertical y ventanas pequeñas (`?movil=1` / `?movil=0`).
+  - En vertical, el monitor ocupa casi toda la pantalla y el brazo 3D va en una miniatura; en horizontal, el monitor en el centro y el 3D con los controles a la derecha.
+  - Un dedo sobre el brazo lleva la sonda a ese punto y dos dedos mueven la cámara; una sola **rueda de ajuste** controla las maniobras, la imagen y la aguja.
+  - Punción completa (con asepsia y lavado con suero), lecciones con textos adaptados y hojas de información y de ajustes.
+  - En móviles: 30 fps, sin sombras ni sala y menos resolución.
+- **Aplicación instalable** con funcionamiento sin conexión tras la primera visita.
+- **Modo enfoque** en escritorio (botón *Enfoque* o tecla `O`): vista grande y la otra en una ventana flotante que se mueve, cambia de tamaño, se intercambia o se oculta; anatomía y pestañas en una columna plegable. Activo por defecto en Punción; `?vista=enfoque|cuadricula`.
+
 ## 1.0.0 · 2026-10-07 · Lanzamiento como Fistulab
 
 Primera versión pública con nombre y dominio propios: **<https://fistulab.com>**.

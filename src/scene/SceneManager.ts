@@ -31,6 +31,7 @@ import {
   SpotLight,
   SRGBColorSpace,
   Texture,
+  TOUCH,
   Vector2,
   Vector3,
   WebGLRenderer,
@@ -172,8 +173,10 @@ export class SceneManager {
     readonly displayTex: Texture,
     readonly anatomyTex: Texture,
     domForControls: HTMLElement,
+    /** móviles: sin sombras ni sala */
+    readonly lowPower = false,
   ) {
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = !lowPower;
     renderer.shadowMap.type = PCFShadowMap;
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -189,7 +192,7 @@ export class SceneManager {
     this.scene.add(new AmbientLight('#ffffff', 0.08));
     const sun = new DirectionalLight('#fffaf0', 1.6);
     sun.position.set(1.4, 3.2, 1.8);
-    sun.castShadow = true;
+    sun.castShadow = !lowPower;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -1.6;
     sun.shadow.camera.right = 1.6;
@@ -204,7 +207,7 @@ export class SceneManager {
     const spot = new SpotLight('#fff6e8', 14, 3.5, 0.5, 0.6, 1.4);
     spot.position.set(0.7, 2.1, 0.7);
     spot.target.position.set(0.45, 0.8, 0.3);
-    spot.castShadow = true;
+    spot.castShadow = !lowPower;
     spot.shadow.mapSize.set(1024, 1024);
     spot.shadow.bias = -0.0003;
     this.scene.add(spot, spot.target);
@@ -215,6 +218,8 @@ export class SceneManager {
     this.controls.minDistance = 0.03;
     this.controls.maxDistance = 6;
     this.controls.zoomSpeed = 1.1;
+    // táctil: un dedo gira la cámara (salvo sobre el brazo, ver App), dos dedos acercan y giran
+    this.controls.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_ROTATE };
 
     this.indent = {
       uIndF: { value: new Vector3() },
@@ -246,7 +251,16 @@ export class SceneManager {
     this.armGroup.add(this.board);
 
     this.room = buildRoom(displayTex, 'left', this.place, 'III');
+    this.room.group.visible = !lowPower;
     this.scene.add(this.room.group);
+  }
+
+  /** Sala, paciente, ecógrafo y operador (en el móvil se ocultan para ahorrar GPU). */
+  get roomVisible() {
+    return this.room.group.visible;
+  }
+  set roomVisible(v: boolean) {
+    this.room.group.visible = v;
   }
 
   /** Reconstruye brazo y anatomía para un modelo (caso) nuevo. */

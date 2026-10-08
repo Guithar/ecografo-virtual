@@ -132,9 +132,35 @@ Ocho lecciones guiadas con **comprobación automática** de cada paso:
 7. Artefactos.
 8. Doppler en la FAV.
 
+### Modo enfoque (escritorio)
+
+Con el botón **Enfoque** o la tecla `O`, el monitor pasa a ocupar casi toda la zona central y el brazo 3D queda en una **ventana flotante** (en la sala, al revés: la sala en grande y el monitor flotante). En un portátil de 1366 × 768 la imagen crece de 9,8 a unos 17 px/mm.
+
+- La ventana se arrastra (⠿) a cualquier esquina, cambia de tamaño (◱), se intercambia con la vista grande (⇄) o se oculta (–). La imagen ecográfica se aparta para no quedar debajo.
+- La sección anatómica y las pestañas pasan a una columna lateral plegable, que se despliega sola al confirmar una punción.
+- Con el 3D flotante, la posición de la sonda o el estado de la aguja se resumen bajo la imagen.
+- Se recuerda para cada modo. Por defecto está activo en **Punción**.
+
+### Versión móvil
+
+En el móvil, la tableta en vertical y las ventanas pequeñas se abre una **interfaz táctil** con el mismo simulador:
+
+- **Pantalla:**
+  - en vertical, el monitor del ecógrafo ocupa casi toda la pantalla y el brazo 3D va en una **miniatura** (⇄ intercambia las vistas, «Vista» cambia la cámara y «–» oculta el 3D);
+  - en horizontal, el monitor queda en el centro y el 3D, con los controles, a la derecha.
+- **Sonda:**
+  - un dedo sobre el brazo en 3D lleva la sonda a ese punto; fuera del brazo gira la cámara y con dos dedos se acerca;
+  - las maniobras finas (a lo largo, alrededor, girar, inclinar, balanceo, presión) se hacen con una **rueda de ajuste**, igual que la profundidad, la ganancia y el foco.
+- **Punción:** la rueda pasa a controlar el **avance**, el ángulo y el rumbo de la aguja, con botones para la **asepsia** y el **lavado con suero**. Al **confirmar** aparece la evaluación.
+- **Lecciones:** las ocho, con los textos adaptados a los controles táctiles.
+- **Más ajustes:** caso, brazo, calidad, frecuencia, Doppler completo, aguja, capas del 3D e informe.
+- **Rendimiento:** en móviles y tabletas se dibuja a 30 fps, sin sombras y sin la sala (se puede activar en «Más»).
+- **Instalable:** desde el navegador se puede **añadir a la pantalla de inicio**. Así se abre a pantalla completa y funciona sin conexión después de la primera visita.
+- **Solo en escritorio:** la sala y la ergonomía, la sección anatómica en un panel aparte (en el móvil se usa «Fusión») y el TGC por bandas.
+
 ## Uso
 
-Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior.
+Necesita un navegador reciente con **WebGL2** (Chrome, Edge, Firefox o Safari) y, a ser posible, una tarjeta gráfica dedicada. Si va lento, baja la calidad en la barra superior (en el móvil, en «Más»).
 
 Empieza en **modo básico**, con los controles de la punción. El botón **Más controles**, a la derecha de la consola, muestra el Doppler, el PW y los ajustes finos de imagen.
 
@@ -193,6 +219,8 @@ Parámetros de URL útiles:
 | `?calidad=` | `alta`, `media`, `baja` |
 | `?camara=` | vista inicial de la cámara |
 | `?max=` | `3d`, `us`, `anat` (panel maximizado) |
+| `?movil=` | `1` fuerza la interfaz táctil, `0` la de escritorio |
+| `?vista=` | `enfoque` o `cuadricula` en todos los modos (p. ej. para proyectar en clase) |
 
 ### Controles principales
 
@@ -208,7 +236,7 @@ Parámetros de URL útiles:
 | Color / PW / modo B / congelar | `C` / `P` / `B` / `Espacio` |
 | Lavar la aguja con suero | `J` |
 | Medir / etiquetas / invertir I-D / compresor | `M` / `L` / `I` / `K` |
-| Vistas de cámara / ayuda | `V` / `H` |
+| Vistas de cámara / modo enfoque / ayuda | `V` / `O` / `H` |
 
 ## Arquitectura
 
@@ -219,8 +247,10 @@ src/
   scene/       escena 3D: piel (surface nets), anatomía, sonda, aguja, sala, cámaras
   interaction/ pose de la sonda (maniobras PART) y física de la aguja
   training/    métricas, ergonomía y lecciones
-  ui/          monitor, consola, paneles e informe
+  ui/          monitor, consola, paneles e informe; mobile.ts: interfaz táctil;
+               focus.ts y floating.ts: modo enfoque y ventana flotante
   app/App.ts   orquestación y bucle principal
+  pwa.ts       aplicación instalable (public/: manifiesto, iconos y service worker)
 ```
 
 La misma descripción anatómica alimenta:

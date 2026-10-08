@@ -1495,6 +1495,144 @@ kbd {
   right: 110px;
 }
 
+/* ---------- ventana flotante (src/ui/floating.ts: posición y recorte) ---------- */
+.pane.pip-float {
+  z-index: 6;
+  border: 1px solid rgba(160, 200, 220, 0.55);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.pane.pip-float .toolbar3d,
+.pane.pip-float .hud,
+.pane.pip-float .pane-hint,
+.pane.pip-float .maxbtn {
+  display: none !important;
+}
+
+.pane.pip-float.dragging {
+  opacity: 0.88;
+}
+
+.pane.pip-hidden {
+  display: none !important;
+}
+
+/* ---------- modo enfoque (escritorio, src/ui/focus.ts) ---------- */
+/* vista grande a la izquierda; columna plegable con la anatomía real y las pestañas */
+body.focus #grid {
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 420px);
+  grid-template-rows: minmax(0, 0.85fr) minmax(0, 1.15fr);
+}
+
+body.focus #grid > #paneMonitor,
+body.focus #grid > #pane3d {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+body.focus #grid > #paneAnat {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+body.focus #grid > #paneInfo {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+body.focus.f-side-off #grid {
+  grid-template-columns: minmax(0, 1fr) 30px;
+}
+
+body.focus.f-side-off #grid > #paneAnat,
+body.focus.f-side-off #grid > #paneInfo,
+body.focus .maxbtn {
+  display: none;
+}
+
+.f-ctl,
+.f-show,
+.f-side-open,
+.f-side-close {
+  display: none;
+}
+
+.f-ctl {
+  position: absolute;
+  z-index: 5;
+  top: 6px;
+  right: 6px;
+  gap: 3px;
+}
+
+#paneMonitor > .f-ctl {
+  top: 1px;
+}
+
+.f-ctl button {
+  padding: 0 7px;
+  font-size: 12px;
+  line-height: 19px;
+  background: rgba(10, 16, 22, 0.85);
+  border-color: rgba(120, 160, 180, 0.5);
+}
+
+.f-ctl [data-f='drag'] {
+  cursor: grab;
+  touch-action: none;
+}
+
+body.focus .pip-float > .f-ctl {
+  display: flex;
+}
+
+.f-show {
+  position: absolute;
+  z-index: 5;
+  right: 10px;
+  bottom: 32px;
+  background: rgba(10, 16, 22, 0.85);
+}
+
+#pane3d > .f-show {
+  bottom: 10px;
+}
+
+body.focus.f-pipoff.f-main-us #paneMonitor > .f-show,
+body.focus.f-pipoff.f-main-3d #pane3d > .f-show {
+  display: block;
+}
+
+#grid > .f-side-open {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+  pointer-events: auto;
+  color: var(--muted);
+}
+
+.f-side-open span {
+  writing-mode: vertical-rl;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+body.focus.f-side-off #grid > .f-side-open {
+  display: flex;
+}
+
+body.focus .f-side-close {
+  display: inline-block;
+  margin: 0 0 3px auto;
+  padding: 2px 9px;
+  border-radius: 6px;
+}
+
 /* ---------- cine ---------- */
 .cine {
   display: flex;
