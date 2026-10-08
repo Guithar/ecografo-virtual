@@ -10,6 +10,7 @@ export const SITE = {
   tagline: 'Punción ecoguiada de la FAV',
   url: 'https://fistulab.com/',
   host: 'fistulab.com',
+  email: 'hola@fistulab.com',
   kofi: 'https://ko-fi.com/fistulab',
   repo: 'https://github.com/Guithar/ecografo-virtual',
   docs: 'https://github.com/Guithar/ecografo-virtual/blob/main/docs/',

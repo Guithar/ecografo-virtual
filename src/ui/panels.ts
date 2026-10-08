@@ -375,7 +375,7 @@ export class Panels {
       <h4>Acerca de ${SITE.name}</h4>
       <div class="about">
         <p><b>${SITE.name}</b> · versión ${BUILD.version} · ${BUILD.date}${commit} · ${link(SITE.url, SITE.host)}<br>
-          Código abierto con licencia MIT en ${link(SITE.repo, 'GitHub')}. Sugerencias, casos nuevos y errores: ${link(`${SITE.repo}/issues`, 'GitHub Issues')}.</p>
+          Código abierto con licencia MIT en ${link(SITE.repo, 'GitHub')}. Contacto: <a href="mailto:${SITE.email}">${SITE.email}</a>. Sugerencias, casos nuevos y errores: ${link(`${SITE.repo}/issues`, 'GitHub Issues')}.</p>
         <p><b>Privacidad.</b> Sin cookies, sin analítica y sin publicidad. Todo se calcula en tu navegador y no se envía nada a ningún servidor. El historial y las preferencias se guardan solo en este navegador (el historial se borra desde el Informe). El alojamiento, GitHub Pages, puede registrar la dirección IP de las visitas por seguridad.</p>
         <p><b>Aviso.</b> Herramienta educativa. No es un producto sanitario, no sirve para diagnosticar ni para decidir tratamientos y no sustituye la formación práctica supervisada. Las cifras (diámetros, flujos, velocidades) son valores didácticos.</p>
         <p><b>Apoya el proyecto.</b> ${SITE.name} es gratuito. Si te resulta útil, puedes apoyarlo con un café en ${link(SITE.kofi, 'Ko-fi', 'kofi-link')}: ayuda a mantenerlo y a añadir casos y lecciones.</p>

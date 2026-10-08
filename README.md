@@ -241,4 +241,4 @@ Fistulab es gratuito y lo seguirá siendo. Si te resulta útil para formar a tu 
 
 ## Licencia
 
-MIT. Se agradecen contribuciones clínicas y técnicas: casos nuevos, validación de valores y traducciones. Escribe en [Issues](https://github.com/Guithar/ecografo-virtual/issues).
+MIT. Se agradecen contribuciones clínicas y técnicas: casos nuevos, validación de valores y traducciones. Escribe en [Issues](https://github.com/Guithar/ecografo-virtual/issues) o a **[hola@fistulab.com](mailto:hola@fistulab.com)**.
