@@ -41,3 +41,24 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+  indexnow:
+    # Avisa a Bing (y a Yandex, Seznam… por IndexNow) de que las páginas han cambiado.
+    # La clave es pública: el buscador la comprueba en https://fistulab.com/<clave>.txt (public/).
+    # Si el aviso falla, la publicación sigue siendo válida: sólo queda una advertencia.
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions: {}
+    env:
+      INDEXNOW_KEY: ca074bea9d312bfccd4a87f032b624a8
+    steps:
+      - name: Avisar a IndexNow
+        run: |
+          status=$(curl -sS -o respuesta.txt -w '%{http_code}' -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{\"host\":\"fistulab.com\",\"key\":\"$INDEXNOW_KEY\",\"keyLocation\":\"https://fistulab.com/$INDEXNOW_KEY.txt\",\"urlList\":[\"https://fistulab.com/\",\"https://fistulab.com/en/\"]}") || status=000
+          echo "IndexNow: HTTP $status"
+          cat respuesta.txt 2>/dev/null || true
+          case "$status" in
+            200|202) ;;
+            *) echo "::warning::IndexNow respondió HTTP $status" ;;
+          esac

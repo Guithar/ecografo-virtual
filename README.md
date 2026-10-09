@@ -212,7 +212,7 @@ Con *Actions* como origen no hace falta archivo `CNAME`: el dominio se guarda en
 
 Si un despliegue falla con «Branch "main" is not allowed to deploy to github-pages», añade `main` en *Settings → Environments → github-pages → Deployment branches and tags*.
 
-**Buscadores.** Cada idioma es una página propia con su título, descripción, imagen para redes (`og.jpg`, `og-en.jpg`), datos estructurados (schema.org) y enlaces `hreflang` a la otra versión; `public/sitemap.xml` recoge las dos y `public/robots.txt` lo anuncia. Tras el primer despliegue conviene dar de alta `https://fistulab.com` en [Google Search Console](https://search.google.com/search-console) y en [Bing Webmaster Tools](https://www.bing.com/webmasters) (verificación por registro TXT en DonDominio) y enviar el sitemap.
+**Buscadores.** Cada idioma es una página propia con su título, descripción, imagen para redes (`og.jpg`, `og-en.jpg`), datos estructurados (schema.org) y enlaces `hreflang` a la otra versión; `public/sitemap.xml` recoge las dos y `public/robots.txt` lo anuncia. Tras el primer despliegue conviene dar de alta `https://fistulab.com` en [Google Search Console](https://search.google.com/search-console) y en [Bing Webmaster Tools](https://www.bing.com/webmasters) (verificación por registro TXT en DonDominio) y enviar el sitemap. Después de cada publicación, el flujo avisa a Bing (y a los demás buscadores de [IndexNow](https://www.indexnow.org)) de que `/` y `/en/` han cambiado; la clave es pública y está en `public/<clave>.txt`, y la misma clave va en `INDEXNOW_KEY` dentro de `deploy.yml` (una prueba comprueba que coinciden).
 
 Parámetros de URL útiles:
 
