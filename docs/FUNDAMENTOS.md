@@ -50,7 +50,7 @@ protocolos y las guías vigentes.
 | Qa normal, prótesis | 600–1800 mL/min | [10] |
 | Disfunción / bajo flujo, GEMAV | FAV < 500 mL/min; prótesis < 600 mL/min; o caída > 20–25 % con Qa < 1000 mL/min | [3,4] |
 | Disfunción / bajo flujo, KDOQI 2006 | FAV < 400–500 mL/min | [2] |
-| Alto flujo | Qa > 1,5–2 L/min (ESVS); Qa ≥ 2 L/min y/o Qa/GC > 0,3 (literatura española) | [5,12] |
+| Alto flujo | Qa > 2 L/min o Qa/GC ≥ 30 % (GEMAV); Qa/GC > 30–35 % en la literatura radiológica | [3,12,75] |
 
 ## 2. Criterios Doppler
 
@@ -101,14 +101,16 @@ protocolos y las guías vigentes.
 
 ### 4.1 Material y ángulo
 
-- **Calibre según el flujo de bomba (Qb)** [26]:
+- **Calibre según el flujo de bomba (Qb)**, tabla orientativa de la NKF, con la presión arterial prebomba vigilada (≈ −250 mmHg como límite) [27]:
 
   | Qb (mL/min) | Calibre |
   |---|---|
-  | < 300 | 17G |
-  | 300–350 | 16G |
+  | 200–250 | 17G |
+  | 250–350 | 16G |
   | 350–450 | 15G |
   | > 450 | 14G |
+
+  GEMAV recomienda el calibre más fino y la aguja más corta que permitan un flujo adecuado [3]. Sigue la pauta de la unidad.
 
 - Las FAV nuevas empiezan con 17G y Qb 200–250 mL/min, y progresan a lo largo de varias semanas [29].
 - **Longitud de aguja:** 25 mm (1") o 32 mm (1¼").
@@ -122,8 +124,8 @@ protocolos y las guías vigentes.
 
 ### 4.2 Distancias y dirección
 
-- **Aguja arterial:** a ≥ 3 cm de la anastomosis [30,31].
-- **Separación entre agujas:** ≥ 5 cm entre las puntas, para evitar la recirculación [30,31].
+- **Aguja arterial:** a ≥ 3 cm de la anastomosis [30]. Las fuentes difieren: GEMAV pide ≥ 2,5 cm en la FAV nativa y 5 cm en la prótesis [3], Castro 3–4 cm [30] y las recomendaciones británicas ≥ 5 cm [31,74]. El simulador evalúa ≥ 3 cm.
+- **Separación entre agujas:** ≥ 5 cm entre las puntas, para evitar la recirculación [30,31,74]. GEMAV acepta ≥ 2,5 cm [3]. El simulador evalúa ≥ 5 cm.
 - **Aguja venosa:** siempre anterógrada, hacia el corazón.
 - **Aguja arterial:** anterógrada o retrógrada, según el protocolo de la unidad.
 
@@ -138,7 +140,7 @@ protocolos y las guías vigentes.
 - **Indicaciones:** es especialmente útil en las **primeras punciones** e indicada en **pacientes obesos**, **vasos muy profundos** y **FAV difíciles de puncionar a ciegas** [11]. Una FAV es difícil por escasa maduración o desarrollo, estenosis de la vena yuxtaanastomótica, venas accesorias, colaterales no puncionables o hematomas de punciones previas [11]. Cada caso del simulador explica por qué la punción ecoguiada está indicada en él.
 - **Ecografía a pie de cama (POCUS) por el personal de la unidad:** permite detectar antes la patología del acceso, facilita la punción y reduce los intentos fallidos, con lo que preserva mejor la FAV [11].
 - **Sonda:** lineal de alta frecuencia, 7,5–12,5 MHz: mucha resolución y poca penetración, adecuada para el acceso vascular [11,26].
-- **Posición:** paciente tumbado o sentado, con el brazo apoyado en una **superficie dura y plana, a unos 45° del cuerpo** [11]. El simulador lo comprueba en *Sala y ergonomía* y en la lista de pasos.
+- **Posición:** paciente tumbado o sentado, con el brazo **apoyado en una posición cómoda y relajada**, que pueda mantener toda la sesión [74]. El simulador comprueba en *Sala y ergonomía* y en la lista de pasos que el brazo esté apoyado y en abducción moderada, **a unos 45° del cuerpo**: es un criterio ergonómico propio del simulador, no una cifra de las guías.
 - **Asepsia:** la punción se hace con técnica aséptica; algunos centros usan **funda y gel estériles** [11]. En el simulador es un paso (botón *Asepsia*) y un criterio de la evaluación.
 - **Técnica:** la sonda se sujeta con una mano y la aguja con la otra, viendo el vaso en todo momento. En el abordaje transversal, el punto de entrada queda a pocos milímetros del centro del transductor. Hay que **localizar siempre la punta** y ajustar el ángulo en consecuencia [11].
 - **Abordaje longitudinal (eje largo, en plano):**
@@ -146,7 +148,7 @@ protocolos y las guías vigentes.
   - Inconveniente: es más difícil mantener la alineación y se pierden las estructuras laterales.
 - **Abordaje transversal (eje corto, fuera de plano):**
   - Ventaja: centra el vaso y muestra las estructuras vecinas.
-  - Inconveniente: **no se ve la entrada en la pared del vaso** y cuesta ver la aguja completa; requiere más experiencia [11].
+  - Inconveniente: la aguja **solo se ve cuando cruza el plano de imagen** [11]; por eso no se ve su entrada en la pared del vaso y requiere más experiencia [CC].
   - Riesgo: **confundir el cuerpo de la aguja con la punta** y perforar la pared posterior. En maniquí, el 64 % de los residentes perforó la pared posterior de la yugular interna con este abordaje [64].
 - **Posicionamiento dinámico de la punta (DNTP):** en eje corto, se avanza la sonda hasta que desaparece el punto de la punta, después se avanza la aguja, y se repite. En varios ensayos aleatorizados (acceso arterial y venoso periférico) mejora el éxito frente al abordaje en plano; en FAV es una extrapolación [43,50].
 - **Comprobación con suero:** tras el reflujo, se lava la aguja con unos mililitros de suero mientras se mira la pantalla.
@@ -168,7 +170,7 @@ protocolos y las guías vigentes.
 | Estenosis yuxtaanastomótica | En los primeros 2–5 cm del segmento de salida. Estrechamiento focal, *aliasing*, cociente de VPS ≥ 3 y turbulencia postestenótica | [25] |
 | Estenosis por hiperplasia intimal | Íntima engrosada y ecogénica; luz < 2 mm; VPS > 400 cm/s | [10,17] |
 | Venas accesorias | Una colateral > 70 % del diámetro de la cefálica predice la no maduración | [24] |
-| Aneurisma | Dilatación con todas las capas de la pared, a menudo con trombo mural y flujo en remolino («yin-yang»). No se debe puncionar la cúpula ni la piel adelgazada | [CC] |
+| Aneurisma | Dilatación con todas las capas de la pared, a menudo con trombo mural y flujo lento y en remolino. El patrón «yin-yang» con cuello y flujo de vaivén es típico del **pseudoaneurisma**. Las definiciones de tamaño varían (> 18 mm o > 3 veces el diámetro del segmento sano; GEMAV, > 20–30 mm): el caso del simulador (≈ 15 mm) es una dilatación aneurismática. No se debe puncionar la cúpula ni la piel adelgazada | [3,75,76,77] |
 | Trombo | Agudo: hipo o anecoico. Crónico: ecogénico. El mural produce un defecto de relleno en el Doppler color | [12,13] |
 | Hematoma o infiltración | Colección heterogénea hipoecoica, sin flujo en el Doppler color; suele seguir a una perforación de la pared posterior | [19,61] |
 | Arteria calcificada (esclerosis de Mönckeberg) | Paredes ecogénicas en «raíl» con sombra acústica. Es 2–5 veces más frecuente en la ERC | [60] |
@@ -388,6 +390,9 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 23. Espesor cutáneo normal por ecografía de alta frecuencia. *QIMS*.
 24. Planken RN et al. *J Vasc Access* 2007.
 25. *AJR* 2015: Arteriovenous fistulas and their characteristic sites of stenosis.
+75. Sharbidre KG et al. Hemodialysis access: US for preprocedural mapping and evaluation of maturity and access dysfunction. *RadioGraphics* 2024;44(1):e230053. https://doi.org/10.1148/rg.230053
+76. Inston N et al. Aneurysms in vascular access: state of the art and future developments. *J Vasc Access* 2017;18(6):464–472. https://doi.org/10.5301/jva.5000828
+77. Balaz P, Björck M. True aneurysm in autologous hemodialysis fistulae: definitions, classification and indications for treatment. *J Vasc Access* 2015;16(6):446–453. https://doi.org/10.5301/jva.5000391
 
 ### Técnica de punción y rotación de sitios
 
@@ -396,6 +401,7 @@ La imagen se calcula en ocho pases de GPU, uno tras otro.
 29. Midwest Kidney Network, protocolo de punción de una FAV nueva.
 30. Castro MCM et al. *Braz J Nephrol* 2020;42:38–46.
 31. KQuIP. Clinical guidelines for cannulation of AVF/AVG, 2016.
+74. VASBI y British Renal Society Vascular Access SIG. Clinical Practice Recommendations for Needling of Arteriovenous Fistulae and Grafts for Haemodialysis, 2018. https://www.thinkkidneys.nhs.uk/kquip/wp-content/uploads/sites/5/2018/10/Clinical-Practice-Recommendations-for-Needling-of-Arteriovenous-Fistulae-and-Grafts-for-Haemodialysis.pdf
 
 ### Punción ecoguiada
 

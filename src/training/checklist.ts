@@ -37,7 +37,10 @@ export interface ChecklistItem {
   how: string;
 }
 
-/** Brazo apoyado en una superficie firme y plana, a unos 45° del cuerpo (Nefrología al día). */
+/**
+ * Brazo apoyado, cómodo y relajado (recomendaciones británicas de punción, VASBI 2018), en abducción moderada:
+ * los ≈ 45° del cuerpo son un criterio ergonómico del simulador, no una cifra de las guías.
+ */
 export function armPositionOk(armAngle: number, armPitch: number): boolean {
   return armAngle >= 30 && armAngle <= 60 && armPitch <= 25;
 }
@@ -57,7 +60,7 @@ export function procedureChecklist(s: ChecklistState): ChecklistItem[] {
   const graft = !!s.access?.graft;
   return [
     {
-      label: tr('Brazo apoyado, a unos 45° del cuerpo', 'Arm supported, about 45° from the body'),
+      label: tr('Brazo apoyado y relajado (≈ 45° del cuerpo)', 'Arm supported and relaxed (≈ 45° from the body)'),
       done: armPositionOk(s.armAngle, s.armPitch),
       how: tr(
         `sobre una superficie firme y plana (ahora ${Math.round(s.armAngle)}°) · Sala y ergonomía`,

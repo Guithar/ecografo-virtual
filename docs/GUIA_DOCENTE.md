@@ -13,7 +13,7 @@ El simulador cubre la fase de **aprendizaje cognitivo y de coordinación ojo-man
 Al finalizar el itinerario, la persona participante será capaz de:
 
 1. **Preparar la escena**:
-   - brazo del paciente apoyado en una superficie firme y plana, a unos 45° del cuerpo, extendido y relajado;
+   - brazo del paciente apoyado, cómodo y relajado, en abducción moderada (el simulador usa unos 45° del cuerpo como referencia ergonómica propia);
    - operador sentado;
    - pantalla en su línea de visión, detrás del sitio de punción;
    - marcador de la sonda coherente con la pantalla.

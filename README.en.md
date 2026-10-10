@@ -83,7 +83,7 @@ All cases can be used with either the left or the right arm.
 ### Cannulation and assessment
 
 - **Arterial and venous** needles, 14–17G, 25 or 32 mm. Three ways to place them: long-axis (in-plane) approach, short-axis (out-of-plane) approach, or a click on the skin. The N key chooses the approach based on the probe view.
-- **Cannulation checklist** that ticks itself off: arm at about 45° from the body, vein located and measured, suitable site, tourniquet, **asepsis** (sterile cover and gel), needle placed, tip in the lumen, alignment and saline flush, confirmation.
+- **Cannulation checklist** that ticks itself off: arm supported and relaxed, vein located and measured, suitable site, tourniquet, **asepsis** (sterile cover and gel), needle placed, tip in the lumen, alignment and saline flush, confirmation.
 - Each case explains **why ultrasound-guided cannulation is indicated** (first cannulations, deep AVF, poor maturation, stenosis, hematoma…).
 - Control of the angle, heading, and advance.
 - **Clinical events:**
@@ -119,7 +119,7 @@ All cases can be used with either the left or the right arm.
   - screen distance, height, and orientation;
   - the operator's reach;
   - **consistency between the probe marker and the screen**;
-  - the **patient's arm**, resting on a firm, flat surface at about 45° from the body.
+  - the **patient's arm**, supported, comfortable and relaxed, moderately abducted (≈ 45° from the body, the simulator's own ergonomic criterion).
 
 ### Learning
 

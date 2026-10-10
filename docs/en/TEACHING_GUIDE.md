@@ -13,7 +13,7 @@ The simulator covers the **cognitive learning and eye–hand–screen coordinati
 By the end of the pathway, participants will be able to:
 
 1. **Set up the scene**:
-   - patient's arm resting on a firm, flat surface, at about 45° from the body, extended and relaxed;
+   - patient's arm supported, comfortable and relaxed, moderately abducted (the simulator uses about 45° from the body as its own ergonomic reference);
    - operator seated;
    - screen in the operator's line of sight, behind the cannulation site;
    - probe marker consistent with the screen.

@@ -972,8 +972,8 @@ export const CASES: CaseDef[] = [
       'Aneurysm with mural thrombus: ultrasound maps the healthy segments and avoids cannulating the thrombus or the thinned skin.',
     ),
     description: tr(
-      'FAV radiocefálica de 6 años con una dilatación aneurismática en el tercio medio del antebrazo (≈ 15 mm), trombo mural en la pared profunda y piel adelgazada sobre la cúpula. El flujo es turbulento, en remolino ("yin-yang"). Resultado típico de la punción repetida en área.',
-      '6-year-old radiocephalic AVF with an aneurysmal dilatation in the mid-forearm (≈ 15 mm), mural thrombus on the deep wall and thinned skin over the dome. Flow is turbulent and swirling ("yin-yang"). Typical result of repeated area puncture.',
+      'FAV radiocefálica de 6 años con una dilatación aneurismática en el tercio medio del antebrazo (≈ 15 mm), trombo mural en la pared profunda y piel adelgazada sobre la cúpula. El flujo dentro del saco es lento y turbulento, en remolino. Resultado típico de la punción repetida en área.',
+      '6-year-old radiocephalic AVF with an aneurysmal dilatation in the mid-forearm (≈ 15 mm), mural thrombus on the deep wall and thinned skin over the dome. Flow inside the sac is slow, turbulent and swirling. Typical result of repeated area puncture.',
     ),
     objectives: [
       tr(

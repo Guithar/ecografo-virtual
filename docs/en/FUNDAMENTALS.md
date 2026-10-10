@@ -50,7 +50,7 @@ protocols and current guidelines.
 | Normal Qa, AV graft (AVG) | 600–1800 mL/min | [10] |
 | Dysfunction / low flow, GEMAV | AVF < 500 mL/min; AVG < 600 mL/min; or a drop > 20–25% with Qa < 1000 mL/min | [3,4] |
 | Dysfunction / low flow, KDOQI 2006 | AVF < 400–500 mL/min | [2] |
-| High flow | Qa > 1.5–2 L/min (ESVS); Qa ≥ 2 L/min and/or Qa/CO > 0.3 (Spanish literature) | [5,12] |
+| High flow | Qa > 2 L/min or Qa/CO ≥ 30% (GEMAV); Qa/CO > 30–35% in the radiology literature | [3,12,75] |
 
 ## 2. Doppler criteria
 
@@ -101,14 +101,16 @@ protocols and current guidelines.
 
 ### 4.1 Equipment and angle
 
-- **Gauge according to blood pump flow rate (Qb)** [26]:
+- **Gauge according to blood pump flow rate (Qb)**, the NKF's guide table, with pre-pump arterial pressure monitored (≈ −250 mmHg as the limit) [27]:
 
   | Qb (mL/min) | Gauge |
   |---|---|
-  | < 300 | 17G |
-  | 300–350 | 16G |
+  | 200–250 | 17G |
+  | 250–350 | 16G |
   | 350–450 | 15G |
   | > 450 | 14G |
+
+  GEMAV recommends the finest gauge and shortest needle that allow adequate flow [3]. Follow your unit's protocol.
 
 - New AVFs start with 17G and a Qb of 200–250 mL/min, and progress over several weeks [29].
 - **Needle length:** 25 mm (1") or 32 mm (1¼").
@@ -122,8 +124,8 @@ protocols and current guidelines.
 
 ### 4.2 Distances and direction
 
-- **Arterial needle:** ≥ 3 cm from the anastomosis [30,31].
-- **Needle spacing:** ≥ 5 cm between the tips, to avoid recirculation [30,31].
+- **Arterial needle:** ≥ 3 cm from the anastomosis [30]. Sources differ: GEMAV requires ≥ 2.5 cm in a native AVF and 5 cm in a graft [3], Castro 3–4 cm [30] and the UK recommendations ≥ 5 cm [31,74]. The simulator scores ≥ 3 cm.
+- **Needle spacing:** ≥ 5 cm between the tips, to avoid recirculation [30,31,74]. GEMAV accepts ≥ 2.5 cm [3]. The simulator scores ≥ 5 cm.
 - **Venous needle:** always antegrade, toward the heart.
 - **Arterial needle:** antegrade or retrograde, according to the unit's protocol.
 
@@ -138,7 +140,7 @@ protocols and current guidelines.
 - **Indications:** it is especially useful for **first cannulations** and is indicated in **obese patients**, **very deep vessels** and **AVFs that are difficult to cannulate blind** [11]. An AVF may be difficult because of poor maturation or development, juxta-anastomotic vein stenosis, accessory veins, non-cannulatable collaterals or hematomas from previous cannulations [11]. Each case in the simulator explains why ultrasound-guided cannulation is indicated for it.
 - **Point-of-care ultrasound (POCUS) by unit staff:** allows earlier detection of access pathology, facilitates cannulation and reduces failed attempts, thereby better preserving the AVF [11].
 - **Probe:** high-frequency linear, 7.5–12.5 MHz: high resolution and limited penetration, well suited to vascular access [11,26].
-- **Positioning:** patient lying down or seated, with the arm resting on a **hard, flat surface, at about 45° from the body** [11]. The simulator checks this in *Room & ergonomics* and in the step checklist.
+- **Positioning:** patient lying down or seated, with the arm **supported in a comfortable, relaxed position** that can be held for the whole session [74]. In *Room & ergonomics* and in the step checklist, the simulator checks that the arm is supported and moderately abducted, **at about 45° from the body**: this is the simulator's own ergonomic criterion, not a figure from the guidelines.
 - **Asepsis:** cannulation is performed with aseptic technique; some centers use a **sterile probe cover and sterile gel** [11]. In the simulator it is a step (*Asepsis* button) and an assessment criterion.
 - **Technique:** the probe is held in one hand and the needle in the other, keeping the vessel in view at all times. In the short-axis approach, the entry point lies a few millimeters from the center of the transducer. **Always locate the tip** and adjust the angle accordingly [11].
 - **Long-axis (in-plane) approach:**
@@ -146,7 +148,7 @@ protocols and current guidelines.
   - Drawback: alignment is harder to maintain and lateral structures are lost from view.
 - **Short-axis (out-of-plane) approach:**
   - Advantage: it centers the vessel and shows neighboring structures.
-  - Drawback: **entry through the vessel wall is not seen** and the whole needle is hard to visualize; it requires more experience [11].
+  - Drawback: the needle **is only seen where it crosses the image plane** [11], so its entry through the vessel wall is not seen and it requires more experience [CC].
   - Risk: **mistaking the needle shaft for the tip** and puncturing the posterior wall. On a phantom, 64% of residents punctured the posterior wall of the internal jugular vein with this approach [64].
 - **Dynamic needle tip positioning (DNTP):** in short axis, the probe is advanced until the tip dot disappears, then the needle is advanced, and the sequence is repeated. In several randomized trials (peripheral arterial and venous access) it improves success compared with the in-plane approach; for AVFs it is an extrapolation [43,50].
 - **Saline flush check:** after flashback, the needle is flushed with a few milliliters of saline while watching the screen.
@@ -168,7 +170,7 @@ protocols and current guidelines.
 | Juxta-anastomotic stenosis | Within the first 2–5 cm of the outflow segment. Focal narrowing, *aliasing*, PSV ratio ≥ 3 and post-stenotic turbulence | [25] |
 | Stenosis due to intimal hyperplasia | Thickened, echogenic intima; lumen < 2 mm; PSV > 400 cm/s | [10,17] |
 | Accessory veins | A collateral > 70% of the cephalic vein diameter predicts non-maturation | [24] |
-| Aneurysm | Dilation involving all layers of the wall, often with mural thrombus and swirling ("yin-yang") flow. Do not cannulate the dome or thinned skin | [CC] |
+| Aneurysm | Dilation involving all layers of the wall, often with mural thrombus and slow, swirling flow. The "yin-yang" pattern with a neck and to-and-fro flow is typical of a **pseudoaneurysm**. Size definitions vary (> 18 mm or > 3 times the diameter of the healthy segment; GEMAV, > 20–30 mm): the simulator's case (≈ 15 mm) is an aneurysmal dilation. Do not cannulate the dome or thinned skin | [3,75,76,77] |
 | Thrombus | Acute: hypo- or anechoic. Chronic: echogenic. Mural thrombus produces a filling defect on color Doppler | [12,13] |
 | Hematoma or infiltration | Heterogeneous hypoechoic collection with no flow on color Doppler; it usually follows a posterior wall puncture | [19,61] |
 | Calcified artery (Mönckeberg sclerosis) | Echogenic "rail-like" walls with acoustic shadowing. It is 2–5 times more frequent in CKD | [60] |
@@ -388,6 +390,9 @@ The image is computed in eight sequential GPU passes.
 23. Normal skin thickness on high-frequency ultrasound. *QIMS*.
 24. Planken RN et al. *J Vasc Access* 2007.
 25. *AJR* 2015: Arteriovenous fistulas and their characteristic sites of stenosis.
+75. Sharbidre KG et al. Hemodialysis access: US for preprocedural mapping and evaluation of maturity and access dysfunction. *RadioGraphics* 2024;44(1):e230053. https://doi.org/10.1148/rg.230053
+76. Inston N et al. Aneurysms in vascular access: state of the art and future developments. *J Vasc Access* 2017;18(6):464–472. https://doi.org/10.5301/jva.5000828
+77. Balaz P, Björck M. True aneurysm in autologous hemodialysis fistulae: definitions, classification and indications for treatment. *J Vasc Access* 2015;16(6):446–453. https://doi.org/10.5301/jva.5000391
 
 ### Cannulation technique and site rotation
 
@@ -396,6 +401,7 @@ The image is computed in eight sequential GPU passes.
 29. Midwest Kidney Network, new AVF cannulation protocol.
 30. Castro MCM et al. *Braz J Nephrol* 2020;42:38–46.
 31. KQuIP. Clinical guidelines for cannulation of AVF/AVG, 2016.
+74. VASBI and British Renal Society Vascular Access SIG. Clinical Practice Recommendations for Needling of Arteriovenous Fistulae and Grafts for Haemodialysis, 2018. https://www.thinkkidneys.nhs.uk/kquip/wp-content/uploads/sites/5/2018/10/Clinical-Practice-Recommendations-for-Needling-of-Arteriovenous-Fistulae-and-Grafts-for-Haemodialysis.pdf
 
 ### Ultrasound-guided cannulation
 

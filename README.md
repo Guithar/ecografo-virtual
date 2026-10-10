@@ -83,7 +83,7 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
 ### Punción y evaluación
 
 - Agujas **arterial y venosa** de 14–17G, de 25 o 32 mm. Tres formas de colocarlas: abordaje longitudinal (en plano), transversal (fuera de plano) o con un clic sobre la piel. La tecla N elige el abordaje según la vista de la sonda.
-- **Lista de pasos de la punción** que se marca sola: brazo a unos 45° del cuerpo, vena localizada y medida, zona adecuada, compresor, **asepsia** (funda y gel estériles), aguja colocada, punta en la luz, alineación y lavado con suero, confirmación.
+- **Lista de pasos de la punción** que se marca sola: brazo apoyado y relajado, vena localizada y medida, zona adecuada, compresor, **asepsia** (funda y gel estériles), aguja colocada, punta en la luz, alineación y lavado con suero, confirmación.
 - Cada caso explica **por qué está indicada la punción ecoguiada** (primeras punciones, FAV profunda, maduración escasa, estenosis, hematoma…).
 - Control del ángulo, del rumbo y del avance.
 - **Eventos clínicos:**
@@ -119,7 +119,7 @@ Todos los casos se pueden usar con el brazo izquierdo o el derecho.
   - la distancia y la altura de la pantalla, y su orientación;
   - el alcance del operador;
   - la **coherencia entre el marcador de la sonda y la pantalla**;
-  - el **brazo del paciente**, apoyado en una superficie firme y plana, a unos 45° del cuerpo.
+  - el **brazo del paciente**, apoyado, cómodo y relajado, en abducción moderada (≈ 45° del cuerpo, criterio ergonómico del simulador).
 
 ### Aprendizaje
 

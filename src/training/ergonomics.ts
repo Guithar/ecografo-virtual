@@ -8,8 +8,8 @@
  *    (SDMS: estándares para la prevención de lesiones musculoesqueléticas en ecografía).
  *  - Orientación coherente: marcador de la sonda a la izquierda del operador ↔ indicador a la izquierda
  *    de la pantalla (ASRA/ESRA, NYSORA): lo que se mueve a la izquierda de las manos se ve a la izquierda.
- *  - Brazo del paciente apoyado en una superficie dura y plana, a unos 45° del cuerpo, extendido y
- *    relajado (Nefrología al día: punción ecoguiada del acceso vascular); operador sentado, sin
+ *  - Brazo del paciente apoyado en una posición cómoda y relajada (VASBI 2018), en abducción moderada:
+ *    los ≈ 45° del cuerpo son un criterio ergonómico del simulador; operador sentado, sin
  *    sobre-extender el hombro.
  */
 import { Quaternion, Vector3 } from 'three';
@@ -152,7 +152,7 @@ export function evaluateErgonomics(sm: SceneManager, sim: UltrasoundSim): ErgoRe
             'The marker is on your right: movements will appear reversed. Rotate the probe 180° or use “Flip L/R”.',
           ),
   });
-  // brazo apoyado en una superficie dura y plana, a unos 45° del cuerpo (Nefrología al día)
+  // brazo apoyado, cómodo y relajado (VASBI 2018); los ≈ 45° del cuerpo son el criterio del simulador
   const roll = sm.cfg.armRoll;
   const armAngle = 90 - sm.cfg.armYaw;
   const pitch = sm.cfg.armPitch;

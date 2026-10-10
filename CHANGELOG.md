@@ -4,6 +4,12 @@
 
 - **Guías** en <https://fistulab.com/guias/> y <https://fistulab.com/en/guides/>: técnica de punción, punción ecoguiada, agujas, regla de los 6 y maduración, Doppler (Qa y estenosis), punción en escalera, área y ojal, infiltración y aneurisma, con referencias y enlaces a los casos del simulador. Páginas de lectura sin JavaScript, enlazadas desde la ayuda y desde «Más» en el móvil.
 - `?leccion=<id>` abre directamente una lección guiada.
+- **Revisión clínica** de los fundamentos:
+  - la tabla de calibre según el flujo de bomba sigue ahora la de la NKF (17G 200–250 mL/min…);
+  - las distancias de las agujas indican en qué difieren las fuentes (GEMAV ≥ 2,5 cm, Castro 3–4 cm, recomendaciones británicas ≥ 5 cm);
+  - la posición del brazo ya no se atribuye a *Nefrología al día*: «apoyado, cómodo y relajado» (VASBI 2018), y los ≈ 45° quedan como criterio ergonómico del simulador;
+  - el umbral de alto flujo cita GEMAV en lugar de una cifra de ESVS sin verificar;
+  - el flujo «yin-yang» se reserva para el pseudoaneurisma, y el caso del aneurisma se describe como flujo lento en remolino.
 - El sitemap se genera al compilar a partir de `src/guides/pages.ts`, y tras cada publicación se avisa a IndexNow (Bing y otros) de todas sus páginas.
 - **Versión en inglés** en <https://fistulab.com/en/>: interfaz, casos, lecciones, ayuda, informe y versión móvil, con el botón *EN*/*ES* en la barra superior (en el móvil, en «Más») que conserva el caso y el modo. La primera vez se sugiere la otra versión si el navegador está en otro idioma. Documentación en inglés: `README.en.md` y `docs/en/`.
 - **Buscadores**: título y descripción por idioma, enlaces `hreflang`, encabezado principal, presentación legible mientras carga (o sin WebGL2), datos estructurados ampliados, imagen para redes en inglés, sitemap con las dos versiones y página 404 bilingüe.
