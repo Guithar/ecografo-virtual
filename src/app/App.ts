@@ -185,7 +185,12 @@ export class App {
     this.scene.setPreset((q.get('camara') as CameraPreset) ?? (this.mode === 'room' ? 'sala' : 'procedimiento'));
     window.addEventListener('resize', () => this.resize());
     this.resize();
-    if (!q.has('frames') && !q.has('max')) this.panels.showWelcome();
+    // ?leccion=<id>: abre esa lección guiada (enlaces desde las guías); sin bienvenida, que la taparía
+    const lessonId = q.get('leccion');
+    if (lessonId && LESSONS.some((l) => l.id === lessonId)) {
+      this.setMode('learn');
+      this.startLesson(lessonId);
+    } else if (!q.has('frames') && !q.has('max')) this.panels.showWelcome();
     requestAnimationFrame(() => this.frame());
   }
 

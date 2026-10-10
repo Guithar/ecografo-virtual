@@ -212,7 +212,7 @@ With *Actions* as the source, no `CNAME` file is needed: the domain is stored in
 
 If a deployment fails with "Branch "main" is not allowed to deploy to github-pages", add `main` under *Settings → Environments → github-pages → Deployment branches and tags*.
 
-**Search engines.** Each language is its own page with its own title, description, social image (`og.jpg`, `og-en.jpg`), structured data (schema.org), and `hreflang` links to the other version; `public/sitemap.xml` lists both and `public/robots.txt` points to it. After the first deployment, add `https://fistulab.com` to [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters) (verified with a TXT record at DonDominio) and submit the sitemap. After each deployment, the workflow tells Bing (and the other [IndexNow](https://www.indexnow.org) search engines) that `/` and `/en/` have changed; the key is public and lives in `public/<key>.txt`, and the same key goes in `INDEXNOW_KEY` in `deploy.yml` (a test checks they match).
+**Search engines.** Each language is its own page with its own title, description, social image (`og.jpg`, `og-en.jpg`), structured data (schema.org), and `hreflang` links to the other version. The **guides** (`guias/` and `en/guides/`) are JavaScript-free reading pages on AV fistula cannulation, ultrasound and complications, written from real searches (Google and Bing autocomplete) and linked to simulator cases; to add one, copy `src/guides/TEMPLATE.html` and list it in `src/guides/pages.ts`. That list drives the build inputs and `sitemap.xml`, which is generated at build time (`public/robots.txt` points to it), and `tests/unit/guides.test.ts` checks each page's language, canonical, `hreflang` and links. After the first deployment, add `https://fistulab.com` to [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters) (verified with a TXT record at DonDominio) and submit the sitemap. After each deployment, the workflow tells Bing (and the other [IndexNow](https://www.indexnow.org) search engines) that the pages in the sitemap have changed; the key is public and lives in `public/<key>.txt`, and the same key goes in `INDEXNOW_KEY` in `deploy.yml` (a test checks they match).
 
 Useful URL parameters (the names and values are in Spanish and work on both language versions, e.g. `https://fistulab.com/en/?caso=rc_estenosis&modo=cannulate`):
 
@@ -225,6 +225,7 @@ Useful URL parameters (the names and values are in Spanish and work on both lang
 | `?max=` | `3d`, `us`, `anat` (maximized panel) |
 | `?movil=` | `1` forces the touch interface, `0` the desktop one |
 | `?vista=` | `enfoque` (focus) or `cuadricula` (grid) in all modes (e.g. for projecting in class) |
+| `?leccion=` | opens a guided lesson: `orientacion`, `knobologia`, `arteria-vena`, `madurez`, `eje-largo`, `eje-corto`, `artefactos`, `doppler-fav` |
 
 ### Main controls
 

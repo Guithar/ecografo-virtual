@@ -53,9 +53,13 @@ jobs:
     steps:
       - name: Avisar a IndexNow
         run: |
+          # todas las páginas del sitemap recién publicado (simulador y guías, en los dos idiomas)
+          urls=$(curl -sS "https://fistulab.com/sitemap.xml?t=$(date +%s)" | grep -o '<loc>[^<]*</loc>' | sed 's/<\/\?loc>//g' | sed 's/.*/"&"/' | paste -sd, -)
+          [ -n "$urls" ] || urls='"https://fistulab.com/","https://fistulab.com/en/"'
+          echo "URL: $urls"
           status=$(curl -sS -o respuesta.txt -w '%{http_code}' -X POST https://api.indexnow.org/indexnow \
             -H 'Content-Type: application/json; charset=utf-8' \
-            -d "{\"host\":\"fistulab.com\",\"key\":\"$INDEXNOW_KEY\",\"keyLocation\":\"https://fistulab.com/$INDEXNOW_KEY.txt\",\"urlList\":[\"https://fistulab.com/\",\"https://fistulab.com/en/\"]}") || status=000
+            -d "{\"host\":\"fistulab.com\",\"key\":\"$INDEXNOW_KEY\",\"keyLocation\":\"https://fistulab.com/$INDEXNOW_KEY.txt\",\"urlList\":[$urls]}") || status=000
           echo "IndexNow: HTTP $status"
           cat respuesta.txt 2>/dev/null || true
           case "$status" in

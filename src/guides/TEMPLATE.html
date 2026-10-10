@@ -1,0 +1,158 @@
+<!doctype html>
+<!--
+  PLANTILLA DE GUÍA (no se publica). Copiar a guias/<slug>/index.html (español) o en/guides/<slug>/index.html (inglés)
+  y sustituir todo lo que va entre {{ }}. Las rutas de cada guía y su traducción están en src/guides/pages.ts.
+  - Sin JavaScript: la página es texto, para que cargue al instante y la lean bien los buscadores.
+  - Título (<title>) de 50–65 caracteres con la búsqueda principal al principio; descripción de 140–160.
+  - Un solo h1; secciones con h2 (y h3 dentro). Las preguntas frecuentes, visibles en la página (sección .faq).
+  - Enlaces al simulador con el caso o la lección (rutas absolutas: /?caso=…, /en/?caso=…).
+  - Cifras y recomendaciones con su referencia (lista .references), coherentes con docs/FUNDAMENTOS.md.
+-->
+<html lang="{{es|en}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{Título SEO}} · Fistulab</title>
+    <meta name="description" content="{{Descripción de 140–160 caracteres}}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://fistulab.com/{{ruta de esta página}}" />
+    <link rel="alternate" hreflang="es" href="https://fistulab.com/{{ruta española}}" />
+    <link rel="alternate" hreflang="en" href="https://fistulab.com/{{ruta inglesa}}" />
+    <link rel="alternate" hreflang="x-default" href="https://fistulab.com/{{ruta española}}" />
+    <meta name="theme-color" content="#0b1117" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/src/guides/guides.css" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Fistulab" />
+    <meta property="og:locale" content="{{es_ES|en_US}}" />
+    <meta property="og:url" content="https://fistulab.com/{{ruta de esta página}}" />
+    <meta property="og:title" content="{{Título para redes}}" />
+    <meta property="og:description" content="{{Descripción para redes}}" />
+    <meta property="og:image" content="https://fistulab.com/{{og.jpg|og-en.jpg}}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": ["Article", "MedicalWebPage"],
+            "@id": "https://fistulab.com/{{ruta de esta página}}#article",
+            "headline": "{{h1}}",
+            "description": "{{Descripción}}",
+            "inLanguage": "{{es|en}}",
+            "url": "https://fistulab.com/{{ruta de esta página}}",
+            "datePublished": "2026-10-10",
+            "dateModified": "2026-10-10",
+            "image": "https://fistulab.com/{{og.jpg|og-en.jpg}}",
+            "author": { "@id": "https://fistulab.com/#org" },
+            "publisher": { "@id": "https://fistulab.com/#org" },
+            "audience": { "@type": "MedicalAudience", "audienceType": "{{Enfermería y medicina de hemodiálisis|Hemodialysis nurses and physicians}}" },
+            "about": { "@type": "MedicalProcedure", "name": "{{Procedimiento o concepto principal}}" },
+            "isPartOf": { "@id": "https://fistulab.com/{{''|en/}}#website" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://fistulab.com/#org",
+            "name": "Fistulab",
+            "url": "https://fistulab.com/",
+            "logo": "https://fistulab.com/icon-512.png"
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Fistulab", "item": "https://fistulab.com/{{''|en/}}" },
+              { "@type": "ListItem", "position": 2, "name": "{{Guías|Guides}}", "item": "https://fistulab.com/{{guias/|en/guides/}}" },
+              { "@type": "ListItem", "position": 3, "name": "{{Nombre corto de la guía}}", "item": "https://fistulab.com/{{ruta de esta página}}" }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="/{{''|en/}}" aria-label="{{Fistulab: abrir el simulador|Fistulab: open the simulator}}">
+        <svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="#12303a" />
+          <rect x="16" y="15" width="32" height="40" fill="#3fc1c9" fill-opacity=".35" />
+          <rect x="13" y="8" width="38" height="8" rx="3" fill="#dfe7ec" />
+          <circle cx="35" cy="37" r="9" fill="#071015" stroke="#9fe7ff" stroke-width="3.2" />
+          <path d="M6 22 33.5 36.2" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+        </svg>
+        Fistu<span>lab</span>
+      </a>
+      <nav>
+        <a class="hide-sm" href="/{{guias/|en/guides/}}">{{Guías|Guides}}</a>
+        <a class="lang" href="/{{ruta de la otra versión}}" hreflang="{{en|es}}" lang="{{en|es}}" title="{{English version|Versión en español}}">{{EN|ES}}</a>
+        <a class="cta" href="/{{''|en/}}">{{Abrir el simulador|Open the simulator}}</a>
+      </nav>
+    </header>
+
+    <main>
+      <ol class="breadcrumbs">
+        <li><a href="/{{''|en/}}">Fistulab</a></li>
+        <li><a href="/{{guias/|en/guides/}}">{{Guías|Guides}}</a></li>
+        <li>{{Nombre corto de la guía}}</li>
+      </ol>
+
+      <article>
+        <h1>{{h1: la búsqueda principal, de forma natural}}</h1>
+        <p class="lead">{{Entradilla de 2–3 frases: qué aprenderá y para quién es.}}</p>
+        <p class="meta">{{Actualizado el 10 de octubre de 2026 · Lectura de N minutos|Updated October 10, 2026 · N-minute read}}</p>
+
+        <div class="key-points">
+          <h2>{{En resumen|Key points}}</h2>
+          <ul>
+            <li>{{3–5 puntos clave, con cifras cuando las haya}}</li>
+          </ul>
+        </div>
+
+        <h2>{{Sección}}</h2>
+        <p>{{Texto…}}</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>{{…}}</th><th>{{…}}</th></tr></thead>
+            <tbody><tr><td>{{…}}</td><td>{{…}}</td></tr></tbody>
+          </table>
+        </div>
+
+        <aside class="practice">
+          <p><strong>{{Practícalo en el simulador|Practice it in the simulator}}.</strong> {{Qué hacer en el caso enlazado.}}</p>
+          <p class="buttons">
+            <a class="button" href="/{{''|en/}}?caso={{id del caso}}&amp;modo=cannulate">{{Abrir el caso: …|Open the case: …}}</a>
+            <a class="button secondary" href="/{{''|en/}}?leccion={{id de la lección}}">{{Lección guiada: …|Guided lesson: …}}</a>
+          </p>
+        </aside>
+
+        <section class="faq">
+          <h2>{{Preguntas frecuentes|Frequently asked questions}}</h2>
+          <h3>{{Pregunta tal como se busca}}</h3>
+          <p>{{Respuesta directa en 2–4 frases.}}</p>
+        </section>
+
+        <p class="note warn">{{Contenido educativo. No sustituye la formación práctica supervisada ni los protocolos de tu unidad.|Educational content. It does not replace supervised hands-on training or your unit's protocols.}}</p>
+
+        <h2>{{Referencias|References}}</h2>
+        <ol class="references">
+          <li>{{Autores. Título. Revista/fuente. Año.}} <a href="{{URL}}">{{dominio}}</a></li>
+        </ol>
+      </article>
+
+      <h2>{{Otras guías|More guides}}</h2>
+      <ul class="guide-list">
+        <li><a href="/{{ruta de otra guía}}"><strong>{{Título}}</strong><span>{{Una frase}}</span></a></li>
+      </ul>
+    </main>
+
+    <footer class="site-footer">
+      <p>{{Fistulab es un simulador gratuito y de código abierto de punción ecoguiada de la FAV para hemodiálisis.|Fistulab is a free, open-source simulator for ultrasound-guided cannulation of the hemodialysis AV fistula.}} <a href="/{{''|en/}}">fistulab.com</a> · <a href="https://github.com/Guithar/ecografo-virtual">GitHub</a> · <a href="https://ko-fi.com/fistulab">Ko-fi</a> · <a href="mailto:hola@fistulab.com">hola@fistulab.com</a></p>
+      <p>{{Herramienta educativa: no es un producto sanitario.|Educational tool: not a medical device.}}</p>
+    </footer>
+  </body>
+</html>

@@ -2,6 +2,9 @@
 
 ## Sin publicar
 
+- **Guías** en <https://fistulab.com/guias/> y <https://fistulab.com/en/guides/>: técnica de punción, punción ecoguiada, agujas, regla de los 6 y maduración, Doppler (Qa y estenosis), punción en escalera, área y ojal, infiltración y aneurisma, con referencias y enlaces a los casos del simulador. Páginas de lectura sin JavaScript, enlazadas desde la ayuda y desde «Más» en el móvil.
+- `?leccion=<id>` abre directamente una lección guiada.
+- El sitemap se genera al compilar a partir de `src/guides/pages.ts`, y tras cada publicación se avisa a IndexNow (Bing y otros) de todas sus páginas.
 - **Versión en inglés** en <https://fistulab.com/en/>: interfaz, casos, lecciones, ayuda, informe y versión móvil, con el botón *EN*/*ES* en la barra superior (en el móvil, en «Más») que conserva el caso y el modo. La primera vez se sugiere la otra versión si el navegador está en otro idioma. Documentación en inglés: `README.en.md` y `docs/en/`.
 - **Buscadores**: título y descripción por idioma, enlaces `hreflang`, encabezado principal, presentación legible mientras carga (o sin WebGL2), datos estructurados ampliados, imagen para redes en inglés, sitemap con las dos versiones y página 404 bilingüe.
 - **Versión móvil**: interfaz táctil automática en móviles, tabletas en vertical y ventanas pequeñas (`?movil=1` / `?movil=0`).

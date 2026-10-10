@@ -842,6 +842,8 @@ export class MobileUI {
     rs.appendChild(el('a', { class: 'm-kofi', href: SITE.kofi, target: '_blank', rel: 'noopener' }, tr('Apoyar en Ko-fi', 'Support on Ko-fi')));
     // la misma vista en el otro idioma (enlace normal: es otra página)
     rs.appendChild(el('a', { class: 'm-kofi', href: otherLangUrl(), hreflang: OTHER_LANG.code, lang: OTHER_LANG.code }, OTHER_LANG.name));
+    // guías de punción y ecografía (páginas de lectura del sitio)
+    rs.appendChild(el('a', { class: 'm-kofi', href: `${SITE.url}${tr('guias/', 'en/guides/')}`, target: '_blank', rel: 'noopener' }, tr('Guías', 'Guides')));
     this.installRow = btnRow(cSes);
     add(this.installRow, button(tr('Instalar en el móvil', 'Install on your phone'), async () => {
       if (await installApp()) app.toast(tr('Aplicación instalada: ábrela desde la pantalla de inicio', 'App installed: open it from your home screen'), 'ok');
